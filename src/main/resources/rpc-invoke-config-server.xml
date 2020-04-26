@@ -1,42 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:nettyrpc="http://www.newlandframework.com/nettyrpc" xsi:schemaLocation="
+       xmlns:nettyrpc="http://www.newlandframework.com/nettyrpc"
+       xsi:schemaLocation="
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
     http://www.newlandframework.com/nettyrpc http://www.newlandframework.com/nettyrpc/nettyrpc.xsd">
+
     <context:property-placeholder location="classpath:rpc-server.properties"/>
     <bean id="beanFactory" class="com.newlandframework.rpc.spring.BeanFactoryUtils"/>
 
     <nettyrpc:service id="demoAddService" interfaceName="com.newlandframework.rpc.services.AddCalculate"
-                      ref="calcAddService"></nettyrpc:service>
+                      ref="calcAddService"/>
     <nettyrpc:service id="demoMultiService" interfaceName="com.newlandframework.rpc.services.MultiCalculate"
-                      ref="calcMultiService"></nettyrpc:service>
+                      ref="calcMultiService"/>
     <nettyrpc:service id="demoPersonManage" interfaceName="com.newlandframework.rpc.services.PersonManage"
-                      ref="personManageService"></nettyrpc:service>
+                      ref="personManageService"/>
     <nettyrpc:service id="demoCostTime" interfaceName="com.newlandframework.rpc.services.CostTimeCalculate"
-                      ref="costTimeCalculateService"></nettyrpc:service>
-
+                      ref="costTimeCalculateService"/>
     <nettyrpc:service id="demoCache" interfaceName="com.newlandframework.rpc.services.Cache"
-                      ref="cacheService" filter="simpleFilter"></nettyrpc:service>
-
+                      ref="cacheService" filter="simpleFilter"/>
+    <!--<nettyrpc:service id="demoCache" interfaceName="com.newlandframework.rpc.services.Cache"
+                      ref="cacheService" filter="simpleFilter"/>-->
     <nettyrpc:service id="demoStore" interfaceName="com.newlandframework.rpc.services.Store"
-                      ref="storeService" filter="simpleFilter"></nettyrpc:service>
-
+                      ref="storeService" filter="simpleFilter"/>
+    <!-- registry用来注册Rpc服务器，其中ipAddr为RPC服务器ip地址及端口(客户端连接这个地址），
+        而echoApiPort为Rpc服务端服务能力展示开放端口(可以通过浏览器访问这个端口，获取服务端的信息) -->
     <nettyrpc:registry id="rpcRegistry" ipAddr="${rpc.server.addr}" echoApiPort="${rpc.server.echo.api.port}"
-                       protocol="PROTOSTUFFSERIALIZE"></nettyrpc:registry>
+                       protocol="PROTOSTUFFSERIALIZE"/>
 
-    <bean id="calcAddService" class="com.newlandframework.rpc.services.impl.AddCalculateImpl"></bean>
-    <bean id="calcMultiService" class="com.newlandframework.rpc.services.impl.MultiCalculateImpl"></bean>
-    <bean id="personManageService" class="com.newlandframework.rpc.services.impl.PersonManageImpl"></bean>
-    <bean id="costTimeCalculateService" class="com.newlandframework.rpc.services.impl.CostTimeCalculateImpl"></bean>
-    <bean id="cacheService" class="com.newlandframework.rpc.services.impl.CacheImpl"></bean>
-    <bean id="storeService" class="com.newlandframework.rpc.services.impl.StoreImpl"></bean>
-
-    <bean id="simpleFilter" class="com.newlandframework.rpc.filter.support.SimpleFilter"></bean>
+    <bean id="calcAddService" class="com.newlandframework.rpc.services.impl.AddCalculateImpl"/>
+    <bean id="calcMultiService" class="com.newlandframework.rpc.services.impl.MultiCalculateImpl"/>
+    <bean id="personManageService" class="com.newlandframework.rpc.services.impl.PersonManageImpl"/>
+    <bean id="costTimeCalculateService" class="com.newlandframework.rpc.services.impl.CostTimeCalculateImpl"/>
+    <bean id="cacheService" class="com.newlandframework.rpc.services.impl.CacheImpl"/>
+    <bean id="storeService" class="com.newlandframework.rpc.services.impl.StoreImpl"/>
+    <bean id="simpleFilter" class="com.newlandframework.rpc.filter.support.SimpleFilter"/>
 
     <!--NettyRPC Listeners And FilterChain Config by tangjie-->
-    <bean id="listeners" class="com.newlandframework.rpc.listener.ModuleListenerChainWrapper">
+    <!--<bean id="listenerChain" class="com.newlandframework.rpc.listener.ListenerChainModularWrapper">
         <constructor-arg name="modular">
             <bean class="com.newlandframework.rpc.core.DefaultModular"></bean>
         </constructor-arg>
@@ -45,9 +48,11 @@
                 <ref bean="listenerAdapter"/>
             </list>
         </property>
-    </bean>
-    <bean id="modular" class="com.newlandframework.rpc.filter.ModuleFilterChainWrapper">
-        <constructor-arg name="modular" ref="listeners"/>
+    </bean>-->
+    <bean id="filterChain" class="com.newlandframework.rpc.filter.FilterChainModularWrapper">
+        <constructor-arg name="modular">
+            <bean class="com.newlandframework.rpc.core.DefaultModular"></bean>
+        </constructor-arg>
         <property name="filters">
             <list>
                 <ref bean="classLoaderChainFilter"/>
@@ -56,7 +61,7 @@
         </property>
     </bean>
     <!--Listeners-->
-    <bean id="listenerAdapter" class="com.newlandframework.rpc.listener.support.ModuleListenerAdapter"/>
+    <!--<bean id="listenerAdapter" class="com.newlandframework.rpc.listener.support.ModuleListenerAdapter"/>-->
     <!--FilterChain-->
     <bean id="classLoaderChainFilter" class="com.newlandframework.rpc.filter.support.ClassLoaderChainFilter"/>
     <bean id="echoChainFilter" class="com.newlandframework.rpc.filter.support.EchoChainFilter"/>

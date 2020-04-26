@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2016 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.netty;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -60,11 +45,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:MessageRecvExecutor.java
- * @description:MessageRecvExecutor功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2016/10/7
+ * MessageRecvExecutor实现了 ApplicationContextAware 接口：
+ *
+ * 在大部分情况下，容器中的Bean处于容器管理下，无需主动访问容器，只需接受容器的依赖注入即可。但在某些特殊的情况下，Bean需要实现某个功能，
+ * 但该功能必须借助于Spring容器才能实现，此时就必须让该Bean先获取Spring容器，然后借助于Spring容器实现该功能。为了让Bean获取它所在的Spring容器，
+ * 可以让该Bean实现ApplicationContextAware接口。
+ *
+ * Spring容器会检测容器中的所有Bean，如果发现某个Bean实现了ApplicationContextAware接口，Spring容器会在创建该Bean之后，
+ * 自动调用该Bean的setApplicationContextAware()方法，调用该方法时，会将容器本身作为参数传给该方法。
  */
 public class MessageRecvExecutor implements ApplicationContextAware {
 
@@ -96,11 +84,13 @@ public class MessageRecvExecutor implements ApplicationContextAware {
         return MessageRecvExecutorHolder.INSTANCE;
     }
 
-    public static void submit(Callable<Boolean> task, final ChannelHandlerContext ctx, final MessageRequest request, final MessageResponse response) {
+    public static void submit(Callable<Boolean> task, final ChannelHandlerContext ctx,
+                              final MessageRequest request, final MessageResponse response) {
         if (threadPoolExecutor == null) {
             synchronized (MessageRecvExecutor.class) {
                 if (threadPoolExecutor == null) {
-                    threadPoolExecutor = MoreExecutors.listeningDecorator((ThreadPoolExecutor) (RpcSystemConfig.isMonitorServerSupport() ? RpcThreadPool.getExecutorWithJmx(threadNums, queueNums) : RpcThreadPool.getExecutor(threadNums, queueNums)));
+                    threadPoolExecutor = MoreExecutors.listeningDecorator((ThreadPoolExecutor) (RpcSystemConfig.isMonitorServerSupport() ?
+                            RpcThreadPool.getExecutorWithJmx(threadNums, queueNums) : RpcThreadPool.getExecutor(threadNums, queueNums)));
                 }
             }
         }
@@ -147,12 +137,13 @@ public class MessageRecvExecutor implements ApplicationContextAware {
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
+                    // 根据用户所选择的序列化协议，从而往pipeline中添加不同的handler
                     .childHandler(new MessageRecvChannelInitializer(handlerMap).buildRpcSerializeProtocol(serializeProtocol))
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
-
+            // MessageRecvExecutor.DELIMITER = ":"，将IP地址和端口号分割成数组
             String[] ipAddr = serverAddress.split(MessageRecvExecutor.DELIMITER);
-
+            // IPADDR_OPRT_ARRAY_LENGTH = 2
             if (ipAddr.length == RpcSystemConfig.IPADDR_OPRT_ARRAY_LENGTH) {
                 final String host = ipAddr[0];
                 final int port = Integer.parseInt(ipAddr[1]);
@@ -160,13 +151,22 @@ public class MessageRecvExecutor implements ApplicationContextAware {
                 future = bootstrap.bind(host, port).sync();
 
                 future.addListener(new ChannelFutureListener() {
+                    /**
+                     * 在RPC服务器启动时，指定其监听一个ip地址127.0.0.1:18887，客户端发送调用请求到这个客户端。
+                     * 不过当指定RPC服务器监听上面这个ip地址之后，还必须让RPC服务器监听另外一个ip地址127.0.0.1:18886。
+                     * 这个端口是用来监听浏览器发送过来的http请求，然后把RPC服务器可以提供的服务（也就是各个接口中的方法签名）
+                     * 展示在网页中，让用可以直接知道
+                     */
                     @Override
                     public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                         if (channelFuture.isSuccess()) {
                             final ExecutorService executor = Executors.newFixedThreadPool(numberOfEchoThreadsPool);
-                            ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<Boolean>(executor);
-                            completionService.submit(new ApiEchoResolver(host, echoApiPort));
-                            System.out.printf("[author tangjie] Netty RPC Server start success!\nip:%s\nport:%d\nprotocol:%s\nstart-time:%s\njmx-invoke-metrics:%s\n\n", host, port, serializeProtocol, ModuleMetricsHandler.getStartTime(), (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ? "open" : "close"));
+                            //ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<Boolean>(executor);
+                            // 把指定RPC服务器监听指定ip地址的过程放到线程池中去执行
+                            executor.submit(new ApiEchoResolver(host, echoApiPort));
+                            System.out.printf("[author tangjie] Netty RPC Server start success!\nip:%s\nport:%d\nprotocol:%s\nstart-time:%s\njmx-invoke-metrics:%s\n\n",
+                                    host, port, serializeProtocol, ModuleMetricsHandler.getStartTime(), (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ?
+                                            "open" : "close"));
                             channelFuture.channel().closeFuture().sync().addListener(new ChannelFutureListener() {
                                 @Override
                                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -190,6 +190,8 @@ public class MessageRecvExecutor implements ApplicationContextAware {
     }
 
     private void register() {
+        // handlerMap中的键值对类型有以下几种可能：
+        // String -> ServiceFilterBinder、String -> AccessAdaptiveProvider、String -> AbilityDetailProvider
         handlerMap.put(RpcSystemConfig.RPC_COMPILER_SPI_ATTR, new AccessAdaptiveProvider());
         handlerMap.put(RpcSystemConfig.RPC_ABILITY_DETAIL_SPI_ATTR, new AbilityDetailProvider());
     }

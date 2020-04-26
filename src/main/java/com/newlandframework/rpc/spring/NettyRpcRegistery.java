@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2016 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.spring;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
@@ -26,11 +11,13 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:NettyRpcRegistery.java
- * @description:NettyRpcRegistery功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2016/10/7
+ * InitializingBean接口：
+ * 在Bean所有的属性都被注入之后会去调用这个afterPropertiesSet()方法，其实在依赖注入完成的时候，
+ * spring会去检查这个类是否实现了InitializingBean接口，如果实现了InitializingBean接口，就会去调用这个类的
+ * afterPropertiesSet()方法。
+ *
+ * DisposableBean接口：
+ * 在对象销毁的时候，会去调用DisposableBean的destroy方法。
  */
 public class NettyRpcRegistery implements InitializingBean, DisposableBean {
     private String ipAddr;
@@ -51,15 +38,18 @@ public class NettyRpcRegistery implements InitializingBean, DisposableBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         MessageRecvExecutor ref = MessageRecvExecutor.getInstance();
+        // 设置MessageRecvExecutor中的ip地址和端口
         ref.setServerAddress(ipAddr);
+        // 设置服务端服务能力展示开放端口
         ref.setEchoApiPort(Integer.parseInt(echoApiPort));
+        // 设置序列化协议
         ref.setSerializeProtocol(Enum.valueOf(RpcSerializeProtocol.class, protocol));
 
         if (RpcSystemConfig.isMonitorServerSupport()) {
             context.register(ThreadPoolMonitorProvider.class);
             context.refresh();
         }
-
+        // 启动Rpc服务器，使其运行起来
         ref.start();
 
         if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT) {

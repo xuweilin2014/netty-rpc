@@ -36,13 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:RpcServerLoader.java
- * @description:RpcServerLoader功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2016/10/7
- */
+
 public class RpcServerLoader {
 
     private static volatile RpcServerLoader rpcServerLoader;

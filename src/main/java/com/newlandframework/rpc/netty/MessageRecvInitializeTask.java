@@ -30,11 +30,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:MessageRecvInitializeTask.java
- * @description:MessageRecvInitializeTask功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2016/10/7
+ *
  */
 public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask {
     private AtomicReference<ModuleMetricsVisitor> visitor = new AtomicReference<ModuleMetricsVisitor>();

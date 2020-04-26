@@ -24,11 +24,7 @@ import com.newlandframework.rpc.core.MessageCallBack;
 import com.newlandframework.rpc.model.MessageRequest;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:MessageSendProxy.java
- * @description:MessageSendProxy功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2016/10/7
+ *
  */
 public class MessageSendProxy<T> extends AbstractInvocationHandler {
 
