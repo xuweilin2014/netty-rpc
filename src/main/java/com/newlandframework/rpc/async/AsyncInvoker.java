@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.async;
 
 import com.newlandframework.rpc.core.ReflectionUtils;
@@ -27,19 +12,18 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
-/**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:AsyncInvoker.java
- * @description:AsyncInvoker功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/3/22
- */
 public class AsyncInvoker {
-    private ThreadPoolExecutor executor = (ThreadPoolExecutor) RpcThreadPool.getExecutor(RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS, RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS);
+    private ThreadPoolExecutor executor = (ThreadPoolExecutor) RpcThreadPool.getExecutor(
+            RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS, RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS);
 
-    public <R> R submit(final AsyncCallback<R> callback) {
+    public <T> T submit(final AsyncCallback<T> callback) {
+        // getGenericInterfaces返回对象实现的接口信息的Type数组，包含泛型信息，举例来说，
+        // 调用AsyncRpcCallTest方法传进来的callback对象是AsyncCallback接口的一个实现类，即 AsyncRpcCall<CostTime>。
+        // 所以调用getGenericInterfaces()[0]所得到的就是AsyncCallback<CostTime>对象（包含泛型信息）。由于使用了泛型，
+        // 所以它是ParameterizedType类型。
         Type type = callback.getClass().getGenericInterfaces()[0];
         if (type instanceof ParameterizedType) {
+            // getGenericClass方法返回值returnClass为泛型中实际参数类型，比如AsyncCallback<CostTime>中的CostTime.class
             Class returnClass = (Class) ReflectionUtils.getGenericClass((ParameterizedType) type, 0);
             return intercept(callback, returnClass);
         } else {
@@ -70,16 +54,19 @@ public class AsyncInvoker {
         }
     }
 
-    private <R> R submit(final AsyncCallback<R> callback, Class<?> returnClass) {
-        Future future = submit(new Callable() {
+    private <T> T submit(final AsyncCallback<T> callback, Class<?> returnClass) {
+        Future future = submit(new Callable<T>() {
             @Override
-            public R call() throws Exception {
+            public T call() throws Exception {
                 return callback.call();
             }
         });
 
-        AsyncCallResult result = new AsyncCallResult(returnClass, future, RpcSystemConfig.SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT);
-        R asyncProxy = (R) result.getResult();
+        // SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT 的值默认为60s
+        AsyncCallResult result = new AsyncCallResult(returnClass, future,
+                RpcSystemConfig.SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT);
+
+        T asyncProxy = (T) result.getResult();
 
         return asyncProxy;
     }

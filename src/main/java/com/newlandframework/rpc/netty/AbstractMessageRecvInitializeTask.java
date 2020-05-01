@@ -1,8 +1,8 @@
 package com.newlandframework.rpc.netty;
 
-import com.newlandframework.rpc.core.Modular;
-import com.newlandframework.rpc.core.ModuleInvoker;
-import com.newlandframework.rpc.core.ModuleProvider;
+import com.newlandframework.rpc.core.ModularProviderHolder;
+import com.newlandframework.rpc.core.ModularInvoker;
+import com.newlandframework.rpc.core.ModularProvider;
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
@@ -23,7 +23,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
     protected static final String METHOD_MAPPED_NAME = "invoke";
     protected boolean returnNotNull = true;
     protected long invokeTimespan;
-    protected Modular modular = BeanFactoryUtils.getBean("filterChain");
+    protected ModularProviderHolder modular = BeanFactoryUtils.getBean("filterChain");
 
     public AbstractMessageRecvInitializeTask(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {
         this.request = request;
@@ -63,9 +63,17 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         }
     }
 
+    /**
+     * class:AbstractMessageRecvInitializeTask
+     * 这里的modular对象是FilterChainModularWrapper，而调用其provider.getInvoker方法就会返回对filterA进行封装的ModularInvoker，
+     * 然后调用invoke方法最终会调用到filterA的invoke方法，并且把filter链中下一个filter（也就是filterB）封装成的ModularInvoker对象（next）传进去。
+     * 然后在filterA的invoke方法中继续调用next的invoke方法，紧接着就会调用filterB的invoke方法，最后调用到目标对象MethodInvoker中的invoke方法。
+     *
+     * 也就是说，在真正调用RPC服务之前（MethodInvoker中的invoke通过反射调用），会通过XML配置文件所配置filter链，对RPC请求进行处理。
+     */
     private Object invoke(MethodInvoker mi, MessageRequest request) throws Throwable {
         if (modular != null) {
-            ModuleProvider provider = modular.getProvider(new ModuleInvoker() {
+            ModularProvider provider = modular.getProvider(new ModularInvoker() {
 
                 @Override
                 public Class getInterface() {

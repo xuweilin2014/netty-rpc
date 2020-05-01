@@ -3,8 +3,8 @@ package com.newlandframework.rpc.core;
 /**
  *
  */
-public interface ModuleProvider<T> {
-    ModuleInvoker<T> getInvoker();
+public interface ModularProvider<T> {
+    ModularInvoker<T> getInvoker();
 
     void destoryInvoker();
 }

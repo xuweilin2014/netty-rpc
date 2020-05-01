@@ -13,9 +13,7 @@ import com.newlandframework.rpc.core.MessageCallBack;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
 
-/**
- *
- */
+
 public class MessageSendHandler extends ChannelInboundHandlerAdapter {
     // 用来存储正在进行中，还没有返回的RPC调用
     private ConcurrentHashMap<String, MessageCallBack> mapCallBack = new ConcurrentHashMap<String, MessageCallBack>();

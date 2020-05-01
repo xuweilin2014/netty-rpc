@@ -11,9 +11,7 @@ import com.newlandframework.rpc.exception.RejectResponeException;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
 
-/**
- *
- */
+
 public class MessageCallBack {
 
     private MessageRequest request;
@@ -59,13 +57,13 @@ public class MessageCallBack {
     }
 
     private void await() {
-        boolean timeout = false;
+        boolean isTimeout = false;
         try {
-            timeout = finish.await(RpcSystemConfig.SYSTEM_PROPERTY_MESSAGE_CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS);
+            isTimeout = finish.await(RpcSystemConfig.SYSTEM_PROPERTY_MESSAGE_CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (!timeout) {
+        if (!isTimeout) {
             throw new InvokeTimeoutException(RpcSystemConfig.TIMEOUT_RESPONSE_MSG);
         }
     }

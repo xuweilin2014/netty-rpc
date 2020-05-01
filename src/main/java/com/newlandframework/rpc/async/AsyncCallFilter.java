@@ -1,34 +1,24 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.async;
 
 import net.sf.cglib.proxy.CallbackFilter;
 
 import java.lang.reflect.Method;
 
-/**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:AsyncCallFilter.java
- * @description:AsyncCallFilter功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/3/22
- */
+
 public class AsyncCallFilter implements CallbackFilter {
     @Override
     public int accept(Method method) {
+
+        /**
+         *  getDeclaringClass返回的是此method是在哪个类中进行声明的，不过如果子类重写了父类的方法，
+         *  或者一个类实现了一个接口中的方法，那么getDeclaringClass返回的是子类或者实现接口的类的名称。
+         *
+         *  在CGLIB动态代理中，调用enhancer.createClass()方法，会把代理类要实现的接口（通过setInterfaces设置），
+         *  以及要代理的目标类（通过setSuperClass实现）包括其父类（也包括Object类）中的所有方法作为参数都传入
+         *  此accept方法中。判断当代理类调用此方法时，应该使用的拦截器在数组中的下标，然后保存起来。
+         *  下标为0：AsyncCallResultInterceptor
+         *  下标为1：AsyncCallObjectInterceptor
+         */
         return AsyncCallObject.class.isAssignableFrom(method.getDeclaringClass()) ? 1 : 0;
     }
 }

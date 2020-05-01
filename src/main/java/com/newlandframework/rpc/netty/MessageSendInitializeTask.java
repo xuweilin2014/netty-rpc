@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2016 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.netty;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
@@ -27,11 +12,7 @@ import java.util.concurrent.TimeUnit;
 import com.newlandframework.rpc.serialize.RpcSerializeProtocol;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:MessageSendInitializeTask.java
- * @description:MessageSendInitializeTask功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2016/10/7
+ * 此Task交给线程池来执行，它的主要任务是连接到RPC服务器端，并且如果没有连上的话，就每隔10s重试一次
  */
 public class MessageSendInitializeTask implements Callable<Boolean> {
 
@@ -59,13 +40,16 @@ public class MessageSendInitializeTask implements Callable<Boolean> {
             @Override
             public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                 if (channelFuture.isSuccess()) {
+                    // 如果客户端连接到RPC服务器成功的话，就把此pipeline中的MessageSendHandler保存到RpcServerLoader中
                     MessageSendHandler handler = channelFuture.channel().pipeline().get(MessageSendHandler.class);
                     RpcServerLoader.getInstance().setMessageSendHandler(handler);
                 } else {
+                    // 如果客户端连接失败的话，则每隔10s再重试一次
                     EventLoop loop = (EventLoop) eventLoopGroup.schedule(new Runnable() {
                         @Override
                         public void run() {
-                            System.out.println("NettyRPC server is down,start to reconnecting to: " + serverAddress.getAddress().getHostAddress() + ':' + serverAddress.getPort());
+                            System.out.println("NettyRPC server is down, start to reconnecting to: " + serverAddress.getAddress().getHostAddress() + ':' + serverAddress.getPort());
+                            // 失败后再调用call方法一次
                             call();
                         }
                     }, RpcSystemConfig.SYSTEM_PROPERTY_CLIENT_RECONNECT_DELAY, TimeUnit.SECONDS);

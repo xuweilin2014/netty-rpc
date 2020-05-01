@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2016 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.netty;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -68,6 +53,8 @@ public class RpcServerLoader {
 
     public void load(String serverAddress, RpcSerializeProtocol serializeProtocol) {
         String[] ipAddr = serverAddress.split(RpcServerLoader.DELIMITER);
+
+        // RpcSystemConfig.IPADDR_OPRT_ARRAY_LENGTH的值为2
         if (ipAddr.length == RpcSystemConfig.IPADDR_OPRT_ARRAY_LENGTH) {
             String host = ipAddr[0];
             int port = Integer.parseInt(ipAddr[1]);
@@ -75,19 +62,21 @@ public class RpcServerLoader {
 
             System.out.printf("[author tangjie] Netty RPC Client start success!\nip:%s\nport:%d\nprotocol:%s\n\n", host, port, serializeProtocol);
 
-            ListenableFuture<Boolean> listenableFuture = threadPoolExecutor.submit(new MessageSendInitializeTask(eventLoopGroup, remoteAddr, serializeProtocol));
+            ListenableFuture<Boolean> listenableFuture = threadPoolExecutor.submit(new MessageSendInitializeTask(
+                    eventLoopGroup, remoteAddr, serializeProtocol));
 
             Futures.addCallback(listenableFuture, new FutureCallback<Boolean>() {
                 @Override
                 public void onSuccess(Boolean result) {
                     try {
                         lock.lock();
-
-                        if (messageSendHandler == null) {
+                        // 当此时连接没有建立好时，不能执行到后面的connectStatus.signalAll()，只能够先进行阻塞，
+                        // 等待setMessageSendHandler方法调用后，发出的signal信号
+                        while (messageSendHandler == null) {
                             handlerStatus.await();
                         }
-
-                        if (result.equals(Boolean.TRUE) && messageSendHandler != null) {
+                        // 当客户端与服务器的连接建立成功后，通知所有调用getMessageSendHandler阻塞的线程
+                        if (result.equals(Boolean.TRUE)) {
                             connectStatus.signalAll();
                         }
                     } catch (InterruptedException ex) {
@@ -96,7 +85,6 @@ public class RpcServerLoader {
                         lock.unlock();
                     }
                 }
-
                 @Override
                 public void onFailure(Throwable t) {
                     t.printStackTrace();
@@ -117,8 +105,10 @@ public class RpcServerLoader {
 
     public MessageSendHandler getMessageSendHandler() throws InterruptedException {
         try {
+            // 在一个客户端中通过多个线程向一个服务器发起请求时，可能客户端和服务器端的连接还没有建立好，即
+            // messageSendHandler为null，因此阻塞，等待连接建立
             lock.lock();
-            if (messageSendHandler == null) {
+            while (messageSendHandler == null) {
                 connectStatus.await();
             }
             return messageSendHandler;

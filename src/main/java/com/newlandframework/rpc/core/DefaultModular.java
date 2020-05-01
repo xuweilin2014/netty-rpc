@@ -3,12 +3,12 @@ package com.newlandframework.rpc.core;
 import com.newlandframework.rpc.model.MessageRequest;
 
 
-public class DefaultModular implements Modular {
+public class DefaultModular implements ModularProviderHolder {
     @Override
-    public <T> ModuleProvider<T> getProvider(ModuleInvoker<T> invoker, MessageRequest request) {
-        return new ModuleProvider<T>() {
+    public <T> ModularProvider<T> getProvider(ModularInvoker<T> invoker, MessageRequest request) {
+        return new ModularProvider<T>() {
             @Override
-            public ModuleInvoker<T> getInvoker() {
+            public ModularInvoker<T> getInvoker() {
                 return invoker;
             }
 

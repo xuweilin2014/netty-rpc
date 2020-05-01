@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.async;
 
 import com.newlandframework.rpc.core.ReflectionUtils;
@@ -26,13 +11,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:AsyncCallResult.java
- * @description:AsyncCallResult功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/3/22
- */
 public class AsyncCallResult {
     private Class returnClass;
     private Future future;
@@ -71,6 +49,7 @@ public class AsyncCallResult {
 
     public Object getResult() {
         Class proxyClass = AsyncProxyCache.get(returnClass.getName());
+
         if (proxyClass == null) {
             Enhancer enhancer = new Enhancer();
             if (returnClass.isInterface()) {
@@ -80,13 +59,18 @@ public class AsyncCallResult {
                 enhancer.setSuperclass(returnClass);
             }
             enhancer.setCallbackFilter(new AsyncCallFilter());
-            enhancer.setCallbackTypes(new Class[]{AsyncCallResultInterceptor.class, AsyncCallObjectInterceptor.class});
+            enhancer.setCallbackTypes(new Class[]{
+                    AsyncLoadResultInterceptor.class, AsyncLoadStatusInterceptor.class
+            });
             proxyClass = enhancer.createClass();
             AsyncProxyCache.save(returnClass.getName(), proxyClass);
         }
 
-        Enhancer.registerCallbacks(proxyClass, new Callback[]{new AsyncCallResultInterceptor(this),
-                new AsyncCallObjectInterceptor(future)});
+        // Enhancer.registerCallbacks不放到if方法里面是因为，传进去的两个Interceptor需要一个新的future对象
+        // 如果把这段代码放到if中，就可能会导致每次创建的代理对象的拦截方法中，future始终是同一个对象
+        Enhancer.registerCallbacks(proxyClass, new Callback[]{
+                new AsyncLoadResultInterceptor(this),
+                new AsyncLoadStatusInterceptor(future)});
 
         try {
             return ReflectionUtils.newInstance(proxyClass);
