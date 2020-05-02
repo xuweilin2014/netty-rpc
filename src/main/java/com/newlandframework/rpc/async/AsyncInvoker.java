@@ -31,7 +31,8 @@ public class AsyncInvoker {
         }
     }
 
-
+    // submit方法把传进来的Callable对象，封装进AsyncFuture对象（实现了FutureTask接口），并且提交到线程池中去执行。
+    // 这个future是此项目中异步调用的关键
     private <T> AsyncFuture<T> submit(Callable<T> task) {
         AsyncFuture future = new AsyncFuture<T>(task);
         executor.submit(future);
@@ -62,7 +63,10 @@ public class AsyncInvoker {
             }
         });
 
-        // SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT 的值默认为60s
+        // SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT 的值默认为60s，这里的returnClass是CostTime.class，
+        // future就是AsyncFuture，也就是一个FutureTask类型，根据这个future可以得知线程池运行任务的结果。
+        // 这是因为，在FutureTask在线程池中被执行结束之后，上面实现Callable接口的匿名内部类中的call方法返回的结果，
+        // 会保存在AsyncFuture对象中（其实是保存在FutureTask对象中的outcome属性中），可以通过FutureTask的get方法获取到。
         AsyncCallResult result = new AsyncCallResult(returnClass, future,
                 RpcSystemConfig.SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT);
 

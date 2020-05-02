@@ -59,10 +59,14 @@ public class MessageCallBack {
     private void await() {
         boolean isTimeout = false;
         try {
+            // 如果await等待调用结果返回的时间没有超时，而是正常返回，则返回true；如果awiat等待的时间超时了，那么就会返回false
             isTimeout = finish.await(RpcSystemConfig.SYSTEM_PROPERTY_MESSAGE_CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        // 如果超时了，则会抛出自定义的异常InvokeTimeoutException。由于MessageCallBack中的此方法是在线程池中执行，因此抛出的异常会被捕获，
+        // 并且最终保存到FutureTask中的outcome属性中
         if (!isTimeout) {
             throw new InvokeTimeoutException(RpcSystemConfig.TIMEOUT_RESPONSE_MSG);
         }

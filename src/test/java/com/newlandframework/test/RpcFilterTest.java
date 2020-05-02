@@ -23,7 +23,7 @@ public class RpcFilterTest {
             }
         }
 
-        /*for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 100; i++) {
             String obj = String.valueOf(i);
             try {
                 System.out.println((String) cache.get(obj));
@@ -43,7 +43,6 @@ public class RpcFilterTest {
                 System.out.println("trace:" + ex.getMessage());
             }
         }
-*/
         context.destroy();
     }
 }

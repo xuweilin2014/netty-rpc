@@ -15,6 +15,9 @@ public class AsyncFuture<V> extends FutureTask<V> {
         callerThread = Thread.currentThread();
     }
 
+    /**
+     * 当FutureTask中的run方法运行完时，就会调用done方法，设置好endTime时间。
+     */
     @Override
     protected void done() {
         endTime = System.currentTimeMillis();
