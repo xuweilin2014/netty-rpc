@@ -7,9 +7,6 @@ import com.newlandframework.rpc.model.MessageResponse;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-/**
- *
- */
 public class RecvInitializeTaskFacade {
     private MessageRequest request;
     private MessageResponse response;
@@ -28,7 +25,9 @@ public class RecvInitializeTaskFacade {
     }
 
     private Callable<Boolean> getMetricsTask() {
-        return jmxMetricsHash ? new HashMessageRecvInitializeTask(request, response, handlerMap) : new MessageRecvInitializeTask(request, response, handlerMap);
+        return jmxMetricsHash ?
+                new HashMessageRecvInitializeTask(request, response, handlerMap)
+                : new MessageRecvInitializeTask(request, response, handlerMap);
     }
 }
 

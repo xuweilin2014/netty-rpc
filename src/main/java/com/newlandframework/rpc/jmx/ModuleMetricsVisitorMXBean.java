@@ -1,32 +1,19 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.jmx;
 
 import java.util.List;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:ModuleMetricsVisitorMXBean.java
- * @description:ModuleMetricsVisitorMXBean功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/10/12
+ * MBean与MXBean的区别是：定义MBean接口实现类的属性时，MBean只支持Java的八种基本数据和一些简单的引用类型，如String。
+ * 不能支持复杂数据类型的关联映射。而MXBean接口实现类定义属性时，支持基本数据类型，引用数据类型，和自定义的数据类型。
  */
 public interface ModuleMetricsVisitorMXBean {
+
+    //此方法表明ModuleMetricsHandler中的有属性ModuleMetricsVisitor，当通过
+    //getAttribute(name, "ModuleMetricsVisitor")来获取ModuleMetricsVisitor属性时，就会调用这个方法。
+    //由于返回的ModuleMetricsVisitor类型是用户自定义的，因此实际获取到的类型为CompositeData[]。
     List<ModuleMetricsVisitor> getModuleMetricsVisitor();
 
+    //此方法表明ModuleMetricsHandler有操作addModuleMetricsVisitor
     void addModuleMetricsVisitor(ModuleMetricsVisitor visitor);
 }
 

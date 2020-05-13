@@ -1,21 +1,6 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.jmx;
 
-
+import lombok.Data;
 import org.apache.commons.collections.iterators.UniqueFilterIterator;
 
 import java.util.ArrayList;
@@ -26,16 +11,12 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:MetricsTask.java
- * @description:MetricsTask功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/10/26
+ * 一个MetricsTask的作用为：负责将一个visitorList中所有visitor记录的某个方法调用数据进行汇总
  */
 public class MetricsTask implements Runnable {
     private final CyclicBarrier barrier;
     private List<ModuleMetricsVisitor> visitorList;
-    private List<ModuleMetricsVisitor> result = new ArrayList<ModuleMetricsVisitor>();
+    private ModuleMetricsVisitor result;
 
     public MetricsTask(CyclicBarrier barrier, List<ModuleMetricsVisitor> visitorList) {
         this.barrier = barrier;
@@ -45,62 +26,55 @@ public class MetricsTask implements Runnable {
     @Override
     public void run() {
         try {
-            barrier.await();
+            // :modified
             accumulate();
+            // 在hashVisitorList中的所有visitorList的数据汇总完毕之前（一个MetricsTask负责一个visitorList数据的汇总），
+            // 线程会阻塞在这里，只有全部汇总完毕之后，线程才会继续向下执行。
             barrier.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (BrokenBarrierException e) {
+        } catch (InterruptedException | BrokenBarrierException e) {
             e.printStackTrace();
         }
     }
 
     private void count(List<ModuleMetricsVisitor> list) {
-        for (int i = 0; i < result.size(); i++) {
-            long invokeCount = 0L;
-            long invokeSuccCount = 0L;
-            long invokeFailCount = 0L;
-            long invokeFilterCount = 0L;
-            long invokeTimespan = 0L;
-            long invokeMinTimespan = list.get(0).getInvokeMinTimespan();
-            long invokeMaxTimespan = list.get(0).getInvokeMaxTimespan();
-            int length = result.get(i).getHistogram().getRanges().length + 1;
-            long[] invokeHistogram = new long[length];
-            Arrays.fill(invokeHistogram, 0L);
-            String lastStackTraceDetail = "";
-            long lastErrorTime = list.get(0).getErrorLastTimeLongVal();
+        long invokeCount = 0L;
+        long invokeSuccCount = 0L;
+        long invokeFailCount = 0L;
+        long invokeFilterCount = 0L;
+        long invokeTimespan = 0L;
+        long invokeMinTimespan = list.get(0).getInvokeMinTimespan();
+        long invokeMaxTimespan = list.get(0).getInvokeMaxTimespan();
+        String lastStackTraceDetail = "";
+        long lastErrorTime = list.get(0).getErrorLastTimeLongVal();
 
-            ModuleMetrics metrics = new ModuleMetrics();
-            metrics.setInvokeCount(invokeCount);
-            metrics.setInvokeSuccCount(invokeSuccCount);
-            metrics.setInvokeFailCount(invokeFailCount);
-            metrics.setInvokeFilterCount(invokeFilterCount);
-            metrics.setInvokeTimespan(invokeTimespan);
-            metrics.setInvokeMinTimespan(invokeMinTimespan);
-            metrics.setInvokeMaxTimespan(invokeMaxTimespan);
-            metrics.setInvokeHistogram(invokeHistogram);
-            metrics.setLastStackTraceDetail(lastStackTraceDetail);
-            metrics.setLastErrorTime(lastErrorTime);
+        ModuleMetrics metrics = new ModuleMetrics();
+        metrics.setInvokeCount(invokeCount);
+        metrics.setInvokeSuccCount(invokeSuccCount);
+        metrics.setInvokeFailCount(invokeFailCount);
+        metrics.setInvokeFilterCount(invokeFilterCount);
+        metrics.setInvokeTimespan(invokeTimespan);
+        metrics.setInvokeMinTimespan(invokeMinTimespan);
+        metrics.setInvokeMaxTimespan(invokeMaxTimespan);
+        metrics.setLastStackTraceDetail(lastStackTraceDetail);
+        metrics.setLastErrorTime(lastErrorTime);
 
-            merge(i, list, metrics);
+        merge(list, metrics);
 
-            result.get(i).setInvokeCount(metrics.getInvokeCount());
-            result.get(i).setInvokeSuccCount(metrics.getInvokeSuccCount());
-            result.get(i).setInvokeFailCount(metrics.getInvokeFailCount());
-            result.get(i).setInvokeFilterCount(metrics.getInvokeFilterCount());
-            result.get(i).setInvokeTimespan(metrics.getInvokeTimespan());
-            result.get(i).setInvokeMaxTimespan(metrics.getInvokeMaxTimespan());
-            result.get(i).setInvokeMinTimespan(metrics.getInvokeMinTimespan());
-            result.get(i).setInvokeHistogram(metrics.getInvokeHistogram());
+        result.setInvokeCount(metrics.getInvokeCount());
+        result.setInvokeSuccCount(metrics.getInvokeSuccCount());
+        result.setInvokeFailCount(metrics.getInvokeFailCount());
+        result.setInvokeFilterCount(metrics.getInvokeFilterCount());
+        result.setInvokeTimespan(metrics.getInvokeTimespan());
+        result.setInvokeMaxTimespan(metrics.getInvokeMaxTimespan());
+        result.setInvokeMinTimespan(metrics.getInvokeMinTimespan());
 
-            if (metrics.getLastErrorTime() > 0) {
-                result.get(i).setErrorLastTimeLongVal(metrics.getLastErrorTime());
-                result.get(i).setLastStackTraceDetail(metrics.getLastStackTraceDetail());
-            }
+        if (metrics.getLastErrorTime() > 0) {
+            result.setErrorLastTimeLongVal(metrics.getLastErrorTime());
+            result.setLastStackTraceDetail(metrics.getLastStackTraceDetail());
         }
     }
 
-    private void merge(int index, List<ModuleMetricsVisitor> list, ModuleMetrics metrics) {
+    private void merge(List<ModuleMetricsVisitor> list, ModuleMetrics metrics) {
         long invokeCount = metrics.getInvokeCount();
         long invokeSuccCount = metrics.getInvokeSuccCount();
         long invokeFailCount = metrics.getInvokeFailCount();
@@ -113,7 +87,8 @@ public class MetricsTask implements Runnable {
         long lastErrorTime = metrics.getLastErrorTime();
 
         for (int i = 0; i < list.size(); i++) {
-            boolean find = equals(result.get(index).getModuleName(), list.get(i).getModuleName(), result.get(index).getMethodName(), list.get(i).getMethodName());
+            boolean find = equals(result.getClassName(), list.get(i).getClassName(),
+                    result.getMethodName(), list.get(i).getMethodName());
             if (find) {
                 invokeCount += list.get(i).getInvokeCount();
                 invokeSuccCount += list.get(i).getInvokeSuccCount();
@@ -130,10 +105,6 @@ public class MetricsTask implements Runnable {
                 }
                 if (maxTimespan > invokeMaxTimespan) {
                     invokeMaxTimespan = maxTimespan;
-                }
-
-                for (int j = 0; j < invokeHistogram.length; j++) {
-                    invokeHistogram[j] += list.get(i).getHistogram().toArray()[j];
                 }
 
                 long fail = list.get(i).getInvokeFailCount();
@@ -161,28 +132,39 @@ public class MetricsTask implements Runnable {
 
     private void accumulate() {
         List<ModuleMetricsVisitor> list = visitorList;
-
+        // 遍历visitorList，获取此visitorList中不同的元素，也就是ModuleMetricsVisitor。判断不同的标准是能否将
+        // visitor加入到一个set集合中，而加入到set集合中，需要依靠ModuleMetricsVisitor中的equals和hashcode方法。
+        //
+        // set中插入数据时，先比较hashCode：
+        // i.如果hashCode相同才会比较equals，equals相同，则两个对象相同，不能插入，equals不同，可以插入；
+        // ii.如果hashCode不同，就直接插入了，两个对象hashCode不相等，他们equals一定是false。
+        // 由于ModuleMetricsVisitor中的equals和hashcode只与className和methodName有关，因此对于同一个visitorList，
+        // 其所有visitor的hashCode和equals方法均返回true
         Iterator iterator = new UniqueFilterIterator(list.iterator());
         while (iterator.hasNext()) {
             ModuleMetricsVisitor visitor = (ModuleMetricsVisitor) iterator.next();
-            result.add(new ModuleMetricsVisitor(visitor.getModuleName(), visitor.getMethodName()));
+            // 创建一个ModuleMetricsVisitor，用来保存visitorList中的汇总结果
+            result = new ModuleMetricsVisitor(visitor.getClassName(), visitor.getMethodName());
+            break;
         }
 
         count(list);
     }
 
-    private boolean equals(String srcModuleName, String destModuleName, String srcMethodName, String destMethodName) {
-        return srcModuleName.equals(destModuleName) && srcMethodName.equals(destMethodName);
+    private boolean equals(String srcClassName, String destClassName,
+                           String srcMethodName, String destMethodName) {
+        return srcClassName.equals(destClassName) && srcMethodName.equals(destMethodName);
     }
 
-    public List<ModuleMetricsVisitor> getResult() {
+    public ModuleMetricsVisitor getResult() {
         return result;
     }
 
-    public void setResult(List<ModuleMetricsVisitor> result) {
+    public void setResult(ModuleMetricsVisitor result) {
         this.result = result;
     }
 
+    @Data
     private class ModuleMetrics {
         private long invokeCount;
         private long invokeSuccCount;
@@ -194,86 +176,6 @@ public class MetricsTask implements Runnable {
         private long[] invokeHistogram;
         private String lastStackTraceDetail;
         private long lastErrorTime;
-
-        public long getInvokeCount() {
-            return invokeCount;
-        }
-
-        public void setInvokeCount(long invokeCount) {
-            this.invokeCount = invokeCount;
-        }
-
-        public long getInvokeSuccCount() {
-            return invokeSuccCount;
-        }
-
-        public void setInvokeSuccCount(long invokeSuccCount) {
-            this.invokeSuccCount = invokeSuccCount;
-        }
-
-        public long getInvokeFailCount() {
-            return invokeFailCount;
-        }
-
-        public void setInvokeFailCount(long invokeFailCount) {
-            this.invokeFailCount = invokeFailCount;
-        }
-
-        public long getInvokeFilterCount() {
-            return invokeFilterCount;
-        }
-
-        public void setInvokeFilterCount(long invokeFilterCount) {
-            this.invokeFilterCount = invokeFilterCount;
-        }
-
-        public long getInvokeTimespan() {
-            return invokeTimespan;
-        }
-
-        public void setInvokeTimespan(long invokeTimespan) {
-            this.invokeTimespan = invokeTimespan;
-        }
-
-        public long getInvokeMinTimespan() {
-            return invokeMinTimespan;
-        }
-
-        public void setInvokeMinTimespan(long invokeMinTimespan) {
-            this.invokeMinTimespan = invokeMinTimespan;
-        }
-
-        public long getInvokeMaxTimespan() {
-            return invokeMaxTimespan;
-        }
-
-        public void setInvokeMaxTimespan(long invokeMaxTimespan) {
-            this.invokeMaxTimespan = invokeMaxTimespan;
-        }
-
-        public long[] getInvokeHistogram() {
-            return invokeHistogram;
-        }
-
-        public void setInvokeHistogram(long[] invokeHistogram) {
-            this.invokeHistogram = invokeHistogram;
-        }
-
-        public String getLastStackTraceDetail() {
-            return lastStackTraceDetail;
-        }
-
-        public void setLastStackTraceDetail(String lastStackTraceDetail) {
-            this.lastStackTraceDetail = lastStackTraceDetail;
-        }
-
-        public long getLastErrorTime() {
-            return lastErrorTime;
-        }
-
-        public void setLastErrorTime(long lastErrorTime) {
-            this.lastErrorTime = lastErrorTime;
-        }
     }
 }
 

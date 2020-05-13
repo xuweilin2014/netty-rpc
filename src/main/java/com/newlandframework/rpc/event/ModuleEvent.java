@@ -1,0 +1,12 @@
+package com.newlandframework.rpc.event;
+
+public enum ModuleEvent {
+    INVOKE_EVENT,
+    INVOKE_SUCC_EVENT,
+    INVOKE_TIMESPAN_EVENT,
+    INVOKE_MAX_TIMESPAN_EVENT,
+    INVOKE_MIN_TIMESPAN_EVENT,
+    INVOKE_FILTER_EVENT,
+    INVOKE_FAIL_EVENT,
+    INVOKE_FAIL_STACKTRACE_EVENT
+}

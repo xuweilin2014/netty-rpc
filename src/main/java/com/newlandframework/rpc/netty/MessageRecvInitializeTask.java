@@ -1,41 +1,24 @@
-/**
- * Copyright (C) 2016 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.netty;
 
 import com.newlandframework.rpc.core.ReflectionUtils;
 import com.newlandframework.rpc.event.*;
-import com.newlandframework.rpc.event.AbstractInvokeEventBus.ModuleEvent;
+import com.newlandframework.rpc.event.ModuleEvent;
 import com.newlandframework.rpc.filter.ServiceFilterBinder;
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
 import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
+import com.newlandframework.rpc.observer.*;
 import com.newlandframework.rpc.parallel.SemaphoreWrapperFactory;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
-/**
- *
- */
+
 public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask {
-    private AtomicReference<ModuleMetricsVisitor> visitor = new AtomicReference<ModuleMetricsVisitor>();
-    private AtomicReference<InvokeEventBusFacade> facade = new AtomicReference<InvokeEventBusFacade>();
-    private AtomicReference<InvokeEventWatcher> watcher = new AtomicReference<InvokeEventWatcher>(new InvokeEventWatcher());
+    private ModuleMetricsVisitor visitor;
+    private InvokeEventFacade facade;
+    private InvokeEventTarget target = new InvokeEventTarget();
     private SemaphoreWrapperFactory factory = SemaphoreWrapperFactory.getInstance();
 
     public MessageRecvInitializeTask(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {
@@ -47,19 +30,28 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
         Class cls = handlerMap.get(request.getClassName()).getClass();
         boolean binder = ServiceFilterBinder.class.isAssignableFrom(cls);
         if (binder) {
+            //获取要调用的RPC服务实现类，比如客户端要调用PersonManage的save方法，实际上就是要调用PersonManageImpl的save方法，
+            //所以这里获取到的就是PersonManageImpl.class
             cls = ((ServiceFilterBinder) handlerMap.get(request.getClassName())).getObject().getClass();
         }
 
         ReflectionUtils utils = new ReflectionUtils();
 
         try {
+            //获取客户端要调用的方法
             Method method = ReflectionUtils.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
             utils.listMethod(method, false);
+            //获取客户端要调用的方法的方法签名
             String signatureMethod = utils.getProvider().toString();
-            visitor.set(ModuleMetricsHandler.getInstance().visit(request.getClassName(), signatureMethod));
-            facade.set(new InvokeEventBusFacade(ModuleMetricsHandler.getInstance(), visitor.get().getModuleName(), visitor.get().getMethodName()));
-            watcher.get().addObserver(new InvokeObserver(facade.get(), visitor.get()));
-            watcher.get().watch(ModuleEvent.INVOKE_EVENT);
+            //获取和此方法对应的ModuleMetricsVisitor对象，用来记录这个方法的调用情况
+            visitor = ModuleMetricsHandler.getInstance().getVisitor(request.getClassName(), signatureMethod);
+            //创建了一个InvokeEventFacade类型的对象facade，它包含了所有INVOKE类型的Event对象，并且这些Event对象中都
+            //保存了handler、className、methodName这三个参数
+            facade = new InvokeEventFacade(ModuleMetricsHandler.getInstance(), visitor.getClassName(), visitor.getMethodName());
+            //target是被观察的对象，通过addObserver方法可以添加观察者对象，这里是InvokeObserver
+            target.addObserver(new InvokeObserver(facade, visitor));
+            //调用notify方法，回调所有观察者对象的update方法，并且将INVOKE_EVENT事件进行传递，但是只有InvokeObserver可以被接收到
+            target.notify(ModuleEvent.INVOKE_EVENT);
         } finally {
             utils.clearProvider();
         }
@@ -67,20 +59,22 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
 
     @Override
     protected void injectSuccInvoke(long invokeTimespan) {
-        watcher.get().addObserver(new InvokeSuccObserver(facade.get(), visitor.get(), invokeTimespan));
-        watcher.get().watch(ModuleEvent.INVOKE_SUCC_EVENT);
+        target.addObserver(new InvokeSuccObserver(facade, visitor, invokeTimespan));
+        target.notify(ModuleEvent.INVOKE_SUCC_EVENT);
     }
 
+    // 当方法调用失败之后，就会调用此方法，作用是更新方法调用失败的次数、方法调用最后一次失败的时间
+    // 以及最后一次失败的堆栈明细这三个参数。
     @Override
     protected void injectFailInvoke(Throwable error) {
-        watcher.get().addObserver(new InvokeFailObserver(facade.get(), visitor.get(), error));
-        watcher.get().watch(ModuleEvent.INVOKE_FAIL_EVENT);
+        target.addObserver(new InvokeFailObserver(facade, visitor, error));
+        target.notify(ModuleEvent.INVOKE_FAIL_EVENT);
     }
 
     @Override
     protected void injectFilterInvoke() {
-        watcher.get().addObserver(new InvokeFilterObserver(facade.get(), visitor.get()));
-        watcher.get().watch(ModuleEvent.INVOKE_FILTER_EVENT);
+        target.addObserver(new InvokeFilterObserver(facade, visitor));
+        target.notify(ModuleEvent.INVOKE_FILTER_EVENT);
     }
 
     @Override

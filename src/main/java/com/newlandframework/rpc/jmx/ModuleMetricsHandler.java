@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.jmx;
 
 import com.newlandframework.rpc.netty.MessageRecvExecutor;
@@ -37,13 +22,6 @@ import java.util.concurrent.Semaphore;
 
 import static com.newlandframework.rpc.core.RpcSystemConfig.DELIMITER;
 
-/**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:ModuleMetricsHandler.java
- * @description:ModuleMetricsHandler功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/10/12
- */
 public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
     public final static String MBEAN_NAME = "com.newlandframework.rpc:type=ModuleMetricsHandler";
     public final static int MODULE_METRICS_JMX_PORT = 1098;
@@ -64,36 +42,32 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
     }
 
     @Override
-    public List<ModuleMetricsVisitor> getModuleMetricsVisitor() {
-        return super.getModuleMetricsVisitor();
-    }
-
-    @Override
-    protected ModuleMetricsVisitor visitCriticalSection(String moduleName, String methodName) {
+    protected ModuleMetricsVisitor visitCriticalSection(String className, String methodName) {
         final String method = methodName.trim();
-        final String module = moduleName.trim();
+        final String cls = className.trim();
 
-        //FIXME: 2017/10/13 by tangjie
-        //JMX度量临界区要注意线程间的并发竞争,否则会统计数据失真
+        // JMX度量临界区要注意线程间的并发竞争,否则会统计数据失真
+        // iterator.next返回的元素都必须符合Predicate中的条件，也就是说使得其中的evaluate方法返回true
+        // evaluate使得返回的visitor与前面的cls#method对应，如果不存在的话，就直接创建一个visitor，并且
+        // 将其加入到队列visitorList中。
         Iterator iterator = new FilterIterator(visitorList.iterator(), new Predicate() {
             @Override
             public boolean evaluate(Object object) {
-                String statModuleName = ((ModuleMetricsVisitor) object).getModuleName();
+                String statClassName = ((ModuleMetricsVisitor) object).getClassName();
                 String statMethodName = ((ModuleMetricsVisitor) object).getMethodName();
-                return statModuleName.compareTo(module) == 0 && statMethodName.compareTo(method) == 0;
+                return statClassName.compareTo(cls) == 0 && statMethodName.compareTo(method) == 0;
             }
         });
 
         ModuleMetricsVisitor visitor = null;
-        while (iterator.hasNext()) {
+        if (iterator.hasNext()) {
             visitor = (ModuleMetricsVisitor) iterator.next();
-            break;
         }
 
         if (visitor != null) {
             return visitor;
         } else {
-            visitor = new ModuleMetricsVisitor(module, method);
+            visitor = new ModuleMetricsVisitor(cls, method);
             addModuleMetricsVisitor(visitor);
             return visitor;
         }
@@ -106,42 +80,39 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
                 return ModuleMetricsHandler.class.getSimpleName();
             }
 
+            /**
+             * 让客户端可以连接到JMXConnectorServer服务器，然后可以通过JConsole或者通过网页，对NettyRPC服务端的调用情况进行监控
+             */
             @Override
             public void run() {
                 MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
                 try {
                     latch.await();
+                    //这个步骤很重要，注册一个端口，绑定url后用于客户端通过rmi方式(也就是JConsole)连接JMXConnectorServer
                     LocateRegistry.createRegistry(MODULE_METRICS_JMX_PORT);
                     MessageRecvExecutor ref = MessageRecvExecutor.getInstance();
-                    String ipAddr = StringUtils.isNotEmpty(ref.getServerAddress()) ? StringUtils.substringBeforeLast(ref.getServerAddress(), DELIMITER) : "localhost";
+                    String ipAddr = StringUtils.isNotEmpty(ref.getServerAddress()) ? StringUtils.substringBeforeLast(
+                            ref.getServerAddress(), DELIMITER) : "localhost";
+
+                    //URL路径的结尾可以随意指定，但如果需要用JConsole来进行连接，则必须使用jmx:rmi
+                    //这里最后拼接成为：service:jmx:rmi:///jndi/rmi://ipAddr:1098/NettyRPCServer
                     moduleMetricsJmxUrl = "service:jmx:rmi:///jndi/rmi://" + ipAddr + ":" + MODULE_METRICS_JMX_PORT + "/NettyRPCServer";
                     JMXServiceURL url = new JMXServiceURL(moduleMetricsJmxUrl);
                     JMXConnectorServer cs = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbs);
 
                     ObjectName name = new ObjectName(MBEAN_NAME);
-
                     mbs.registerMBean(ModuleMetricsHandler.this, name);
-                    mbs.addNotificationListener(name, listener, null, null);
-                    cs.start();
 
+                    //在此ModuleMetricsHandler上注册一个NotificationListener，用来处理发生的事件。
+                    mbs.addNotificationListener(name, listener, null, null);
+
+                    cs.start();
                     semaphoreWrapper.release();
 
-                    System.out.printf("NettyRPC JMX server is start success!\njmx-url:[ %s ]\n\n", moduleMetricsJmxUrl);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (MBeanRegistrationException e) {
-                    e.printStackTrace();
-                } catch (InstanceAlreadyExistsException e) {
-                    e.printStackTrace();
-                } catch (NotCompliantMBeanException e) {
-                    e.printStackTrace();
-                } catch (MalformedObjectNameException e) {
-                    e.printStackTrace();
-                } catch (InstanceNotFoundException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
+                    System.err.printf("【jmx support】:NettyRPC JMX server starts successfully!\njmx-url:[ %s ]\n\n", moduleMetricsJmxUrl);
+                } catch (IOException | MBeanRegistrationException | InstanceAlreadyExistsException
+                        | NotCompliantMBeanException | MalformedObjectNameException
+                        | InstanceNotFoundException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -169,10 +140,14 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
 
     public MBeanServerConnection connect() {
         try {
+            //semaphore在初始化的时候为0，只有start方法中将JMXConnectorServer启动之后，才会调用semaphore的release方法，使semaphore变为1。
+            //由于此方法只在ModuleMetricsHtmlBuilder的init方法中被调用，因此也就是通过semaphoreWrapper确保在JMXConnectorServer启动后，
+            //ModuleMetricsHtmlBuilder才能获取到与JMXConnectorServer的连接connection
             if (!semaphoreWrapper.isRelease()) {
                 semaphoreWrapper.acquire();
             }
 
+            //与上面start方法中的JMXConnectorServer建立连接
             JMXServiceURL url = new JMXServiceURL(moduleMetricsJmxUrl);
             JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
             connection = jmxc.getMBeanServerConnection();

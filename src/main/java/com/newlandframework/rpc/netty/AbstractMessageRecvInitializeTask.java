@@ -17,9 +17,9 @@ import java.util.concurrent.Callable;
 
 
 public abstract class AbstractMessageRecvInitializeTask implements Callable<Boolean> {
-    protected MessageRequest request = null;
-    protected MessageResponse response = null;
-    protected Map<String, Object> handlerMap = null;
+    protected MessageRequest request;
+    protected MessageResponse response;
+    protected Map<String, Object> handlerMap;
     protected static final String METHOD_MAPPED_NAME = "invoke";
     protected boolean returnNotNull = true;
     protected long invokeTimespan;
@@ -31,6 +31,11 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         this.handlerMap = handlerMap;
     }
 
+    /**
+     * 1.如果开启了JMX监控的话，使用的是MessageRecvInitializeTask，为了提高JMX数据统计监控的精度，服务端对RPC请求进行隔离，即如下所示的acquire和release方法，
+     * 一次允许一个线程进入。但是如果客户端是通过AsyncInvoker异步调用的方式进行RPC请求的话，则会把异步并行加载强制转成异步串行加载。这并不是我们希望看到的。
+     * 2.如果没有开启JMX监控的话，使用的是MessageRecvInitializeTaskAdapter，它的acquire和release均为空方法，因此异步调用可以并行执行。
+     */
     @Override
     public Boolean call() {
         try {

@@ -1,18 +1,3 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.jmx;
 
 import com.newlandframework.rpc.core.ReflectionUtils;
@@ -26,14 +11,11 @@ import java.util.Set;
 import java.util.Iterator;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:HashModuleMetricsVisitor.java
- * @description:HashModuleMetricsVisitor功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/10/26
+ * HashModuleMetricsVisitor是对ModuleMetricsVisitor进行一层封装。即RPC服务器中每一个接口的每一个方法创建一个visitorList，
+ * 长度为SYSTEM_PROPERTY_JMX_METRICS_HASH_NUMS。最后把这些visitorList加入到hashVisitorList中。
  */
 public class HashModuleMetricsVisitor {
-    private List<List<ModuleMetricsVisitor>> hashVisitorList = new ArrayList<List<ModuleMetricsVisitor>>();
+    private List<List<ModuleMetricsVisitor>> hashVisitorList = new ArrayList<>();
 
     private static final HashModuleMetricsVisitor INSTANCE = new HashModuleMetricsVisitor();
 
@@ -52,15 +34,18 @@ public class HashModuleMetricsVisitor {
     private void init() {
         Map<String, Object> map = MessageRecvExecutor.getInstance().getHandlerMap();
         ReflectionUtils utils = new ReflectionUtils();
-        Set<String> s = (Set<String>) map.keySet();
+        //集合s中保存的为RPC服务器的所有接口
+        Set<String> s = map.keySet();
         Iterator<String> iter = s.iterator();
         String key;
         while (iter.hasNext()) {
             key = iter.next();
             try {
+                //获取一个接口中的所有方法签名
                 List<String> list = utils.getClassMethodSignature(Class.forName(key));
                 for (String signature : list) {
-                    List<ModuleMetricsVisitor> visitorList = new ArrayList<ModuleMetricsVisitor>();
+                    List<ModuleMetricsVisitor> visitorList = new ArrayList<>();
+                    //为每一个方法签名都创建一个visitorList，长度为JMX_METRICS_HASH_NUMS，并且创建之后加入到hashVisitorList
                     for (int i = 0; i < RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_HASH_NUMS; i++) {
                         ModuleMetricsVisitor visitor = new ModuleMetricsVisitor(key, signature);
                         visitor.setHashKey(i);
@@ -82,8 +67,5 @@ public class HashModuleMetricsVisitor {
         return hashVisitorList;
     }
 
-    public void setHashVisitorList(List<List<ModuleMetricsVisitor>> hashVisitorList) {
-        this.hashVisitorList = hashVisitorList;
-    }
 }
 

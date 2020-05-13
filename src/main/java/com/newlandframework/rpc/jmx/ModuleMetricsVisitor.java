@@ -1,22 +1,4 @@
-/**
- * Copyright (C) 2017 Newland Group Holding Limited
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.newlandframework.rpc.jmx;
-
-import com.alibaba.druid.util.Histogram;
-import com.newlandframework.rpc.core.RpcSystemConfig;
 
 import javax.management.JMException;
 import javax.management.openmbean.*;
@@ -27,15 +9,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:ModuleMetricsVisitor.java
- * @description:ModuleMetricsVisitor功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2017/10/12
+ * 作为ModuleMetricsHandler这个bean中的一个属性，必须要有getter方法来获取对象中的属性值
  */
 public class ModuleMetricsVisitor {
     public static final long DEFAULT_INVOKE_MIN_TIMESPAN = 3600 * 1000L;
@@ -44,31 +21,48 @@ public class ModuleMetricsVisitor {
     private static final OpenType<?>[] THROWABLE_TYPES = new OpenType<?>[]{SimpleType.STRING, SimpleType.STRING, SimpleType.STRING};
     private static CompositeType THROWABLE_COMPOSITE_TYPE = null;
 
-    private String moduleName;
+    private String className;
     private String methodName;
+
+    //方法调用次数
     private volatile long invokeCount = 0L;
+    //方法调用成功的次数
     private volatile long invokeSuccCount = 0L;
+    //方法调用失败的次数
     private volatile long invokeFailCount = 0L;
+    //方法被过滤的次数
     private volatile long invokeFilterCount = 0L;
+    //方法调用耗时
     private long invokeTimespan = 0L;
+    //方法调用的最小耗时，初始值为3600s
     private long invokeMinTimespan = DEFAULT_INVOKE_MIN_TIMESPAN;
+    //方法调用的最大耗时，初始值为0s
     private long invokeMaxTimespan = 0L;
-    private long[] invokeHistogram;
     private Exception lastStackTrace;
+    //方法最后一次调用失败堆栈明细
     private String lastStackTraceDetail;
+    //方法最后一次调用失败的时间
     private long lastErrorTime;
     private int hashKey = 0;
 
-    private Histogram histogram = new Histogram(TimeUnit.MILLISECONDS, new long[]{1, 10, 100, 1000, 10 * 1000, 100 * 1000, 1000 * 1000});
+    /**
+     * 下面这4个AtomicLongFieldUpdater是用来更新4个Long类型的属性值：invokeCount、invokeSuccCount、invokeFailCount、invokeFilterCount。
+     * 使用AtomicLongFieldUpdater有以下2个好处：
+     * 1.AtomicLong对象的引用和值统统不需要，因而不会有大量的AtomicLong对象存在于堆上
+     * 2.AtomicLongFieldUpdater是一个静态常量，它在类加载的时候就放在了堆空间的常量池中，对于N个对象，只需要一个AtomicLongFieldUpdater即可（类静态常量）
+     */
+    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeCount");
+    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeSuccCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeSuccCount");
+    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeFailCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFailCount");
+    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeFilterCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFilterCount");
 
-    private final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeCountUpdater = AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeCount");
-    private final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeSuccCountUpdater = AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeSuccCount");
-    private final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeFailCountUpdater = AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFailCount");
-    private final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeFilterCountUpdater = AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFilterCount");
-
-    @ConstructorProperties({"moduleName", "methodName"})
-    public ModuleMetricsVisitor(String moduleName, String methodName) {
-        this.moduleName = moduleName;
+    @ConstructorProperties({"className", "methodName"})
+    public ModuleMetricsVisitor(String className, String methodName) {
+        this.className = className;
         this.methodName = methodName;
         clear();
     }
@@ -84,11 +78,10 @@ public class ModuleMetricsVisitor {
         invokeSuccCountUpdater.set(this, 0);
         invokeFailCountUpdater.set(this, 0);
         invokeFilterCountUpdater.set(this, 0);
-        histogram.reset();
     }
 
     public void reset() {
-        moduleName = "";
+        className = "";
         methodName = "";
         clear();
     }
@@ -128,7 +121,9 @@ public class ModuleMetricsVisitor {
 
     public void setLastStackTrace(Exception lastStackTrace) {
         this.lastStackTrace = lastStackTrace;
+        //获取方法上次调用异常得堆栈信息
         this.lastStackTraceDetail = getLastStackTrace();
+        //获取方法调用异常的时间
         this.lastErrorTime = System.currentTimeMillis();
     }
 
@@ -157,7 +152,7 @@ public class ModuleMetricsVisitor {
             return null;
         }
 
-        Map<String, Object> map = new HashMap<String, Object>(512);
+        Map<String, Object> map = new HashMap<>(512);
 
         map.put("class", error.getClass().getName());
         map.put("message", error.getMessage());
@@ -166,12 +161,12 @@ public class ModuleMetricsVisitor {
         return new CompositeDataSupport(getThrowableCompositeType(), map);
     }
 
-    public String getModuleName() {
-        return moduleName;
+    public String getClassName() {
+        return className;
     }
 
-    public void setModuleName(String moduleName) {
-        this.moduleName = moduleName;
+    public void setClassName(String moduleName) {
+        this.className = moduleName;
     }
 
     public String getMethodName() {
@@ -182,68 +177,64 @@ public class ModuleMetricsVisitor {
         this.methodName = methodName;
     }
 
+    /**
+     * 获取、设置、增加invokeCount的值
+     */
     public long getInvokeCount() {
-        return this.invokeCountUpdater.get(this);
+        return invokeCountUpdater.get(this);
     }
 
     public void setInvokeCount(long invokeCount) {
-        this.invokeCountUpdater.set(this, invokeCount);
+        invokeCountUpdater.set(this, invokeCount);
     }
 
     public long incrementInvokeCount() {
-        return this.invokeCountUpdater.incrementAndGet(this);
+        return invokeCountUpdater.incrementAndGet(this);
     }
 
+    /**
+     * 获取、设置、增加invokeSuccCount的值
+     */
     public long getInvokeSuccCount() {
-        return this.invokeSuccCountUpdater.get(this);
+        return invokeSuccCountUpdater.get(this);
     }
 
     public void setInvokeSuccCount(long invokeSuccCount) {
-        this.invokeSuccCountUpdater.set(this, invokeSuccCount);
+        invokeSuccCountUpdater.set(this, invokeSuccCount);
     }
 
     public long incrementInvokeSuccCount() {
-        return this.invokeSuccCountUpdater.incrementAndGet(this);
+        return invokeSuccCountUpdater.incrementAndGet(this);
     }
 
+    /**
+     * 获取、设置、增加invokeFailCount的值
+     */
     public long getInvokeFailCount() {
-        return this.invokeFailCountUpdater.get(this);
+        return invokeFailCountUpdater.get(this);
     }
 
     public void setInvokeFailCount(long invokeFailCount) {
-        this.invokeFailCountUpdater.set(this, invokeFailCount);
+        invokeFailCountUpdater.set(this, invokeFailCount);
     }
 
     public long incrementInvokeFailCount() {
-        return this.invokeFailCountUpdater.incrementAndGet(this);
+        return invokeFailCountUpdater.incrementAndGet(this);
     }
 
+    /**
+     * 获取、设置、增加invokeFilterCountUpdater的值
+     */
     public long getInvokeFilterCount() {
-        return this.invokeFilterCountUpdater.get(this);
+        return invokeFilterCountUpdater.get(this);
     }
 
     public void setInvokeFilterCount(long invokeFilterCount) {
-        this.invokeFilterCountUpdater.set(this, invokeFilterCount);
+        invokeFilterCountUpdater.set(this, invokeFilterCount);
     }
 
     public long incrementInvokeFilterCount() {
-        return this.invokeFilterCountUpdater.incrementAndGet(this);
-    }
-
-    public void setHistogram(Histogram histogram) {
-        this.histogram = histogram;
-    }
-
-    public Histogram getHistogram() {
-        return histogram;
-    }
-
-    public long[] getInvokeHistogram() {
-        return RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_HASH_SUPPORT ? invokeHistogram : histogram.toArray();
-    }
-
-    public void setInvokeHistogram(long[] invokeHistogram) {
-        this.invokeHistogram = invokeHistogram;
+        return invokeFilterCountUpdater.incrementAndGet(this);
     }
 
     public long getInvokeTimespan() {
@@ -282,19 +273,24 @@ public class ModuleMetricsVisitor {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((moduleName == null) ? 0 : moduleName.hashCode());
+        result = prime * result + ((className == null) ? 0 : className.hashCode());
         result = prime * result + ((methodName == null) ? 0 : methodName.hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        return moduleName.equals(((ModuleMetricsVisitor) obj).moduleName) && methodName.equals(((ModuleMetricsVisitor) obj).methodName);
+        return className.equals(((ModuleMetricsVisitor) obj).className)
+                && methodName.equals(((ModuleMetricsVisitor) obj).methodName);
     }
 
     @Override
     public String toString() {
-        String metrics = String.format("<<[moduleName:%s]-[methodName:%s]>> [invokeCount:%d][invokeSuccCount:%d][invokeFilterCount:%d][invokeTimespan:%d][invokeMinTimespan:%d][invokeMaxTimespan:%d][invokeFailCount:%d][lastErrorTime:%d][lastStackTraceDetail:%s]\n", moduleName, methodName, invokeCount, invokeSuccCount, invokeFilterCount, invokeTimespan, invokeMinTimespan, invokeMaxTimespan, invokeFailCount, lastErrorTime, lastStackTraceDetail);
+        String metrics = String.format("<<[moduleName:%s]-[methodName:%s]>> [invokeCount:%d][invokeSuccCount:%d]" +
+                "[invokeFilterCount:%d][invokeTimespan:%d][invokeMinTimespan:%d][invokeMaxTimespan:%d]" +
+                "[invokeFailCount:%d][lastErrorTime:%d][lastStackTraceDetail:%s]\n",
+                className, methodName, invokeCount, invokeSuccCount, invokeFilterCount, invokeTimespan,
+                invokeMinTimespan, invokeMaxTimespan, invokeFailCount, lastErrorTime, lastStackTraceDetail);
         return metrics;
     }
 }

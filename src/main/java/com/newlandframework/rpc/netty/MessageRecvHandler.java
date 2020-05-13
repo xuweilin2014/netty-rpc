@@ -27,8 +27,8 @@ public class MessageRecvHandler extends ChannelInboundHandlerAdapter {
         MessageResponse response = new MessageResponse();
         RecvInitializeTaskFacade facade = new RecvInitializeTaskFacade(request, response, handlerMap);
         Callable<Boolean> recvTask = facade.getTask();
-        // 将任务 recvTask 放入到 MessageRecvExecutor 中的线程池中去执行。调用 recvTask 中的 call 方法，
-        // 即调用 RpcServer 本地的方法，如果方法调用成功，就将结果封装成 MessageResponse 并且通过 Netty 发送至客户端
+        //将任务 recvTask 放入到 MessageRecvExecutor 中的线程池中去执行。调用 recvTask 中的 call 方法，
+        //即调用 RpcServer 本地的方法，如果方法调用成功，就将结果封装成 MessageResponse 并且通过 Netty 发送至客户端
         MessageRecvExecutor.submit(recvTask, ctx, request, response);
     }
 

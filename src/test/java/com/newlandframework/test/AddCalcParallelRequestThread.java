@@ -25,7 +25,11 @@ public class AddCalcParallelRequestThread implements Runnable {
         try {
             signal.await();
             int add = calc.add(taskNumber, taskNumber);
-            System.out.println("calc add result:[" + add + "]");
+            if (add != taskNumber * 2){
+                System.err.println("compute error: " + taskNumber + " * 2 != " + add);
+            }else{
+                System.out.println("calc add result of " + taskNumber + " * 2 :[" + add + "]");
+            }
         } catch (InterruptedException ex) {
             Logger.getLogger(AddCalcParallelRequestThread.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InvokeTimeoutException ex) {
