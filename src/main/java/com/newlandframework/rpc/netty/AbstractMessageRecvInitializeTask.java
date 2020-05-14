@@ -32,18 +32,16 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
     }
 
     /**
-     * 1.如果开启了JMX监控的话，使用的是MessageRecvInitializeTask，为了提高JMX数据统计监控的精度，服务端对RPC请求进行隔离，即如下所示的acquire和release方法，
-     * 一次允许一个线程进入。但是如果客户端是通过AsyncInvoker异步调用的方式进行RPC请求的话，则会把异步并行加载强制转成异步串行加载。这并不是我们希望看到的。
-     * 2.如果没有开启JMX监控的话，使用的是MessageRecvInitializeTaskAdapter，它的acquire和release均为空方法，因此异步调用可以并行执行。
+     * 1.如果开启了JMX监控的话，使用的是MessageRecvInitializeTask
+     * 2.如果没有开启JMX监控的话，使用的是MessageRecvInitializeTaskAdapter
      */
     @Override
     public Boolean call() {
         try {
-            acquire();
             response.setMessageId(request.getMessageId());
             injectInvoke();
             Object result = reflect(request);
-            boolean isInvokeSucc = ((returnNotNull && result != null) || !returnNotNull);
+            boolean isInvokeSucc = (!returnNotNull || result != null);
             // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
             if (isInvokeSucc) {
                 response.setResult(result);
@@ -63,8 +61,6 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
             System.err.printf("RPC Server invoke error!\n");
             injectFailInvoke(t);
             return Boolean.FALSE;
-        } finally {
-            release();
         }
     }
 
@@ -162,9 +158,5 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
     protected abstract void injectFailInvoke(Throwable error);
 
     protected abstract void injectFilterInvoke();
-
-    protected abstract void acquire();
-
-    protected abstract void release();
 }
 

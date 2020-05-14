@@ -1,5 +1,6 @@
 package com.newlandframework.rpc.observer;
 
+import com.newlandframework.rpc.event.AbstractInvokeEvent;
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
 import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
@@ -25,8 +26,8 @@ public class InvokeObserver extends AbstractInvokeObserver {
     @Override
     public void update(Observable o, Object arg) {
         if (arg == ModuleEvent.INVOKE_EVENT) {
-            super.getFacade().fetchEvent(ModuleEvent.INVOKE_EVENT).notify(super.getVisitor().getInvokeCount(),
-                    super.getVisitor().incrementInvokeCount());
+            AbstractInvokeEvent event = super.getFacade().fetchEvent(ModuleEvent.INVOKE_EVENT);
+            event.notify(super.getFacade(), null);
         }
     }
 }

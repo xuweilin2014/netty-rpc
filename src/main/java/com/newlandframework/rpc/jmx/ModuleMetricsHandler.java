@@ -6,22 +6,23 @@ import com.newlandframework.rpc.parallel.SemaphoreWrapper;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.lang3.StringUtils;
-
 import javax.management.*;
 import javax.management.remote.*;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 
 import static com.newlandframework.rpc.core.RpcSystemConfig.DELIMITER;
 
+/**
+ * ModuleMetricsHandler是一个MXBean，或者说一个管理构件，用来代表一个被管理的资源实例。
+ * 拥有属性：ModuleMetricsVisitor
+ * 拥有行为：addModuleMetricsVisitor
+ */
 public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
     public final static String MBEAN_NAME = "com.newlandframework.rpc:type=ModuleMetricsHandler";
     public final static int MODULE_METRICS_JMX_PORT = 1098;
@@ -87,7 +88,6 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
             public void run() {
                 MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
                 try {
-                    latch.await();
                     //这个步骤很重要，注册一个端口，绑定url后用于客户端通过rmi方式(也就是JConsole)连接JMXConnectorServer
                     LocateRegistry.createRegistry(MODULE_METRICS_JMX_PORT);
                     MessageRecvExecutor ref = MessageRecvExecutor.getInstance();
@@ -109,10 +109,10 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
                     cs.start();
                     semaphoreWrapper.release();
 
-                    System.err.printf("【jmx support】:NettyRPC JMX server starts successfully!\njmx-url:[ %s ]\n\n", moduleMetricsJmxUrl);
-                } catch (IOException | MBeanRegistrationException | InstanceAlreadyExistsException
-                        | NotCompliantMBeanException | MalformedObjectNameException
-                        | InstanceNotFoundException | InterruptedException e) {
+                    System.err.printf("【jmx support】:NettyRPC JMX server starts successfully!\n【jmx-url】:%s\n\n", moduleMetricsJmxUrl);
+                } catch (IOException | MalformedObjectNameException | InstanceNotFoundException
+                        | InstanceAlreadyExistsException | NotCompliantMBeanException
+                        | MBeanRegistrationException e) {
                     e.printStackTrace();
                 }
             }
@@ -124,11 +124,6 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
         try {
             ObjectName name = new ObjectName(MBEAN_NAME);
             mbs.unregisterMBean(name);
-            ExecutorService executor = getExecutor();
-            executor.shutdown();
-            while (!executor.isTerminated()) {
-
-            }
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();
         } catch (InstanceNotFoundException e) {

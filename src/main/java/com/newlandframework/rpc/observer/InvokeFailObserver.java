@@ -28,11 +28,10 @@ public class InvokeFailObserver extends AbstractInvokeObserver {
         if (arg == ModuleEvent.INVOKE_FAIL_EVENT) {
             //更新方法调用失败的次数
             super.getFacade().fetchEvent(ModuleEvent.INVOKE_FAIL_EVENT)
-                    .notify(super.getVisitor().getInvokeFailCount(),
-                            super.getVisitor().incrementInvokeFailCount());
+                    .notify(super.getFacade(), null);
             //更新方法调用最后一次失败的时间以及最后一次失败的堆栈明细
             super.getFacade().fetchEvent(ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT)
-                    .notify(null, error);
+                    .notify(super.getFacade(), error);
         }
     }
 }

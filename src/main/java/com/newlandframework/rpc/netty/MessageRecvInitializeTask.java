@@ -1,7 +1,7 @@
 package com.newlandframework.rpc.netty;
 
 import com.newlandframework.rpc.core.ReflectionUtils;
-import com.newlandframework.rpc.event.*;
+import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
 import com.newlandframework.rpc.filter.ServiceFilterBinder;
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
@@ -9,8 +9,6 @@ import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
 import com.newlandframework.rpc.observer.*;
-import com.newlandframework.rpc.parallel.SemaphoreWrapperFactory;
-
 import java.lang.reflect.Method;
 import java.util.Map;
 
@@ -19,7 +17,6 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
     private ModuleMetricsVisitor visitor;
     private InvokeEventFacade facade;
     private InvokeEventTarget target = new InvokeEventTarget();
-    private SemaphoreWrapperFactory factory = SemaphoreWrapperFactory.getInstance();
 
     public MessageRecvInitializeTask(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {
         super(request, response, handlerMap);
@@ -46,8 +43,8 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
             //获取和此方法对应的ModuleMetricsVisitor对象，用来记录这个方法的调用情况
             visitor = ModuleMetricsHandler.getInstance().getVisitor(request.getClassName(), signatureMethod);
             //创建了一个InvokeEventFacade类型的对象facade，它包含了所有INVOKE类型的Event对象，并且这些Event对象中都
-            //保存了handler、className、methodName这三个参数
-            facade = new InvokeEventFacade(ModuleMetricsHandler.getInstance(), visitor.getClassName(), visitor.getMethodName());
+            //保存了handler、visitor这两个参数
+            facade = new InvokeEventFacade(ModuleMetricsHandler.getInstance(), visitor);
             //target是被观察的对象，通过addObserver方法可以添加观察者对象，这里是InvokeObserver
             target.addObserver(new InvokeObserver(facade, visitor));
             //调用notify方法，回调所有观察者对象的update方法，并且将INVOKE_EVENT事件进行传递，但是只有InvokeObserver可以被接收到
@@ -75,15 +72,5 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
     protected void injectFilterInvoke() {
         target.addObserver(new InvokeFilterObserver(facade, visitor));
         target.notify(ModuleEvent.INVOKE_FILTER_EVENT);
-    }
-
-    @Override
-    protected void acquire() {
-        factory.acquire();
-    }
-
-    @Override
-    protected void release() {
-        factory.release();
     }
 }

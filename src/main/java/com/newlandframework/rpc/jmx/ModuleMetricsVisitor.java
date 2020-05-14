@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import java.util.function.LongBinaryOperator;
 
 /**
  * 作为ModuleMetricsHandler这个bean中的一个属性，必须要有getter方法来获取对象中的属性值
@@ -32,21 +33,21 @@ public class ModuleMetricsVisitor {
     private volatile long invokeFailCount = 0L;
     //方法被过滤的次数
     private volatile long invokeFilterCount = 0L;
-    //方法调用耗时
-    private long invokeTimespan = 0L;
+    //方法调用的耗时累加
+    private volatile long accumulateTimespan = 0L;
     //方法调用的最小耗时，初始值为3600s
-    private long invokeMinTimespan = DEFAULT_INVOKE_MIN_TIMESPAN;
+    private volatile long invokeMinTimespan = DEFAULT_INVOKE_MIN_TIMESPAN;
     //方法调用的最大耗时，初始值为0s
-    private long invokeMaxTimespan = 0L;
+    private volatile long invokeMaxTimespan = 0L;
     private Exception lastStackTrace;
     //方法最后一次调用失败堆栈明细
     private String lastStackTraceDetail;
     //方法最后一次调用失败的时间
     private long lastErrorTime;
-    private int hashKey = 0;
 
     /**
-     * 下面这4个AtomicLongFieldUpdater是用来更新4个Long类型的属性值：invokeCount、invokeSuccCount、invokeFailCount、invokeFilterCount。
+     * 下面这7个AtomicLongFieldUpdater是用来更新7个Long类型的属性值：invokeCount、invokeSuccCount、invokeFailCount、invokeFilterCount、
+     * accumulateTimespan、invokeMaxTimespan、invokeMinTimespan
      * 使用AtomicLongFieldUpdater有以下2个好处：
      * 1.AtomicLong对象的引用和值统统不需要，因而不会有大量的AtomicLong对象存在于堆上
      * 2.AtomicLongFieldUpdater是一个静态常量，它在类加载的时候就放在了堆空间的常量池中，对于N个对象，只需要一个AtomicLongFieldUpdater即可（类静态常量）
@@ -59,6 +60,12 @@ public class ModuleMetricsVisitor {
             AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFailCount");
     private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeFilterCountUpdater =
             AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFilterCount");
+    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> accumulateTimespanUpdater =
+            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "accumulateTimespan");
+    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeMaxTimespanUpdater =
+            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeMaxTimespan");
+    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeMinTimespanUpdater =
+            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeMinTimespan");
 
     @ConstructorProperties({"className", "methodName"})
     public ModuleMetricsVisitor(String className, String methodName) {
@@ -69,7 +76,7 @@ public class ModuleMetricsVisitor {
 
     public void clear() {
         lastStackTraceDetail = "";
-        invokeTimespan = 0L;
+        accumulateTimespan = 0L;
         invokeMinTimespan = DEFAULT_INVOKE_MIN_TIMESPAN;
         invokeMaxTimespan = 0L;
         lastErrorTime = 0L;
@@ -102,6 +109,10 @@ public class ModuleMetricsVisitor {
         return format.format(new Date(lastErrorTime));
     }
 
+    public void setLastErrorTime(long lastErrorTime) {
+        this.lastErrorTime = lastErrorTime;
+    }
+
     public String getLastStackTrace() {
         if (lastStackTrace == null) {
             return null;
@@ -119,7 +130,7 @@ public class ModuleMetricsVisitor {
         return buf.toString();
     }
 
-    public void setLastStackTrace(Exception lastStackTrace) {
+    public synchronized void setLastStackTrace(Exception lastStackTrace) {
         this.lastStackTrace = lastStackTrace;
         //获取方法上次调用异常得堆栈信息
         this.lastStackTraceDetail = getLastStackTrace();
@@ -188,8 +199,8 @@ public class ModuleMetricsVisitor {
         invokeCountUpdater.set(this, invokeCount);
     }
 
-    public long incrementInvokeCount() {
-        return invokeCountUpdater.incrementAndGet(this);
+    public void incrementInvokeCount() {
+        invokeCountUpdater.incrementAndGet(this);
     }
 
     /**
@@ -203,8 +214,8 @@ public class ModuleMetricsVisitor {
         invokeSuccCountUpdater.set(this, invokeSuccCount);
     }
 
-    public long incrementInvokeSuccCount() {
-        return invokeSuccCountUpdater.incrementAndGet(this);
+    public void incrementInvokeSuccCount() {
+        invokeSuccCountUpdater.incrementAndGet(this);
     }
 
     /**
@@ -218,8 +229,8 @@ public class ModuleMetricsVisitor {
         invokeFailCountUpdater.set(this, invokeFailCount);
     }
 
-    public long incrementInvokeFailCount() {
-        return invokeFailCountUpdater.incrementAndGet(this);
+    public void incrementInvokeFailCount() {
+        invokeFailCountUpdater.incrementAndGet(this);
     }
 
     /**
@@ -233,16 +244,26 @@ public class ModuleMetricsVisitor {
         invokeFilterCountUpdater.set(this, invokeFilterCount);
     }
 
-    public long incrementInvokeFilterCount() {
-        return invokeFilterCountUpdater.incrementAndGet(this);
+    public void incrementInvokeFilterCount() {
+        invokeFilterCountUpdater.incrementAndGet(this);
     }
 
-    public long getInvokeTimespan() {
-        return invokeTimespan;
+    public long getAccumulateTimespan() {
+        return accumulateTimespan;
     }
 
-    public void setInvokeTimespan(long invokeTimespan) {
-        this.invokeTimespan = invokeTimespan;
+    public void setAccumulateTimespan(long accumulateTimespan) {
+        this.accumulateTimespan = accumulateTimespan;
+    }
+
+    public void accumulateTimespan(Long invokeTimespan){
+        accumulateTimespanUpdater.accumulateAndGet(this, invokeTimespan,
+                new LongBinaryOperator() {
+            @Override
+            public long applyAsLong(long left, long right) {
+                return left + right;
+            }
+        });
     }
 
     public long getInvokeMinTimespan() {
@@ -250,7 +271,11 @@ public class ModuleMetricsVisitor {
     }
 
     public void setInvokeMinTimespan(long invokeMinTimespan) {
-        this.invokeMinTimespan = invokeMinTimespan;
+        do{
+            if (invokeMinTimespan >= this.invokeMinTimespan)
+                break;
+        }while (!invokeMinTimespanUpdater.compareAndSet(this,
+                this.invokeMinTimespan, invokeMinTimespan));
     }
 
     public long getInvokeMaxTimespan() {
@@ -258,15 +283,11 @@ public class ModuleMetricsVisitor {
     }
 
     public void setInvokeMaxTimespan(long invokeMaxTimespan) {
-        this.invokeMaxTimespan = invokeMaxTimespan;
-    }
-
-    public int getHashKey() {
-        return hashKey;
-    }
-
-    public void setHashKey(int hashKey) {
-        this.hashKey = hashKey;
+        do{
+            if (invokeMaxTimespan <= this.invokeMaxTimespan)
+                break;
+        }while (!invokeMaxTimespanUpdater.compareAndSet(this,
+                this.invokeMaxTimespan, invokeMaxTimespan));
     }
 
     @Override
@@ -289,7 +310,7 @@ public class ModuleMetricsVisitor {
         String metrics = String.format("<<[moduleName:%s]-[methodName:%s]>> [invokeCount:%d][invokeSuccCount:%d]" +
                 "[invokeFilterCount:%d][invokeTimespan:%d][invokeMinTimespan:%d][invokeMaxTimespan:%d]" +
                 "[invokeFailCount:%d][lastErrorTime:%d][lastStackTraceDetail:%s]\n",
-                className, methodName, invokeCount, invokeSuccCount, invokeFilterCount, invokeTimespan,
+                className, methodName, invokeCount, invokeSuccCount, invokeFilterCount, accumulateTimespan,
                 invokeMinTimespan, invokeMaxTimespan, invokeFailCount, lastErrorTime, lastStackTraceDetail);
         return metrics;
     }

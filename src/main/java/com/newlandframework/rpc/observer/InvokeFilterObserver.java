@@ -20,8 +20,8 @@ public class InvokeFilterObserver extends AbstractInvokeObserver {
         if (arg == ModuleEvent.INVOKE_FILTER_EVENT) {
             // 更新方法被过滤的次数
             super.getFacade().fetchEvent(ModuleEvent.INVOKE_FILTER_EVENT)
-                    .notify(super.getVisitor().getInvokeFilterCount(),
-                            super.getVisitor().incrementInvokeFilterCount());
+                    .notify(super.getFacade(),
+                            null);
         }
     }
 }

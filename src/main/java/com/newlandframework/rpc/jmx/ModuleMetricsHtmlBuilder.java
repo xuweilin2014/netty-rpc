@@ -17,7 +17,7 @@ public class ModuleMetricsHtmlBuilder {
     private final static String TR_BEGIN = "<tr>";
     private final static String TR_END = "</tr>";
     private final static String TABLE_BEGIN = "<html><body><div class=\"table-container\"><table border=\"1\"><tr><th>模块名称</th><th>方法名称</th>" +
-            "<th>调用次数</th><th>调用成功次数</th><th>调用失败次数</th><th>被过滤次数</th><th>方法耗时（毫秒）</th><th>方法最大耗时（毫秒）</th>" +
+            "<th>调用次数</th><th>调用成功次数</th><th>调用失败次数</th><th>被过滤次数</th><th>方法平均耗时（毫秒）</th><th>方法最大耗时（毫秒）</th>" +
             "<th>方法最小耗时（毫秒）</th><th>最后一次失败时间</th><th>最后一次失败堆栈明细</th></tr>";
     private final static String TABLE_END = "</table></body></html>";
     private final static String JMX_METRICS_ATTR = "ModuleMetricsVisitor";
@@ -66,9 +66,8 @@ public class ModuleMetricsHtmlBuilder {
              * 在此接口中有getModuleMetricsVisitor方法，表明ModuleMetricsHandler这个MXBean中有ModuleMetricsVisitor属性。
              *
              * 因此，调用getAttribute时指明JMX_METRICS_ATTR，就会调用ModuleMetricsHandler（实际上是它的父类）中的getModuleMetricsVisitor方法
-             * 来获取ModuleMetricsVisitor（里面保存了一个方法调用相关的监控数据）。
-             *
-             * 这里获取到的实际上是ModuleMetricsVisitor的一个list集合。遍历这个list集合，获取每一个visitor中相关的数据，并且转换成HTML的格式返回。
+             * 来获取ModuleMetricsVisitor（里面保存了一个方法调用相关的监控数据）。这里获取到的实际上是ModuleMetricsVisitor的一个list集合。
+             * 遍历这个list集合，获取每一个visitor中相关的数据，并且转换成HTML的格式返回。
              */
             Object obj = connection.getAttribute(name, JMX_METRICS_ATTR);
             if (obj instanceof CompositeData[]) {
@@ -80,7 +79,7 @@ public class ModuleMetricsHtmlBuilder {
                     long invokeSuccCount = (Long) (data.get("invokeSuccCount"));
                     long invokeFailCount = (Long) (data.get("invokeFailCount"));
                     long invokeFilterCount = (Long) (data.get("invokeFilterCount"));
-                    long invokeTimespan = (Long) (data.get("invokeTimespan"));
+                    long accumulateTimespan = (Long) (data.get("accumulateTimespan"));
                     long invokeMinTimespan = ((Long) (data.get("invokeMinTimespan")))
                             .equals(ModuleMetricsVisitor.DEFAULT_INVOKE_MIN_TIMESPAN) ?
                             Long.valueOf(0L) : (Long) (data.get("invokeMinTimespan"));
@@ -94,7 +93,7 @@ public class ModuleMetricsHtmlBuilder {
                     metrics.append(TD_BEGIN + invokeSuccCount + TD_END);
                     metrics.append(TD_BEGIN + invokeFailCount + TD_END);
                     metrics.append(TD_BEGIN + invokeFilterCount + TD_END);
-                    metrics.append(TD_BEGIN + invokeTimespan + TD_END);
+                    metrics.append(TD_BEGIN + (double) (accumulateTimespan / invokeCount) + TD_END);
                     metrics.append(TD_BEGIN + invokeMaxTimespan + TD_END);
                     metrics.append(TD_BEGIN + invokeMinTimespan + TD_END);
                     metrics.append(TD_BEGIN + (lastErrorTime != null ? lastErrorTime : "") + TD_END);

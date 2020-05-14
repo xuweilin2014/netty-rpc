@@ -1,5 +1,7 @@
 package com.newlandframework.rpc.event;
 
+import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
+
 import javax.management.AttributeChangeNotification;
 import javax.management.Notification;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,15 +14,16 @@ public class InvokeFailStackTraceEvent extends AbstractInvokeEvent {
         super();
     }
 
-    public InvokeFailStackTraceEvent(String className, String methodName) {
-        super(className, methodName);
+    public InvokeFailStackTraceEvent(ModuleMetricsVisitor visitor) {
+        super(visitor);
     }
 
     @Override
     public Notification buildNotification(Object oldValue, Object newValue) {
         return new AttributeChangeNotification(this,
                 sequenceInvokeFailStackTraceNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.className, super.methodName, ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT.toString(), oldValue, newValue);
+                super.visitor.getClassName(), super.visitor.getMethodName(), ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT.toString(),
+                oldValue, newValue);
     }
 }
 

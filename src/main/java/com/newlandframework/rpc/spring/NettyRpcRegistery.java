@@ -1,9 +1,7 @@
 package com.newlandframework.rpc.spring;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
-import com.newlandframework.rpc.jmx.HashModuleMetricsVisitor;
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
 import com.newlandframework.rpc.jmx.ThreadPoolMonitorProvider;
 import com.newlandframework.rpc.serialize.RpcSerializeProtocol;
 import com.newlandframework.rpc.netty.MessageRecvExecutor;
@@ -55,8 +53,6 @@ public class NettyRpcRegistery implements InitializingBean, DisposableBean {
 
         // 如果用户开启了对JMX监控的支持的话，那么就通过ModuleMetricsHandler启动JMX
         if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT) {
-            HashModuleMetricsVisitor visitor = HashModuleMetricsVisitor.getInstance();
-            visitor.signal();
             ModuleMetricsHandler handler = ModuleMetricsHandler.getInstance();
             handler.start();
         }

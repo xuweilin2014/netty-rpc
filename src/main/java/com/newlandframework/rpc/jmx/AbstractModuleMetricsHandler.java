@@ -1,7 +1,5 @@
 package com.newlandframework.rpc.jmx;
 
-import com.newlandframework.rpc.core.RpcSystemConfig;
-
 import javax.management.*;
 import java.lang.management.ManagementFactory;
 import java.text.SimpleDateFormat;
@@ -9,7 +7,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
 
@@ -17,9 +14,6 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
     protected List<ModuleMetricsVisitor> visitorList = new CopyOnWriteArrayList<>();
     protected static String startTime;
     private final Queue<Thread> waiters = new ConcurrentLinkedQueue<>();
-    private static final int METRICS_VISITOR_LIST_SIZE = HashModuleMetricsVisitor.getInstance().getHashModuleMetricsVisitorListSize();
-    private MetricsTask[] tasks = new MetricsTask[METRICS_VISITOR_LIST_SIZE];
-    private ExecutorService executor = Executors.newFixedThreadPool(METRICS_VISITOR_LIST_SIZE);
 
     public AbstractModuleMetricsHandler() {
     }
@@ -39,37 +33,8 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
         }
     }
 
-    /**
-     * 返回ModuleMetricsVisitor分为两种情况：
-     * 1.JMX_METRICS_HASH_SUPPORT为false，直接返回visitorList
-     * 2.JMX_METRICS_HASH_SUPPORT为true，不能直接返回visitorList，因为此时visitorList为空。前面说过，hashVisitorList中的
-     * 每一个visitorList都表示RPC服务器中的一个方法调用情况，此list中不同的visitor都有可能记录了对应方法（比如add方法）的调用情况，这是因为
-     * 每一次客户端发起对add方法的调用时，都会通过一定的哈希算法选择visitorList中的某一个visitor来记录add方法的调用情况。因此，在做最终统计
-     * 时，需要将list中的所有visitor记录的情况进行一个汇总。
-     */
     @Override
     public List<ModuleMetricsVisitor> getModuleMetricsVisitor() {
-        if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_HASH_SUPPORT) {
-            CountDownLatch latch = new CountDownLatch(1);
-            MetricsAggregationTask aggregationTask = new MetricsAggregationTask(tasks, visitorList, latch);
-
-            //在创建CyclicBarrier时，指定的barrierAction是aggregationTask，表明在hashVisitorList中所有visitorList的数据都进行汇总之后，
-            //会调用aggregationTask中的run方法，将得到结果保存到传入aggregationTask中的visitorList中，然后返回。
-            CyclicBarrier barrier = new CyclicBarrier(METRICS_VISITOR_LIST_SIZE, aggregationTask);
-
-            //对每一个visitorList中情况进行汇总的任务由task数组中的一个task来进行。
-            for (int i = 0; i < METRICS_VISITOR_LIST_SIZE; i++) {
-                tasks[i] = new MetricsTask(barrier, HashModuleMetricsVisitor.getInstance().getHashVisitorList().get(i));
-                executor.execute(tasks[i]);
-            }
-
-            try {
-                visitorList.clear();
-                latch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
         return visitorList;
     }
 
@@ -122,13 +87,5 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
     }
 
     protected abstract ModuleMetricsVisitor visitCriticalSection(String className, String methodName);
-
-    public ExecutorService getExecutor() {
-        return executor;
-    }
-
-    public void setExecutor(ExecutorService executor) {
-        this.executor = executor;
-    }
 }
 

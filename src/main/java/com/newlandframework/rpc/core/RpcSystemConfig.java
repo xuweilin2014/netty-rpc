@@ -13,9 +13,6 @@ public class RpcSystemConfig {
     public static final int SYSTEM_PROPERTY_CLIENT_RECONNECT_DELAY = Integer.parseInt(System.getProperty("nettyrpc.default.client.reconnect.delay", "10"));
     public static final int SYSTEM_PROPERTY_PARALLEL = Math.max(2, Runtime.getRuntime().availableProcessors());
     public static final int SYSTEM_PROPERTY_JMX_INVOKE_METRICS = Integer.getInteger("nettyrpc.jmx.invoke.metrics", 1);
-    public static final int SYSTEM_PROPERTY_JMX_METRICS_HASH_NUMS = Integer.getInteger("nettyrpc.jmx.metrics.hash.nums", 8);
-    public static final int SYSTEM_PROPERTY_JMX_METRICS_LOCK_FAIR = Integer.getInteger("nettyrpc.jmx.metrics.lock.fair", 0);
-    public static final boolean SYSTEM_PROPERTY_JMX_METRICS_HASH_SUPPORT = RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_HASH_NUMS != 1;
     public static final boolean SYSTEM_PROPERTY_JMX_METRICS_SUPPORT = RpcSystemConfig.SYSTEM_PROPERTY_JMX_INVOKE_METRICS != 0;
     public static final String DELIMITER = ":";
     public static final int IPADDR_OPRT_ARRAY_LENGTH = 2;

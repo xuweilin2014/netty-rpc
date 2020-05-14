@@ -1,6 +1,8 @@
 package com.newlandframework.rpc.event;
 
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
+import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
+
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -19,11 +21,11 @@ public class InvokeEventFacade {
         enumMap.put(ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT, new InvokeFailStackTraceEvent());
     }
 
-    public InvokeEventFacade(ModuleMetricsHandler handler, String className, String methodName) {
+    public InvokeEventFacade(ModuleMetricsHandler handler, ModuleMetricsVisitor visitor) {
         for (AbstractInvokeEvent event : enumMap.values()) {
             event.setHandler(handler);
-            event.setClassName(className);
-            event.setMethodName(methodName);
+            event.setVisitor(visitor);
+            event.setFacade(this);
         }
     }
 

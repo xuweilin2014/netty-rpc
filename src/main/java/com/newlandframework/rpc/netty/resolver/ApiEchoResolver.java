@@ -1,5 +1,6 @@
 package com.newlandframework.rpc.netty.resolver;
 
+import com.newlandframework.rpc.core.RpcSystemConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
@@ -46,8 +47,12 @@ public class ApiEchoResolver implements Callable<Boolean> {
 
             Channel ch = b.bind(port).sync().channel();
 
-            System.err.println("You can open your web browser see NettyRPC server api interface: " +
+            System.err.println("【NettyRPC server api interface】:" +
                     (SSL ? "https" : "http") + "://" + host + ":" + port + "/NettyRPC.html");
+            if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT){
+                System.err.println("【NettyRPC server metrics】:" +
+                        (SSL ? "https" : "http") + "://" + host + ":" + port + "/NettyRPC.html/metrics");
+            }
 
             ch.closeFuture().sync();
             return Boolean.TRUE;

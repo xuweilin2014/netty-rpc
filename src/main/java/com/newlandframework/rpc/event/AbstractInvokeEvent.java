@@ -1,22 +1,22 @@
 package com.newlandframework.rpc.event;
 
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
+import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
 import lombok.Data;
 import javax.management.Notification;
 
 @Data
 public abstract class AbstractInvokeEvent {
 
-    protected String className;
-    protected String methodName;
+    protected ModuleMetricsVisitor visitor;
     protected ModuleMetricsHandler handler;
+    protected InvokeEventFacade facade;
 
     public AbstractInvokeEvent() {
     }
 
-    public AbstractInvokeEvent(String className, String methodName) {
-        this.className = className;
-        this.methodName = methodName;
+    public AbstractInvokeEvent(ModuleMetricsVisitor visitor) {
+        this.visitor = visitor;
     }
 
     public abstract Notification buildNotification(Object oldValue, Object newValue);
