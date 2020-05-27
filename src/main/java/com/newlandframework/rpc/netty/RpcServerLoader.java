@@ -31,7 +31,8 @@ public class RpcServerLoader {
     private EventLoopGroup eventLoopGroup = new NioEventLoopGroup(PARALLEL);
     private static int threadNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS;
     private static int queueNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS;
-    private static ListeningExecutorService threadPoolExecutor = MoreExecutors.listeningDecorator((ThreadPoolExecutor) RpcThreadPool.getExecutor(threadNums, queueNums));
+    private static ListeningExecutorService threadPoolExecutor =
+            MoreExecutors.listeningDecorator((ThreadPoolExecutor) RpcThreadPool.getExecutor(threadNums, queueNums));
     private MessageSendHandler messageSendHandler = null;
     private Lock lock = new ReentrantLock();
     private Condition connectStatus = lock.newCondition();

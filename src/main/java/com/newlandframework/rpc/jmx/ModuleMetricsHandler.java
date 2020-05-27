@@ -75,9 +75,12 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
     }
 
     public void start() {
+        //将JMX服务器的启动放入到其它的线程中去执行，使用的是AbstractDaemonThread的匿名内部类，
+        //在run方法中启动JMX服务器，而在getDaemonThread方法中，返回这个线程的名字。
+        //此匿名内部类会调用父类AbstractDaemonThread的无参构造方法，生成一个名为ModuleMetricsHandler的线程，来负责JMX服务器的启动
         new AbstractDaemonThread() {
             @Override
-            public String getDeamonThreadName() {
+            public String getDaemonThreadName() {
                 return ModuleMetricsHandler.class.getSimpleName();
             }
 

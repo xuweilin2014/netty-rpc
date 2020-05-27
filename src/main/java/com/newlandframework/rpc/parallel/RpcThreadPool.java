@@ -7,7 +7,6 @@ import com.newlandframework.rpc.parallel.policy.AbortPolicy;
 import com.newlandframework.rpc.parallel.policy.BlockingPolicy;
 import com.newlandframework.rpc.parallel.policy.CallerRunsPolicy;
 import com.newlandframework.rpc.parallel.policy.DiscardedPolicy;
-import com.newlandframework.rpc.parallel.policy.RejectedPolicy;
 import com.newlandframework.rpc.parallel.policy.RejectedPolicyType;
 
 import javax.management.InstanceNotFoundException;
@@ -32,10 +31,11 @@ import java.util.concurrent.RejectedExecutionHandler;
 public class RpcThreadPool {
     private static final Timer TIMER = new Timer("ThreadPoolMonitor", true);
     private static long monitorDelay = 100L;
-    private static long monitorPeriod = 300L;
 
     private static RejectedExecutionHandler createPolicy() {
-        RejectedPolicyType rejectedPolicyType = RejectedPolicyType.fromString(System.getProperty(RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_REJECTED_POLICY_ATTR, "AbortPolicy"));
+        //根据用户的配置来采用具体的拒绝策略，如果用户没有进行配置的话，默认是使用AbortPolicy
+        RejectedPolicyType rejectedPolicyType = RejectedPolicyType.fromString(
+                System.getProperty(RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_REJECTED_POLICY_ATTR, "AbortPolicy"));
 
         switch (rejectedPolicyType) {
             case BLOCKING_POLICY:
@@ -44,8 +44,6 @@ public class RpcThreadPool {
                 return new CallerRunsPolicy();
             case ABORT_POLICY:
                 return new AbortPolicy();
-            case REJECTED_POLICY:
-                return new RejectedPolicy();
             case DISCARDED_POLICY:
                 return new DiscardedPolicy();
             default: {
@@ -57,15 +55,17 @@ public class RpcThreadPool {
     }
 
     private static BlockingQueue<Runnable> createBlockingQueue(int queues) {
-        BlockingQueueType queueType = BlockingQueueType.fromString(System.getProperty(RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NAME_ATTR, "LinkedBlockingQueue"));
+        //根据用户的配置来采用具体的阻塞队列，如果用户没有进行配置的话，默认是使用LinkedBlockingQueue
+        BlockingQueueType queueType = BlockingQueueType.fromString(
+                System.getProperty(RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NAME_ATTR, "LinkedBlockingQueue"));
 
         switch (queueType) {
             case LINKED_BLOCKING_QUEUE:
-                return new LinkedBlockingQueue<Runnable>();
+                return new LinkedBlockingQueue<>();
             case ARRAY_BLOCKING_QUEUE:
-                return new ArrayBlockingQueue<Runnable>(RpcSystemConfig.SYSTEM_PROPERTY_PARALLEL * queues);
+                return new ArrayBlockingQueue<>(RpcSystemConfig.SYSTEM_PROPERTY_PARALLEL * queues);
             case SYNCHRONOUS_QUEUE:
-                return new SynchronousQueue<Runnable>();
+                return new SynchronousQueue<>();
             default: {
                 break;
             }
@@ -79,16 +79,16 @@ public class RpcThreadPool {
         // 当然如果业务足够简单，把处理逻辑写入netty的handler（ChannelInboundHandlerAdapter）也未尝不可
         System.out.println("ThreadPool Core[threads:" + threads + ", queues:" + queues + "]");
         String name = "RpcThreadPool";
+
+        //创建一个线程池，根据用户的配置来具体选择任务队列以及拒绝策略
         ThreadPoolExecutor executor = new ThreadPoolExecutor(threads, threads, 0, TimeUnit.MILLISECONDS,
-                createBlockingQueue(queues),
-                new NamedThreadFactory(name, true), createPolicy());
+                createBlockingQueue(queues),  new NamedThreadFactory(name, true), createPolicy());
         return executor;
     }
 
     public static Executor getExecutorWithJmx(int threads, int queues) {
         final ThreadPoolExecutor executor = (ThreadPoolExecutor) getExecutor(threads, queues);
         TIMER.scheduleAtFixedRate(new TimerTask() {
-
             @Override
             public void run() {
                 ThreadPoolStatus status = new ThreadPoolStatus();
@@ -102,15 +102,8 @@ public class RpcThreadPool {
 
                 try {
                     ThreadPoolMonitorProvider.monitor(status);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (MalformedObjectNameException e) {
-                    e.printStackTrace();
-                } catch (ReflectionException e) {
-                    e.printStackTrace();
-                } catch (MBeanException e) {
-                    e.printStackTrace();
-                } catch (InstanceNotFoundException e) {
+                } catch (IOException | MalformedObjectNameException | ReflectionException
+                        | MBeanException | InstanceNotFoundException e) {
                     e.printStackTrace();
                 }
             }
