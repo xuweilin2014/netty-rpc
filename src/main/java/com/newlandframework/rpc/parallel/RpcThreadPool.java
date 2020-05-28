@@ -1,8 +1,6 @@
 package com.newlandframework.rpc.parallel;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
-import com.newlandframework.rpc.jmx.ThreadPoolMonitorProvider;
-import com.newlandframework.rpc.jmx.ThreadPoolStatus;
 import com.newlandframework.rpc.parallel.policy.AbortPolicy;
 import com.newlandframework.rpc.parallel.policy.BlockingPolicy;
 import com.newlandframework.rpc.parallel.policy.CallerRunsPolicy;
@@ -86,29 +84,5 @@ public class RpcThreadPool {
         return executor;
     }
 
-    public static Executor getExecutorWithJmx(int threads, int queues) {
-        final ThreadPoolExecutor executor = (ThreadPoolExecutor) getExecutor(threads, queues);
-        TIMER.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                ThreadPoolStatus status = new ThreadPoolStatus();
-                status.setPoolSize(executor.getPoolSize());
-                status.setActiveCount(executor.getActiveCount());
-                status.setCorePoolSize(executor.getCorePoolSize());
-                status.setMaximumPoolSize(executor.getMaximumPoolSize());
-                status.setLargestPoolSize(executor.getLargestPoolSize());
-                status.setTaskCount(executor.getTaskCount());
-                status.setCompletedTaskCount(executor.getCompletedTaskCount());
-
-                try {
-                    ThreadPoolMonitorProvider.monitor(status);
-                } catch (IOException | MalformedObjectNameException | ReflectionException
-                        | MBeanException | InstanceNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, monitorDelay, monitorDelay);
-        return executor;
-    }
 }
 

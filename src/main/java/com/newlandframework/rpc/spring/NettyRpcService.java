@@ -14,7 +14,7 @@ import org.springframework.context.ApplicationListener;
 
 /**
  * 表示一个Rpc服务端所能够提供的服务，它具有三个最重要的属性：interfaceName、ref、filter。
- * interfaceName表示这个服务所实现的接口的名字，比如AddCalculate
+ * interfaceName表示这个服务所实现的接口的名字，或者说是这个服比如AddCalculate
  * ref表示的是真正实现这个接口的类，比如AddCalculateImpl
  * filter表示拦截器
  *

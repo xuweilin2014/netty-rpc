@@ -2,7 +2,6 @@ package com.newlandframework.rpc.spring;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
-import com.newlandframework.rpc.jmx.ThreadPoolMonitorProvider;
 import com.newlandframework.rpc.serialize.RpcSerializeProtocol;
 import com.newlandframework.rpc.netty.MessageRecvExecutor;
 import org.springframework.beans.factory.DisposableBean;
@@ -43,11 +42,6 @@ public class NettyRpcRegistery implements InitializingBean, DisposableBean {
         ref.setEchoApiPort(Integer.parseInt(echoApiPort));
         // 设置序列化协议
         ref.setSerializeProtocol(Enum.valueOf(RpcSerializeProtocol.class, protocol));
-
-        if (RpcSystemConfig.isMonitorServerSupport()) {
-            context.register(ThreadPoolMonitorProvider.class);
-            context.refresh();
-        }
         // 启动Rpc服务器，使其运行起来
         ref.start();
 
