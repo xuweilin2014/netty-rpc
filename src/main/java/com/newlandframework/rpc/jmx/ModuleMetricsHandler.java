@@ -34,6 +34,7 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
     private CountDownLatch latch = new CountDownLatch(1);
     private ModuleMetricsListener listener = new ModuleMetricsListener();
 
+    //通过饿汉模式来实现单例模式
     public static ModuleMetricsHandler getInstance() {
         return INSTANCE;
     }
@@ -127,11 +128,8 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
         try {
             ObjectName name = new ObjectName(MBEAN_NAME);
             mbs.unregisterMBean(name);
-        } catch (MalformedObjectNameException e) {
-            e.printStackTrace();
-        } catch (InstanceNotFoundException e) {
-            e.printStackTrace();
-        } catch (MBeanRegistrationException e) {
+        } catch (MalformedObjectNameException | InstanceNotFoundException
+                | MBeanRegistrationException e) {
             e.printStackTrace();
         }
     }

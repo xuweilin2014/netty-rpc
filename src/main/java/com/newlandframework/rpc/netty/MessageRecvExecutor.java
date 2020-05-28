@@ -56,23 +56,44 @@ import org.springframework.context.ApplicationContextAware;
  */
 public class MessageRecvExecutor implements ApplicationContextAware {
 
+    //Rpc服务器的IP地址和端口号
     private String serverAddress;
+
+    //服务能力开放的端口
     private int echoApiPort;
+
+    //传输数据所使用的序列化协议
     private RpcSerializeProtocol serializeProtocol = RpcSerializeProtocol.JDKSERIALIZE;
+
     private static final String DELIMITER = RpcSystemConfig.DELIMITER;
+
+    //SYSTEM_PROPERTY_PARALLEL的值为处理器的数量
     private static final int PARALLEL = RpcSystemConfig.SYSTEM_PROPERTY_PARALLEL * 2;
+
+    //线程的数量，默认为16
     private static int threadNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS;
+
+    //队列的数量，默认为-1
     private static int queueNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS;
+
+    //线程池，也是使用单例模式
     private static volatile ListeningExecutorService threadPoolExecutor;
+
     private Map<String, Object> handlerMap = new ConcurrentHashMap<String, Object>();
+
     private int numberOfEchoThreadsPool = 1;
 
-    ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyRPC ThreadFactory");
+    //在此类中用来创建Netty中的worker group中的线程，并且不是守护线程
+    private ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyWorkerThreadPool");
+
     EventLoopGroup boss = new NioEventLoopGroup();
-    EventLoopGroup worker = new NioEventLoopGroup(PARALLEL, threadRpcFactory, SelectorProvider.provider());
+
+    EventLoopGroup worker = new NioEventLoopGroup(PARALLEL, threadRpcFactory);
 
     private MessageRecvExecutor() {
         handlerMap.clear();
+
+        //提前往handlerMap中放入一些对象，比如AbilityDetailProvider
         register();
     }
 
@@ -80,6 +101,7 @@ public class MessageRecvExecutor implements ApplicationContextAware {
         static final MessageRecvExecutor INSTANCE = new MessageRecvExecutor();
     }
 
+    //通过Holder模式实现了单例模式，即MessageRecvExecutor在整个RPC服务器中是唯一的
     public static MessageRecvExecutor getInstance() {
         return MessageRecvExecutorHolder.INSTANCE;
     }
@@ -191,7 +213,7 @@ public class MessageRecvExecutor implements ApplicationContextAware {
 
     private void register() {
         // handlerMap中的键值对类型有以下几种可能：
-        // String -> ServiceFilterBinder、String -> AccessAdaptiveProvider、String -> AbilityDetailProvider
+        // String -> ServiceFilterBinder对象、String -> AccessAdaptiveProvider对象、String -> AbilityDetailProvider对象
         handlerMap.put(RpcSystemConfig.RPC_COMPILER_SPI_ATTR, new AccessAdaptiveProvider());
         handlerMap.put(RpcSystemConfig.RPC_ABILITY_DETAIL_SPI_ATTR, new AbilityDetailProvider());
     }

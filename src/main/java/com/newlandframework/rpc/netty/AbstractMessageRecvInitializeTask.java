@@ -32,13 +32,20 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
     }
 
     /**
-     * 1.如果开启了JMX监控的话，使用的是MessageRecvInitializeTask
-     * 2.如果没有开启JMX监控的话，使用的是MessageRecvInitializeTaskAdapter
+     * 每一个客户端发起的一次RPC请求，都会在服务器端包装成一个Task，然后放到线程池中去执行。这些Task的类型是MessageRecvInitializeTask
+     * （开启了JMX监控）或者MessageRecvInitializeTaskAdapter（没有开启JMX）这两类，他们都实现了Callable接口。每个Task任务的执行流程如下：
+     * 1.调用injectInvoke方法，增加方法的调用次数，不过如果没有开启JMX，也就是task是MessageRecvInitializeTaskAdapter的话，这个方法是个空方法，
+     * 没有什么作用。
+     * 2.调用reflect来执行客户端要调用的方法，并且获取到执行的结果。
+     * 3.如果调用成功的话，就会修改方法调用成功的次数、累积耗时、最大耗时、最小耗时
+     * 4.如果方法调用被拦截，就会修改方法被拦截的次数
+     * 5.如果方法调用时抛出异常，就会修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
      */
     @Override
     public Boolean call() {
         try {
             response.setMessageId(request.getMessageId());
+            //增加方法的调用次数
             injectInvoke();
             Object result = reflect(request);
             boolean isInvokeSucc = (!returnNotNull || result != null);
@@ -47,11 +54,13 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
                 response.setResult(result);
                 response.setError("");
                 response.setReturnNotNull(returnNotNull);
+                // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
                 injectSuccInvoke(invokeTimespan);
             } else {
                 System.err.println(RpcSystemConfig.FILTER_RESPONSE_MSG);
                 response.setResult(null);
                 response.setError(RpcSystemConfig.FILTER_RESPONSE_MSG);
+                //修改方法被拦截的次数
                 injectFilterInvoke();
             }
             return Boolean.TRUE;
@@ -59,6 +68,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
             response.setError(getStackTrace(t));
             t.printStackTrace();
             System.err.printf("RPC Server invoke error!\n");
+            //修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
             injectFailInvoke(t);
             return Boolean.FALSE;
         }

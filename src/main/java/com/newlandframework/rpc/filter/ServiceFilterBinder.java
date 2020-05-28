@@ -1,8 +1,9 @@
 package com.newlandframework.rpc.filter;
 
-import lombok.Data;
 
-
+/**
+ * ServiceFilterBinder用来保存RPC服务端的服务实现类，以及对应的过滤器
+ */
 public class ServiceFilterBinder {
     private Object object;
     private Filter filter;

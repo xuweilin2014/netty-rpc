@@ -20,7 +20,8 @@ public class NettyRpcServiceParser implements BeanDefinitionParser {
         beanDefinition.getPropertyValues().addPropertyValue("interfaceName", interfaceName);
         beanDefinition.getPropertyValues().addPropertyValue("ref", ref);
         beanDefinition.getPropertyValues().addPropertyValue("filter", filter);
-        // 自定义标签nettyrpc类型的bean在容器中的名字beanname，就是nettyrpc标签中interfaceName属性的值
+        //自定义标签nettyrpc中元素类型为service所定义的bean（也就是<nettyrpc:service/>在容器中的名字beanname，
+        //就是标签中interfaceName属性的值
         parserContext.getRegistry().registerBeanDefinition(interfaceName, beanDefinition);
 
         return beanDefinition;
