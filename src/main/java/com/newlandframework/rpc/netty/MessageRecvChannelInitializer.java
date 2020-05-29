@@ -23,6 +23,11 @@ public class MessageRecvChannelInitializer extends ChannelInitializer<SocketChan
         frame = new RpcRecvSerializeFrame(handlerMap);
     }
 
+    /**
+     * NioSocketChannel实现了socketChannel接口，NioSocketChannel表示Netty为客户端建立的连接，用来
+     * 处理客户端的读写请求，这里获取到此channel对应的pipeline，然后根据用户选择的传输协议不同，往pipeline中添加不同的
+     * handler。
+     */
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         ChannelPipeline pipeline = socketChannel.pipeline();

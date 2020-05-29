@@ -16,8 +16,9 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
- * 在浏览器页面中显示RPC服务端中可以提供的服务详情，其实就是客户端可以调用的对象的接口，
- * 在页面中显示这些接口的全类名和方法签名
+ * ApiEchoHandler的作用如下：
+ * i.在浏览器页面中显示Rpc服务端中可以提供的服务详情，其实就是客户端可以调用的对象的接口，在页面中显示这些接口的全类名和方法签名
+ * ii.在浏览器中显示Rpc服务端中，每个服务或者说方法被调用的次数，调用的耗时等统计信息
  */
 public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
     private static final String CONTENT_TYPE = "Content-Type";
@@ -57,13 +58,12 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
     private byte[] buildResponseMsg(HttpRequest req) {
         byte[] content = null;
 
-        //http请求的uri中是否包括metrics，即表明要获取NettyRPC模块调用情况
+        //http请求的uri中是否包括metrics，即是否表明要获取NettyRPC模块调用情况
         boolean metrics = (req.getUri().indexOf(METRICS) != -1);
 
         /*
-         * 1.如果系统支持JMX_METRICS，并且metrics为true的话（也就是用户请求获取NettyRPC模块调用情况），
-         * 就会构造调用信息，并且传递给content。
-         * 2.如果系统不支持JMX_METRICS，并且metrics为true的话，就会直接返回"NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
+         * 1.如果系统支持JMX，并且metrics为true的话（也就是用户请求获取NettyRPC模块调用情况），就会构造调用信息，并且传递给content。
+         * 2.如果系统不支持JMX，并且metrics为true的话，就会直接返回"NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
          * 3.如果metrics为false的话，表明用户只是想知道NettyRPC服务器端可以提供的能力，即可以调用的接口信息
          */
 

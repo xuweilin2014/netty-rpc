@@ -159,34 +159,35 @@ public class MessageRecvExecutor implements ApplicationContextAware {
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
-                    // 根据用户所选择的序列化协议，从而往pipeline中添加不同的handler
+                    //根据用户所选择的序列化协议不同，往NioSocketChannel对应的pipeline中添加不同的handler的类型也不同
                     .childHandler(new MessageRecvChannelInitializer(handlerMap).buildRpcSerializeProtocol(serializeProtocol))
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
             // MessageRecvExecutor.DELIMITER = ":"，将IP地址和端口号分割成数组
             String[] ipAddr = serverAddress.split(MessageRecvExecutor.DELIMITER);
-            // IPADDR_OPRT_ARRAY_LENGTH = 2
-            if (ipAddr.length == RpcSystemConfig.IPADDR_OPRT_ARRAY_LENGTH) {
+            // IPADDR_PORT_ARRAY_LENGTH = 2
+            if (ipAddr.length == RpcSystemConfig.IPADDR_PORT_ARRAY_LENGTH) {
                 final String host = ipAddr[0];
                 final int port = Integer.parseInt(ipAddr[1]);
                 ChannelFuture future = null;
-                future = bootstrap.bind(host, port).sync();
 
+                //
+                future = bootstrap.bind(host, port).sync();
                 future.addListener(new ChannelFutureListener() {
                     /**
                      * 在RPC服务器启动时，指定其监听一个ip地址127.0.0.1:18887，客户端发送调用请求到这个客户端。
                      * 不过当指定RPC服务器监听上面这个ip地址之后，还必须让RPC服务器监听另外一个ip地址127.0.0.1:18886。
-                     * 这个端口是用来监听浏览器发送过来的http请求，然后把RPC服务器可以提供的服务（也就是各个接口中的方法签名）
-                     * 展示在网页中，让用可以直接知道
+                     * 这个端口是用来监听浏览器发送过来的http请求，然后把Rpc服务器可以提供的服务（也就是各个接口中的方法签名）
+                     * 展示在网页中，让用户可以直接知道
                      */
                     @Override
                     public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                         if (channelFuture.isSuccess()) {
                             final ExecutorService executor = Executors.newFixedThreadPool(numberOfEchoThreadsPool);
-                            //ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<Boolean>(executor);
-                            // 把指定RPC服务器监听指定ip地址的过程放到线程池中去执行
+                            //把指定RPC服务器监听指定ip地址的过程放到线程池中去执行
                             executor.submit(new ApiEchoResolver(host, echoApiPort));
-                            System.out.printf("[author tangjie] Netty RPC Server start success!\nip:%s\nport:%d\nprotocol:%s\nstart-time:%s\njmx-invoke-metrics:%s\n\n",
+                            System.out.printf("Netty RPC Server start success!\n【ip】:%s\n【port】:%d\n【protocol】:%s\n" +
+                                            "【start-time】:%s\n【jmx-invoke-metrics】:%s\n",
                                     host, port, serializeProtocol, ModuleMetricsHandler.getStartTime(), (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ?
                                             "open" : "close"));
                             channelFuture.channel().closeFuture().sync().addListener(new ChannelFutureListener() {
@@ -199,7 +200,7 @@ public class MessageRecvExecutor implements ApplicationContextAware {
                     }
                 });
             } else {
-                System.out.printf("[author tangjie] Netty RPC Server start fail!\n");
+                System.err.printf("Netty RPC Server start fail!\n");
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

@@ -11,7 +11,9 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 
 import java.util.Map;
 
-
+/**
+ * 如果用户选择的传输协议是JDK自带的话，会调用此类中的handle方法，
+ */
 public class JdkNativeRecvHandler implements NettyRpcRecvHandler {
     @Override
     public void handle(Map<String, Object> handlerMap, ChannelPipeline pipeline) {

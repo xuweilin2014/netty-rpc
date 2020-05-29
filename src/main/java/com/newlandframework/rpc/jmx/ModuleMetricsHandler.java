@@ -24,14 +24,23 @@ import static com.newlandframework.rpc.core.RpcSystemConfig.DELIMITER;
  * 拥有行为：addModuleMetricsVisitor
  */
 public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
+
     public final static String MBEAN_NAME = "com.newlandframework.rpc:type=ModuleMetricsHandler";
+
     public final static int MODULE_METRICS_JMX_PORT = 1098;
+
     private String moduleMetricsJmxUrl = "";
+
     private Semaphore semaphore = new Semaphore(0);
+
     private SemaphoreWrapper semaphoreWrapper = new SemaphoreWrapper(semaphore);
+
     private static final ModuleMetricsHandler INSTANCE = new ModuleMetricsHandler();
+
     private MBeanServerConnection connection;
+
     private CountDownLatch latch = new CountDownLatch(1);
+
     private ModuleMetricsListener listener = new ModuleMetricsListener();
 
     //通过饿汉模式来实现单例模式
@@ -105,6 +114,8 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
                     JMXConnectorServer cs = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbs);
 
                     ObjectName name = new ObjectName(MBEAN_NAME);
+
+                    //表达式OuterClass.this表示外围类的引用
                     mbs.registerMBean(ModuleMetricsHandler.this, name);
 
                     //在此ModuleMetricsHandler上注册一个NotificationListener，用来处理发生的事件。

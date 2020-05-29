@@ -43,9 +43,14 @@ public class ApiEchoResolver implements Callable<Boolean> {
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
+                    /*
+                     * 这里的childHandler方法是当有新连接建立时（即NioSocketChannel），把ApiEchoInitializer添加到这个
+                     * channel对应的pipeline中，然后当此channel最终注册到某个NioEventLoop上时，回调这个ApiEchoInitializer
+                     * 中的handlerAdded方法，最终调用到其中的initChannel方法，初始化新连接，往其中添加各种handler
+                     */
                     .childHandler(new ApiEchoInitializer(sslCtx));
 
-            Channel ch = b.bind(port).sync().channel();
+            Channel ch = b.bind(host, port).sync().channel();
 
             System.err.println("【NettyRPC server api interface】:" +
                     (SSL ? "https" : "http") + "://" + host + ":" + port + "/NettyRPC.html");

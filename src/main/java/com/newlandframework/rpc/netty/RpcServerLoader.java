@@ -56,7 +56,7 @@ public class RpcServerLoader {
         String[] ipAddr = serverAddress.split(RpcServerLoader.DELIMITER);
 
         // RpcSystemConfig.IPADDR_OPRT_ARRAY_LENGTH的值为2
-        if (ipAddr.length == RpcSystemConfig.IPADDR_OPRT_ARRAY_LENGTH) {
+        if (ipAddr.length == RpcSystemConfig.IPADDR_PORT_ARRAY_LENGTH) {
             String host = ipAddr[0];
             int port = Integer.parseInt(ipAddr[1]);
             final InetSocketAddress remoteAddr = new InetSocketAddress(host, port);

@@ -22,15 +22,15 @@ public class ModuleMetricsHtmlBuilder {
     private final static String TABLE_END = "</table></body></html>";
     private final static String JMX_METRICS_ATTR = "ModuleMetricsVisitor";
 
+    //利用饿汉模式来实现单例模式
     public static ModuleMetricsHtmlBuilder getInstance() {
         return INSTANCE;
     }
 
     private ModuleMetricsHtmlBuilder() {
-        init();
     }
 
-    // 获取到对启动的JMXConnectorServer的连接connection
+    //获取到与已经启动的JMXConnectorServer的连接connection
     private void init() {
         ModuleMetricsHandler handler = ModuleMetricsHandler.getInstance();
         connection = handler.connect();
@@ -50,8 +50,9 @@ public class ModuleMetricsHtmlBuilder {
     }
 
     public String buildModuleMetrics() {
-        StringBuilder metrics = new StringBuilder();
+        init();
 
+        StringBuilder metrics = new StringBuilder();
         metrics.append(TABLE_BEGIN);
         ObjectName name = null;
         try {
@@ -66,7 +67,7 @@ public class ModuleMetricsHtmlBuilder {
              * 在此接口中有getModuleMetricsVisitor方法，表明ModuleMetricsHandler这个MXBean中有ModuleMetricsVisitor属性。
              *
              * 因此，调用getAttribute时指明JMX_METRICS_ATTR，就会调用ModuleMetricsHandler（实际上是它的父类）中的getModuleMetricsVisitor方法
-             * 来获取ModuleMetricsVisitor（里面保存了一个方法调用相关的监控数据）。这里获取到的实际上是ModuleMetricsVisitor的一个list集合。
+             * 来获取ModuleMetricsVisitor（里面保存了一个特定方法调用相关的监控数据）。这里获取到的实际上是ModuleMetricsVisitor的一个list集合。
              * 遍历这个list集合，获取每一个visitor中相关的数据，并且转换成HTML的格式返回。
              */
             Object obj = connection.getAttribute(name, JMX_METRICS_ATTR);

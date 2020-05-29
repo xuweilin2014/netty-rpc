@@ -8,4 +8,11 @@
 8.反射
 9.enumMap
 10.Java线程中断  ok
+11.netty future.channel().closeFuture().sync(); 源代码分析
+
+future = bootstrap.bind(host, port).sync();
+future.addListener(new ChannelFutureListener() {
+    //代码省略
+});
+
 
