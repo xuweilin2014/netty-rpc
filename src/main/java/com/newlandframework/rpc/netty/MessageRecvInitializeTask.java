@@ -14,8 +14,11 @@ import java.util.Map;
 
 
 public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask {
+
     private ModuleMetricsVisitor visitor;
+
     private InvokeEventFacade facade;
+
     private InvokeEventTarget target = new InvokeEventTarget();
 
     public MessageRecvInitializeTask(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {
@@ -24,10 +27,11 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
 
     @Override
     protected void injectInvoke() {
+        //request.getClassName返回客户端rpc调用方法所属于的接口的名字
         Class cls = handlerMap.get(request.getClassName()).getClass();
         boolean binder = ServiceFilterBinder.class.isAssignableFrom(cls);
         if (binder) {
-            //获取要调用的RPC服务实现类，比如客户端要调用PersonManage的save方法，实际上就是要调用PersonManageImpl的save方法，
+            //获取客户端要调用的服务的实现类，比如客户端要调用PersonManage的save方法，save方法的真正实现类为PersonManageImpl，
             //所以这里获取到的就是PersonManageImpl.class
             cls = ((ServiceFilterBinder) handlerMap.get(request.getClassName())).getObject().getClass();
         }
@@ -35,12 +39,14 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
         ReflectionUtils utils = new ReflectionUtils();
 
         try {
-            //获取客户端要调用的方法
+            //通过反射获取客户端要调用的方法
             Method method = ReflectionUtils.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
+            //通过反射获取方法的签名，保存到ReflectionUtils类的provider对象中
             utils.listMethod(method, false);
-            //获取客户端要调用的方法的方法签名
+            //获取客户端要调用的方法的方法签名的字符串
             String signatureMethod = utils.getProvider().toString();
-            //获取和此方法对应的ModuleMetricsVisitor对象，用来记录这个方法的调用情况
+            //获取和此方法对应的ModuleMetricsVisitor对象，用来记录这个方法的调用情况，每一个特定的方法，都只和一个ModuleMetricsVisitor对象
+            //对应
             visitor = ModuleMetricsHandler.getInstance().getVisitor(request.getClassName(), signatureMethod);
             //创建了一个InvokeEventFacade类型的对象facade，它包含了所有INVOKE类型的Event对象，并且这些Event对象中都
             //保存了handler、visitor这两个参数

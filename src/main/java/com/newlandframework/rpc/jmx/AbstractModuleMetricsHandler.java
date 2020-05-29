@@ -11,8 +11,11 @@ import java.util.concurrent.locks.LockSupport;
 
 
 public abstract class AbstractModuleMetricsHandler extends NotificationBroadcasterSupport implements ModuleMetricsVisitorMXBean {
+
     protected List<ModuleMetricsVisitor> visitorList = new CopyOnWriteArrayList<>();
+
     protected static String startTime;
+
     private final Queue<Thread> waiters = new ConcurrentLinkedQueue<>();
 
     public AbstractModuleMetricsHandler() {

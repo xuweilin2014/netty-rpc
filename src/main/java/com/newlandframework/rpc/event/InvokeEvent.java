@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * InvokeEvent
  */
 public class InvokeEvent extends AbstractInvokeEvent {
+
     private AtomicLong sequenceInvokeNumber = new AtomicLong(0L);
 
     public InvokeEvent() {

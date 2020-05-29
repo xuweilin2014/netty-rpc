@@ -12,9 +12,13 @@ import java.util.concurrent.Callable;
  * 如果用户没有开启JMX监控，就直接返回MessageRecvInitializeTaskAdapter；
  */
 public class RecvInitializeTaskFacade {
+
     private MessageRequest request;
+
     private MessageResponse response;
+
     private Map<String, Object> handlerMap;
+
     private boolean isMetrics = RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT;
 
     public RecvInitializeTaskFacade(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {

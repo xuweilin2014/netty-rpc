@@ -10,8 +10,13 @@ import java.util.concurrent.TimeUnit;
  * 被RPC服务器中内置的Http服务器调用，用来获取方法被调用的具体数据
  */
 public class ModuleMetricsHtmlBuilder {
+
     private static final ModuleMetricsHtmlBuilder INSTANCE = new ModuleMetricsHtmlBuilder();
+
     private MBeanServerConnection connection;
+
+    private final static String JMX_METRICS_ATTR = "ModuleMetricsVisitor";
+
     private final static String TD_BEGIN = "<td>";
     private final static String TD_END = "</td>";
     private final static String TR_BEGIN = "<tr>";
@@ -20,7 +25,6 @@ public class ModuleMetricsHtmlBuilder {
             "<th>调用次数</th><th>调用成功次数</th><th>调用失败次数</th><th>被过滤次数</th><th>方法平均耗时（毫秒）</th><th>方法最大耗时（毫秒）</th>" +
             "<th>方法最小耗时（毫秒）</th><th>最后一次失败时间</th><th>最后一次失败堆栈明细</th></tr>";
     private final static String TABLE_END = "</table></body></html>";
-    private final static String JMX_METRICS_ATTR = "ModuleMetricsVisitor";
 
     //利用饿汉模式来实现单例模式
     public static ModuleMetricsHtmlBuilder getInstance() {
@@ -94,7 +98,7 @@ public class ModuleMetricsHtmlBuilder {
                     metrics.append(TD_BEGIN + invokeSuccCount + TD_END);
                     metrics.append(TD_BEGIN + invokeFailCount + TD_END);
                     metrics.append(TD_BEGIN + invokeFilterCount + TD_END);
-                    metrics.append(TD_BEGIN + (double) (accumulateTimespan / invokeCount) + TD_END);
+                    metrics.append(TD_BEGIN + (double) (accumulateTimespan / invokeSuccCount) + TD_END);
                     metrics.append(TD_BEGIN + invokeMaxTimespan + TD_END);
                     metrics.append(TD_BEGIN + invokeMinTimespan + TD_END);
                     metrics.append(TD_BEGIN + (lastErrorTime != null ? lastErrorTime : "") + TD_END);

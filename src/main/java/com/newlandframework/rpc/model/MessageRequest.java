@@ -11,10 +11,16 @@ import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 public class MessageRequest implements Serializable {
 
     private String messageId;
+
+    //客户端调用的方法所属于接口的名字
     private String className;
+
     private String methodName;
+
     private Class<?>[] typeParameters;
+
     private Object[] parametersVal;
+
     private boolean invokeMetrics = true;
 
     public boolean isInvokeMetrics() {

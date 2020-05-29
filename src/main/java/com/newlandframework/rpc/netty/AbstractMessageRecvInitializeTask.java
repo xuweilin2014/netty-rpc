@@ -17,12 +17,19 @@ import java.util.concurrent.Callable;
 
 
 public abstract class AbstractMessageRecvInitializeTask implements Callable<Boolean> {
+
     protected MessageRequest request;
+
     protected MessageResponse response;
+
     protected Map<String, Object> handlerMap;
+
     protected static final String METHOD_MAPPED_NAME = "invoke";
+
     protected boolean returnNotNull = true;
+
     protected long invokeTimespan;
+
     protected ModularProviderHolder modular = BeanFactoryUtils.getBean("filterChain");
 
     public AbstractMessageRecvInitializeTask(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {
@@ -32,10 +39,9 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
     }
 
     /**
-     * 每一个客户端发起的一次RPC请求，都会在服务器端包装成一个Task，然后放到线程池中去执行。这些Task的类型是MessageRecvInitializeTask
+     * 每一个客户端发起的一次Rpc请求，都会在服务器端将其包装成一个Task，然后放到线程池中去执行。这些Task的类型是MessageRecvInitializeTask
      * （开启了JMX监控）或者MessageRecvInitializeTaskAdapter（没有开启JMX）这两类，他们都实现了Callable接口。每个Task任务的执行流程如下：
      * 1.调用injectInvoke方法，增加方法的调用次数，不过如果没有开启JMX，也就是task是MessageRecvInitializeTaskAdapter的话，这个方法是个空方法，
-     * 没有什么作用。
      * 2.调用reflect来执行客户端要调用的方法，并且获取到执行的结果。
      * 3.如果调用成功的话，就会修改方法调用成功的次数、累积耗时、最大耗时、最小耗时
      * 4.如果方法调用被拦截，就会修改方法被拦截的次数

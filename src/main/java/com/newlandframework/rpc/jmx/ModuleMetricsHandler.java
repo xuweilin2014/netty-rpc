@@ -41,6 +41,7 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
 
     private CountDownLatch latch = new CountDownLatch(1);
 
+    //因为ModuleMetricsHandler采用单例模式，因此listener对象也是唯一的，在服务器中只有一个
     private ModuleMetricsListener listener = new ModuleMetricsListener();
 
     //通过饿汉模式来实现单例模式
