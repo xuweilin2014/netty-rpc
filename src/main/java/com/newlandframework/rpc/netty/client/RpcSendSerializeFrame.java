@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.netty;
+package com.newlandframework.rpc.netty.client;
 
 import com.newlandframework.rpc.netty.handler.NettyRpcSendHandler;
 import com.newlandframework.rpc.netty.handler.JdkNativeSendHandler;

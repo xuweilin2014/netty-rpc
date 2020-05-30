@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.netty;
+package com.newlandframework.rpc.netty.client;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;

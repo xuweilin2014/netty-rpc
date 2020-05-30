@@ -70,7 +70,7 @@ public class RpcParallelTest {
         for (int i = 0; i < 1; i++) {
             addTask((AddCalculate) context.getBean("addCalc"), parallel);
             multiTask((MultiCalculate) context.getBean("multiCalc"), parallel);
-            System.out.printf("[author tangjie] Netty RPC Server 消息协议序列化第[%d]轮并发验证结束!\n\n", i);
+            System.out.printf("Netty RPC Server 消息协议序列化第[%d]轮并发验证结束!\n\n", i);
         }
 
         context.destroy();

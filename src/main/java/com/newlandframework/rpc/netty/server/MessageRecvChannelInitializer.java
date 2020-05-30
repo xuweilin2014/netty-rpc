@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.netty;
+package com.newlandframework.rpc.netty.server;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

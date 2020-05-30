@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.netty;
+package com.newlandframework.rpc.netty.server;
 
 import com.newlandframework.rpc.model.MessageRequest;
 import org.apache.commons.lang3.reflect.MethodUtils;

@@ -15,8 +15,11 @@ import com.newlandframework.rpc.model.MessageResponse;
 public class MessageCallBack {
 
     private MessageRequest request;
+
     private MessageResponse response;
+
     private Lock lock = new ReentrantLock();
+
     private Condition finish = lock.newCondition();
 
     public MessageCallBack(MessageRequest request) {

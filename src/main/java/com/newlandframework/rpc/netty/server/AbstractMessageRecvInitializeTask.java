@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.netty;
+package com.newlandframework.rpc.netty.server;
 
 import com.newlandframework.rpc.core.ModularProviderHolder;
 import com.newlandframework.rpc.core.ModularInvoker;

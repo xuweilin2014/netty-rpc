@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.netty;
+package com.newlandframework.rpc.netty.server;
 
 import com.newlandframework.rpc.netty.handler.NettyRpcRecvHandler;
 import com.newlandframework.rpc.netty.handler.JdkNativeRecvHandler;

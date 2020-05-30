@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.netty.handler;
 
-import com.newlandframework.rpc.netty.MessageRecvHandler;
+import com.newlandframework.rpc.netty.server.MessageRecvHandler;
 import com.newlandframework.rpc.serialize.MessageCodecUtil;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;

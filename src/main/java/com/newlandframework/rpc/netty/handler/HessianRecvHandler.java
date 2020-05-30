@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.netty.handler;
 
-import com.newlandframework.rpc.netty.MessageRecvHandler;
+import com.newlandframework.rpc.netty.server.MessageRecvHandler;
 import com.newlandframework.rpc.serialize.hessian.HessianCodecUtil;
 import com.newlandframework.rpc.serialize.hessian.HessianDecoder;
 import com.newlandframework.rpc.serialize.hessian.HessianEncoder;

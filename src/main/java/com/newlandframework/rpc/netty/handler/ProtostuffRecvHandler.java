@@ -1,7 +1,7 @@
 
 package com.newlandframework.rpc.netty.handler;
 
-import com.newlandframework.rpc.netty.MessageRecvHandler;
+import com.newlandframework.rpc.netty.server.MessageRecvHandler;
 import com.newlandframework.rpc.serialize.protostuff.ProtostuffCodecUtil;
 import com.newlandframework.rpc.serialize.protostuff.ProtostuffDecoder;
 import com.newlandframework.rpc.serialize.protostuff.ProtostuffEncoder;

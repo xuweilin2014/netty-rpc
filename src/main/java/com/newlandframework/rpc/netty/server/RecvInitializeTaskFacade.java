@@ -1,8 +1,10 @@
-package com.newlandframework.rpc.netty;
+package com.newlandframework.rpc.netty.server;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
+import com.newlandframework.rpc.netty.server.MessageRecvInitializeTask;
+import com.newlandframework.rpc.netty.server.MessageRecvInitializeTaskAdapter;
 
 import java.util.Map;
 import java.util.concurrent.Callable;

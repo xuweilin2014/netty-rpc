@@ -3,10 +3,9 @@ package com.newlandframework.rpc.spring;
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
 import com.newlandframework.rpc.serialize.RpcSerializeProtocol;
-import com.newlandframework.rpc.netty.MessageRecvExecutor;
+import com.newlandframework.rpc.netty.server.MessageRecvExecutor;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
  * InitializingBean接口：
