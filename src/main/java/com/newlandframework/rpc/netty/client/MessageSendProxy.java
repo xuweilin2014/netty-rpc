@@ -10,7 +10,7 @@ import com.newlandframework.rpc.core.MessageCallBack;
 import com.newlandframework.rpc.model.MessageRequest;
 
 
-public class MessageSendProxy<T> implements InvocationHandler {
+public class MessageSendProxy implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         MessageRequest request = new MessageRequest();

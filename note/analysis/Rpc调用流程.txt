@@ -1,0 +1,24 @@
+1.客户端向服务器发起方法调用
+
+客户端使用<nettyrpc:reference/>标签：
+
+<nettyrpc:reference/>属性如下：
+1.interfaceName：要使用的服务
+2.ipAddr：要连接的服务器IP地址和端口号
+3.protocol：传输数据所使用的序列化协议
+
+在客户端Spring IoC容器启动的过程中，会初始化client.xml文件中的bean，由于<nettyrpc:reference/>标签对应的NettyRpcReference类实现了InitializingBean
+接口，因此会回调其中的afterProperties方法。在此方法中，会和服务器建立连接，如果连接建立失败，则每过10s再尝试一下。
+
+接着，由于NettyRpcReference类实现了FactoryBean接口，因此通过ctx.getBean获取Spring容器中的bean对象时，实际上获取到的是NettyRpcReference
+类中getObject方法返回的对象，即一个实现了interfaceName接口的代理对象。
+
+PersonManage manage = (PersonManage) context.getBean("personManage");
+manage.save(p);
+
+比如上面的代码，返回的manage对象实际上是一个代理对象，调用它的save方法最终会调用MessageSendProxy类中的invoke方法。MessageSendProxy实现了
+InvocationHandler接口。
+
+在MessageSendProxy#invoke方法中，会把调用请求包装成一个MessageRequest对象，然后发送到服务器端。注意，这里客户端向服务器端发起的调用是同步调用，
+所以，客户端在发起调用后会阻塞，直到服务器端把结果返回。客户端默认阻塞的时间不超过30s，如果超过30s后，还没有接收返回的结果，那么就会抛出InvokeTimeoutException异常。
+

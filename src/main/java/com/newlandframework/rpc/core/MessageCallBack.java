@@ -62,7 +62,8 @@ public class MessageCallBack {
     private void await() {
         boolean isTimeout = false;
         try {
-            // 如果await等待调用结果返回的时间没有超时，而是正常返回，则返回true；如果awiat等待的时间超时了，那么就会返回false
+            //在finish上阻塞，等待调用结果的返回，默认的等待时间为30s
+            //如果await等待调用结果返回的时间没有超时，而是正常返回，则返回true；如果awiat等待的时间超时了，那么就会返回false
             isTimeout = finish.await(RpcSystemConfig.SYSTEM_PROPERTY_MESSAGE_CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();

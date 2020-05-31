@@ -19,7 +19,8 @@ public class MessageRecvHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * 此方法接收客户端发过来的Rpc调用请求，并且通过反射来进行调用
+     * 此方法接收客户端发过来的Rpc调用请求，并且将方法的实际调用包装成一个Task，然后放到线程池中去执行。不会阻塞Netty的worker线程。
+     * 根据是否开启JMX监控，返回的Task不同。
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {

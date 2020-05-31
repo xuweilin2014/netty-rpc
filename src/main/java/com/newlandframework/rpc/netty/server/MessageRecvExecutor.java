@@ -68,13 +68,14 @@ public class MessageRecvExecutor implements ApplicationContextAware {
     //SYSTEM_PROPERTY_PARALLEL的值为处理器的数量
     private static final int PARALLEL = RpcSystemConfig.SYSTEM_PROPERTY_PARALLEL * 2;
 
-    //线程的数量，默认为16
+    //threadPoolExecutor线程池中线程的数量，默认为16
     private static int threadNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS;
 
-    //队列的数量，默认为-1
+    //threadPoolExecutor线程池中任务队列的大小，默认为-1
     private static int queueNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS;
 
-    //线程池，也是使用单例模式
+    //线程池，也是使用单例模式，保证唯一
+    //此线程池用来真正执行客户端的方法调用请求
     private static volatile ListeningExecutorService threadPoolExecutor;
 
     private Map<String, Object> handlerMap = new ConcurrentHashMap<String, Object>();
@@ -115,6 +116,8 @@ public class MessageRecvExecutor implements ApplicationContextAware {
             }
         }
 
+        //将客户端发送过来的方法调用请求封装成Task，放入到线程池中，由其它线程去真正调用服务端的方法，如果
+        //执行完成后，就会回调FutureCallback中的onSuccess方法，将response(方法的调用结果封装在其中)返回客户端。
         ListenableFuture<Boolean> listenableFuture = threadPoolExecutor.submit(task);
         Futures.addCallback(listenableFuture, new FutureCallback<Boolean>() {
             @Override
@@ -122,7 +125,7 @@ public class MessageRecvExecutor implements ApplicationContextAware {
                 ctx.writeAndFlush(response).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                        System.out.println("RPC Server Send message-id respone:" + request.getMessageId());
+                        System.out.println("Rpc Server Send message-id respone:" + request.getMessageId());
                     }
                 });
             }

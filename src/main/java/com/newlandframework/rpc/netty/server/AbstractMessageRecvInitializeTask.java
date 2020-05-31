@@ -127,7 +127,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         advisor.setMappedName(METHOD_MAPPED_NAME);
         // 配置增强对象，也就是 MethodInterceptor 对象，当调用 MethodInvoker 中的 invoke 方法时，
         // 就会被此对象拦截，先调用 MethodProxyAdvisor 中的 invoke 方法
-        // （说明一下，这里的invoke方法和 MethodInvoker中的invoke方法不同，假如MethodInvoker类中的目标方法为hello，并且METHOD_MAPPED_NAME为hello，
+        // （说明一下，这里MethodProxyAdvisor 中的invoke方法和 MethodInvoker中的invoke方法不同，假如MethodInvoker类中的目标方法为hello，并且METHOD_MAPPED_NAME为hello，
         // 那么当MethodInvoker调用hello方法时，也会先调用MethodProxyAdvisor中的invoke方法，也就是对hello方法进行增强，然后再调用MethodInvoker中的hello方法）
         advisor.setAdvice(new MethodProxyAdvisor(handlerMap));
         weaver.addAdvisor(advisor);
