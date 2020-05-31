@@ -7,4 +7,4 @@
                      __/ |    | |         
                     |___/     |_|         
 
-[NettyRPC 2.0,Build 2016/10/7,Author:tangjie http://www.cnblogs.com/jietang/]
+【NettyRPC 2.0,Build 2016/10/7】

@@ -29,7 +29,7 @@ public class NettyRpcNamespaceHandler extends NamespaceHandlerSupport {
             System.out.println("| |\\ |||  \\    / \\   / \\   \\  / |  \\/||  \\/||  /  ");
             System.out.println("| | \\|||  /_   | |   | |   / /  |    /|  __/|  \\_ ");
             System.out.println("\\_/  \\|\\____\\  \\_/   \\_/  /_/   \\_/\\_\\\\_/   \\____/");
-            System.out.println("[NettyRPC 2.0,Build 2016/10/7,Author:tangjie http://www.cnblogs.com/jietang/]");
+            System.out.println("【NettyRPC 2.0,Build 2016/10/7】");
             System.out.println("");
         }
     }
