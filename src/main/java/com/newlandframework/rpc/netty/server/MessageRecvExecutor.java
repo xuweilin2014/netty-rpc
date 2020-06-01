@@ -91,9 +91,6 @@ public class MessageRecvExecutor implements ApplicationContextAware {
 
     private MessageRecvExecutor() {
         handlerMap.clear();
-
-        //提前往handlerMap中放入一些对象，比如AbilityDetailProvider
-        register();
     }
 
     private static class MessageRecvExecutorHolder {
@@ -212,13 +209,6 @@ public class MessageRecvExecutor implements ApplicationContextAware {
     public void stop() {
         worker.shutdownGracefully();
         boss.shutdownGracefully();
-    }
-
-    private void register() {
-        // handlerMap中的键值对类型有以下几种可能：
-        // String -> ServiceFilterBinder对象、String -> AccessAdaptiveProvider对象、String -> AbilityDetailProvider对象
-        handlerMap.put(RpcSystemConfig.RPC_COMPILER_SPI_ATTR, new AccessAdaptiveProvider());
-        handlerMap.put(RpcSystemConfig.RPC_ABILITY_DETAIL_SPI_ATTR, new AbilityDetailProvider());
     }
 
     public Map<String, Object> getHandlerMap() {

@@ -59,8 +59,8 @@ public class SpringAopAnalysis {
     }
 
     /**
-     * 创建的代理对象将要实现的一些接口。这些接口是按照顺序保存在数组中 Interfaces to be implemented by the proxy.
-     * Held in List to keep the order of registration, to create JDK proxy with
+     * 创建的代理对象将要实现的一些接口。这些接口是按照顺序保存在数组中 
+     * Interfaces to be implemented by the proxy. Held in List to keep the order of registration, to create JDK proxy with
      * specified order of interfaces.
      */
     private List<Class<?>> interfaces = new ArrayList<Class<?>>();
@@ -136,11 +136,11 @@ public class SpringAopAnalysis {
         adviceChanged();
     }
 
-    // class:ProxyFactory
+    //class:ProxyFactory
     public Object getProxy() {
-        // createAopProxy根据Factory的设置生成一个AopProxy，返回的AopProxy有两种实现：
-        // 一种是JDK动态代理类型的JdkDynamicAopProxy，另外一种是CGLib类型的ObjenesisCglibAopProxy。
-        // 对于不同的代理方式，getProxy调用的是各自内部的实现。
+        //createAopProxy根据Factory的设置生成一个AopProxy，返回的AopProxy有两种实现：
+        //一种是JDK动态代理类型的JdkDynamicAopProxy，另外一种是CGLib类型的ObjenesisCglibAopProxy。
+        //对于不同的代理方式，getProxy调用的是各自内部的实现。
         return createAopProxy().getProxy();
     }
 
@@ -240,7 +240,7 @@ public class SpringAopAnalysis {
         if (cached == null) {
             /**
              * 真正的调用在DefaultAdvisorChainFactory中，它实现了AdvisorChainFactory接口。通过遍历所有的Advisor切面，如果是PointcutAdvisor，
-             * 则提取出Pointcut，然后匹配Pointcut与当前类和方法是否匹配。如果匹配的话通过AdvisorAdapterRegistry切面注册适配器将Advisor中的
+             * 则提取出Pointcut，然后查看Pointcut与当前类和方法（也就是切入点）是否匹配。如果匹配的话通过AdvisorAdapterRegistry切面注册适配器将Advisor中的
              * Advice都转换为MethodInteceptor对象，然后添加到List中从而形成拦截器链。
              */
             cached = this.advisorChainFactory.getInterceptorsAndDynamicInterceptionAdvice(this, method, targetClass);
@@ -265,10 +265,10 @@ public class SpringAopAnalysis {
             //切入点切面
 			if (advisor instanceof PointcutAdvisor) {
                 PointcutAdvisor pointcutAdvisor = (PointcutAdvisor) advisor;
-                //Advisor与前类和方法是否匹配
+                //Advisor中的切入点Pointcut与当前类和方法是否匹配
 				if (config.isPreFiltered() || pointcutAdvisor.getPointcut().getClassFilter().matches(actualClass)) {
-                    //获取advisor所有拦截器（可能会进行一些封装），一个被代理的对象可以配置多个拦截器，所以当前类中的方法可以与多个拦截器相匹配，
-                    //比如BrowserBeforeAdvice和BrowserAfterReturningAdvice拦截器
+                    //获取所有拦截器（即Advisor中的Advice，或者说增强器），一个被代理的对象可以配置多个拦截器，
+                    //所以可能会有多个拦截器与当前切入点相匹配，比如前面的BrowserBeforeAdvice和BrowserAfterReturningAdvice拦截器
 					MethodInterceptor[] interceptors = registry.getInterceptors(advisor);
                     MethodMatcher mm = pointcutAdvisor.getPointcut().getMethodMatcher();
                     //当前方法是否使用切入点配置
@@ -324,7 +324,7 @@ public class SpringAopAnalysis {
             }
             for (AdvisorAdapter adapter : this.adapters) {
                 //使用adapter对象来判断advice是实现了MethodBeforeAdvice、AfterReturningAdvice、
-                //ThrowsAdvice这三个接口之一，如果是的话，就将其包装成一个MethodInterceptor
+                //ThrowsAdvice这三个接口之一，如果是的话，就将其包装成一个MethodInterceptor，加入到列表中
                 if (adapter.supportsAdvice(advice)) {
                     interceptors.add(adapter.getInterceptor(advisor));
                 }
@@ -357,7 +357,7 @@ public class SpringAopAnalysis {
     
     }
 
-    class ReflectiveMethodInvocation {
+    class ReflectiveMethodInvocation implements ProxyMethodInvocation, Cloneable {
         // 在JdkDynamicAopProxy的invoke方法中通过
         protected ReflectiveMethodInvocation(Object proxy, Object target, Method method, Object[] arguments,
                 Class<?> targetClass, List<Object> interceptorsAndDynamicMethodMatchers) {

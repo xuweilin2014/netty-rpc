@@ -5,7 +5,7 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
 /**
- *
+ * MethodInvoker#invoke方法通过反射来真正执行客户端要求调用的方法
  */
 public class MethodInvoker {
     private Object serviceBean;

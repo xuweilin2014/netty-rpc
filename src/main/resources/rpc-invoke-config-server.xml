@@ -11,22 +11,16 @@
     <context:property-placeholder location="classpath:rpc-server.properties"/>
     <bean id="beanFactory" class="com.newlandframework.rpc.spring.BeanFactoryUtils"/>
 
-    <nettyrpc:service id="demoAddService" interfaceName="com.newlandframework.rpc.services.AddCalculate"
-                      ref="calcAddService"/>
-    <nettyrpc:service id="demoMultiService" interfaceName="com.newlandframework.rpc.services.MultiCalculate"
-                      ref="calcMultiService"/>
-    <nettyrpc:service id="demoPersonManage" interfaceName="com.newlandframework.rpc.services.PersonManage"
-                      ref="personManageService"/>
-    <nettyrpc:service id="demoCostTime" interfaceName="com.newlandframework.rpc.services.CostTimeCalculate"
-                      ref="costTimeCalculateService"/>
-    <nettyrpc:service id="demoCache" interfaceName="com.newlandframework.rpc.services.Cache"
-                      ref="cacheService" filter="simpleFilter"/>
-    <!--<nettyrpc:service id="demoCache" interfaceName="com.newlandframework.rpc.services.Cache"
-                      ref="cacheService" filter="simpleFilter"/>-->
-    <nettyrpc:service id="demoStore" interfaceName="com.newlandframework.rpc.services.Store"
-                      ref="storeService" filter="simpleFilter"/>
-    <!-- registry用来注册Rpc服务器，其中ipAddr为RPC服务器ip地址及端口(客户端连接这个地址），
-        而echoApiPort为Rpc服务端服务能力展示开放端口(可以通过浏览器访问这个端口，获取服务端的信息) -->
+    <nettyrpc:service id="demoAddService" interfaceName="com.newlandframework.rpc.services.AddCalculate" ref="calcAddService"/>
+    <nettyrpc:service id="demoMultiService" interfaceName="com.newlandframework.rpc.services.MultiCalculate" ref="calcMultiService"/>
+    <nettyrpc:service id="demoPersonManage" interfaceName="com.newlandframework.rpc.services.PersonManage" ref="personManageService"/>
+    <nettyrpc:service id="demoCostTime" interfaceName="com.newlandframework.rpc.services.CostTimeCalculate" ref="costTimeCalculateService"/>
+    <nettyrpc:service id="demoCache" interfaceName="com.newlandframework.rpc.services.Cache" ref="cacheService" filter="simpleFilter"/>
+    <nettyrpc:service id="demoStore" interfaceName="com.newlandframework.rpc.services.Store" ref="storeService" filter="simpleFilter"/>
+    <nettyrpc:service id="demoAbility" interfaceName="com.newlandframework.rpc.core.AbilityDetail" ref="abilityProvider"/>
+
+    <!-- registry用来注册Rpc服务器，其中ipAddr为RPC服务器ip地址及端口(客户端连接这个地址），而echoApiPort为Rpc服务端服务能力展示开放端口
+    (可以通过浏览器访问这个端口，获取服务端的信息) -->
     <nettyrpc:registry id="rpcRegistry" ipAddr="${rpc.server.addr}" echoApiPort="${rpc.server.echo.api.port}"
                        protocol="JDKSERIALIZE"/>
 
@@ -37,8 +31,8 @@
     <bean id="cacheService" class="com.newlandframework.rpc.services.impl.CacheImpl"/>
     <bean id="storeService" class="com.newlandframework.rpc.services.impl.StoreImpl"/>
     <bean id="simpleFilter" class="com.newlandframework.rpc.filter.support.SimpleFilter"/>
+    <bean id="abilityProvider" class="com.newlandframework.rpc.core.AbilityDetailProvider"/>
 
-    <!--NettyRPC FilterChain Config by tangjie-->
     <bean id="filterChain" class="com.newlandframework.rpc.filter.FilterChainModularWrapper">
         <constructor-arg name="modular">
             <bean class="com.newlandframework.rpc.core.DefaultModular"></bean>
@@ -50,6 +44,7 @@
             </list>
         </property>
     </bean>
+
     <!--FilterChain-->
     <bean id="classLoaderChainFilter" class="com.newlandframework.rpc.filter.support.ClassLoaderChainFilter"/>
     <bean id="echoChainFilter" class="com.newlandframework.rpc.filter.support.EchoChainFilter"/>
