@@ -17,10 +17,10 @@ public class AsyncInvoker {
             RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS, RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS);
 
     public <T> T submit(final AsyncCallback<T> callback) {
-        // getGenericInterfaces返回对象实现的接口信息的Type数组，包含泛型信息，举例来说，
-        // 调用AsyncRpcCallTest方法传进来的callback对象是AsyncCallback接口的一个实现类，即 AsyncRpcCall<CostTime>。
-        // 所以调用getGenericInterfaces()[0]所得到的就是AsyncCallback<CostTime>对象（包含泛型信息）。由于使用了泛型，
-        // 所以它是ParameterizedType类型。
+        //getGenericInterfaces返回一个Type数组，表示此对象直接实现的接口的信息，其中包含了泛型信息，举例来说：
+        //调用AsyncRpcCallTest方法传进来的callback对象是AsyncCallback接口的一个实现类的对象，即 AsyncRpcCall<CostTime>。
+        //调用getGenericInterfaces()[0]所得到的就是AsyncCallback<CostTime>的Type对象（包含泛型信息）。由于使用了泛型，所以它是ParameterizedType类型。
+        //调用getInterfaces()[0]得到的就是AsyncCallBack的Class对象（不包含泛型信息）。
         Type type = callback.getClass().getGenericInterfaces()[0];
         if (type instanceof ParameterizedType) {
             // getGenericClass方法返回值returnClass为泛型中实际参数类型，比如AsyncCallback<CostTime>中的CostTime.class
@@ -39,7 +39,7 @@ public class AsyncInvoker {
         return future;
     }
 
-    private <R> R intercept(final AsyncCallback<R> callback, Class<?> returnClass) {
+    private <T> T intercept(final AsyncCallback<T> callback, Class<?> returnClass) {
         if (!Modifier.isPublic(returnClass.getModifiers())) {
             return callback.call();
         } else if (Modifier.isFinal(returnClass.getModifiers())) {
