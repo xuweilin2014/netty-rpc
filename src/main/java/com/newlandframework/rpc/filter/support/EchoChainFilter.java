@@ -1,16 +1,16 @@
 package com.newlandframework.rpc.filter.support;
 
-import com.newlandframework.rpc.core.ModularInvoker;
+import com.newlandframework.rpc.core.ChainFilterInvoker;
 import com.newlandframework.rpc.filter.ChainFilter;
 import com.newlandframework.rpc.model.MessageRequest;
 
 
 public class EchoChainFilter implements ChainFilter {
     @Override
-    public Object invoke(ModularInvoker<?> invoker, MessageRequest request) throws Throwable {
+    public Object intercept(ChainFilterInvoker<?> invoker, MessageRequest request) throws Throwable {
         Object o = null;
         try {
-            System.out.println("[NettyRPC 2.0]: EchoChainFilter##TRACE MESSAGE-ID:" + request.getMessageId());
+            System.err.println("【NettyRPC 2.0】 拦截器链-1##TRACE MESSAGE-ID:" + request.getMessageId());
             o = invoker.invoke(request);
             return o;
         } catch (Throwable throwable) {

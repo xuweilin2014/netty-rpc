@@ -14,7 +14,7 @@ public class RpcFilterTest {
 
         Cache cache = (Cache) context.getBean("cache");
 
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 10; i++) {
             String obj = String.valueOf(i);
             try {
                 cache.put(obj, obj);
@@ -23,7 +23,7 @@ public class RpcFilterTest {
             }
         }
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             String obj = String.valueOf(i);
             try {
                 System.out.println((String) cache.get(obj));
@@ -32,7 +32,7 @@ public class RpcFilterTest {
             }
         }
 
-        Store store = (Store) context.getBean("store");
+        /*Store store = (Store) context.getBean("store");
 
         for (int i = 0; i < 100; i++) {
             String obj = String.valueOf(i);
@@ -42,7 +42,7 @@ public class RpcFilterTest {
             } catch (RejectResponeException ex) {
                 System.out.println("trace:" + ex.getMessage());
             }
-        }
+        }*/
         context.destroy();
     }
 }

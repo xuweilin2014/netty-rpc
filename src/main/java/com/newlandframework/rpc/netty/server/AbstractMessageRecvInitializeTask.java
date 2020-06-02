@@ -1,9 +1,9 @@
 package com.newlandframework.rpc.netty.server;
 
-import com.newlandframework.rpc.core.ModularProviderHolder;
-import com.newlandframework.rpc.core.ModularInvoker;
-import com.newlandframework.rpc.core.ModularProvider;
+import com.newlandframework.rpc.core.ChainFilterInvoker;
+import com.newlandframework.rpc.core.ChainFilterInvokerProvider;
 import com.newlandframework.rpc.core.RpcSystemConfig;
+import com.newlandframework.rpc.filter.FilterChainBuilder;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
 import com.newlandframework.rpc.spring.BeanFactoryUtils;
@@ -30,7 +30,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
 
     protected long invokeTimespan;
 
-    protected ModularProviderHolder modular = BeanFactoryUtils.getBean("filterChain");
+    protected FilterChainBuilder chainBuilder = BeanFactoryUtils.getBean("filterChain");
 
     public AbstractMessageRecvInitializeTask(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {
         this.request = request;
@@ -73,7 +73,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         } catch (Throwable t) {
             response.setError(getStackTrace(t));
             t.printStackTrace();
-            System.err.printf("RPC Server invoke error!\n");
+            System.err.printf("Rpc Server invoke error!\n");
             //修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
             injectFailInvoke(t);
             return Boolean.FALSE;
@@ -81,22 +81,19 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
     }
 
     /**
-     * class:AbstractMessageRecvInitializeTask
-     * 这里的modular对象是FilterChainModularWrapper，而调用其provider.getInvoker方法就会返回对filterA进行封装的ModularInvoker，
-     * 然后调用invoke方法最终会调用到filterA的invoke方法，并且把filter链中下一个filter（也就是filterB）封装成的ModularInvoker对象（next）传进去。
-     * 然后在filterA的invoke方法中继续调用next的invoke方法，紧接着就会调用filterB的invoke方法，最后调用到目标对象MethodInvoker中的invoke方法。
-     *
-     * 也就是说，在真正调用RPC服务之前（MethodInvoker中的invoke通过反射调用），会通过XML配置文件所配置filter链，对RPC请求进行处理。
+     * i.如果没有配置过滤器链的话，就直接通过反射调用客户端要求的方法，并且返回结果
+     * ii.如果配置了过滤器链的话，就会先执行过滤器链中多个过滤器的intercept方法，对客户端的调用请求进行一些处理，然后再反射调用客户端要求的方法
      */
     private Object invoke(MethodInvoker mi, MessageRequest request) throws Throwable {
-        if (modular != null) {
-            ModularProvider provider = modular.getProvider(new ModularInvoker() {
+        if (chainBuilder != null) {
+            ChainFilterInvokerProvider provider = chainBuilder.buildChain(new ChainFilterInvoker() {
 
                 @Override
                 public Class getInterface() {
                     return mi.getClass().getInterfaces()[0];
                 }
 
+                //ChainFilterInvoker对象一般是ChanFilterInvoker链中的最后一个，用来真正执行客户端要求调用的方法
                 @Override
                 public Object invoke(MessageRequest request) throws Throwable {
                     return mi.invoke(request);
@@ -104,8 +101,8 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
 
                 @Override
                 public void destroy() {
-
                 }
+
             }, request);
             return provider.getInvoker().invoke(request);
         } else {

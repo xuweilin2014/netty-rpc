@@ -77,14 +77,12 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
         while (waiters.peek() != current) {
             LockSupport.park(ModuleMetricsVisitor.class);
         }
-        System.err.println("【" + current.getName() + "】线程进入临界区" );
     }
 
     /**
      * 当一个线程退出临界区之后，就会把自己从队列中移除，接着唤醒队列中新的队头元素，使得它可以进入临界区获得visitor对象
      */
     protected void exit() {
-        System.err.println("【" + Thread.currentThread().getName() + "】线程退出临界区" );
         waiters.remove();
         LockSupport.unpark(waiters.peek());
     }

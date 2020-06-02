@@ -21,8 +21,7 @@
 
     <!-- registry用来注册Rpc服务器，其中ipAddr为RPC服务器ip地址及端口(客户端连接这个地址），而echoApiPort为Rpc服务端服务能力展示开放端口
     (可以通过浏览器访问这个端口，获取服务端的信息) -->
-    <nettyrpc:registry id="rpcRegistry" ipAddr="${rpc.server.addr}" echoApiPort="${rpc.server.echo.api.port}"
-                       protocol="JDKSERIALIZE"/>
+    <nettyrpc:registry id="rpcRegistry" ipAddr="${rpc.server.addr}" echoApiPort="${rpc.server.echo.api.port}" protocol="JDKSERIALIZE"/>
 
     <bean id="calcAddService" class="com.newlandframework.rpc.services.impl.AddCalculateImpl"/>
     <bean id="calcMultiService" class="com.newlandframework.rpc.services.impl.MultiCalculateImpl"/>
@@ -33,10 +32,7 @@
     <bean id="simpleFilter" class="com.newlandframework.rpc.filter.support.SimpleFilter"/>
     <bean id="abilityProvider" class="com.newlandframework.rpc.core.AbilityDetailProvider"/>
 
-    <bean id="filterChain" class="com.newlandframework.rpc.filter.FilterChainModularWrapper">
-        <constructor-arg name="modular">
-            <bean class="com.newlandframework.rpc.core.DefaultModular"></bean>
-        </constructor-arg>
+    <bean id="filterChain" class="com.newlandframework.rpc.filter.FilterChainBuilder">
         <property name="filters">
             <list>
                 <ref bean="classLoaderChainFilter"/>

@@ -1,9 +1,10 @@
 public class ChainFilterAndListenerAnalysis{
+
     public interface ModularProviderHolder {
         <T> ModuleProvider<T> getProvider(ModuleInvoker<T> invoker, MessageRequest request);
     }
 
-    public interface ModuleInvoker<T> {
+    public interface ModularInvoker<T> {
         Class<T> getInterface();
         Object invoke(MessageRequest request) throws Throwable;
         void destroy();
@@ -121,7 +122,5 @@ public class ChainFilterAndListenerAnalysis{
             return mi.invoke(request);
         }
     }
-
-
 
 }
