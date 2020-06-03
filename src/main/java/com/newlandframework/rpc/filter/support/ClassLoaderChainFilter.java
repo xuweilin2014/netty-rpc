@@ -17,9 +17,6 @@ public class ClassLoaderChainFilter implements ChainFilter {
         try {
             result = invoker.invoke(request);
             return result;
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-            throw throwable;
         } finally {
             Thread.currentThread().setContextClassLoader(ocl);
         }
