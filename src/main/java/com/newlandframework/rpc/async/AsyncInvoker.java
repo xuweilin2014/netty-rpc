@@ -13,6 +13,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class AsyncInvoker {
+
     private ThreadPoolExecutor executor = (ThreadPoolExecutor) RpcThreadPool.getExecutor(
             RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS, RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS);
 
@@ -24,15 +25,15 @@ public class AsyncInvoker {
         Type type = callback.getClass().getGenericInterfaces()[0];
         if (type instanceof ParameterizedType) {
             // getGenericClass方法返回值returnClass为泛型中实际参数类型，比如AsyncCallback<CostTime>中的CostTime.class
-            Class returnClass = (Class) ReflectionUtils.getGenericClass((ParameterizedType) type, 0);
+            Class<?> returnClass = ReflectionUtils.getGenericClass((ParameterizedType) type, 0);
             return intercept(callback, returnClass);
         } else {
             throw new AsyncCallException("NettyRPC AsyncCallback must be parameterized type!");
         }
     }
 
-    // submit方法把传进来的Callable对象，封装进AsyncFuture对象（实现了FutureTask接口），并且提交到线程池中去执行。
-    // 这个future是此项目中异步调用的关键
+    //submit方法把传进来的Callable对象，封装进AsyncFuture对象（实现了FutureTask接口），并且提交到线程池中去执行。
+    //这个future是此项目中异步调用的关键
     private <T> AsyncFuture<T> submit(Callable<T> task) {
         AsyncFuture future = new AsyncFuture<T>(task);
         executor.submit(future);
@@ -56,7 +57,7 @@ public class AsyncInvoker {
     }
 
     private <T> T submit(final AsyncCallback<T> callback, Class<?> returnClass) {
-        Future future = submit(new Callable<T>() {
+        Future<T> future = submit(new Callable<T>() {
             @Override
             public T call() throws Exception {
                 return callback.call();
