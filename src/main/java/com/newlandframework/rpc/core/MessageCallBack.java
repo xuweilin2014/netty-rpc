@@ -10,6 +10,7 @@ import com.newlandframework.rpc.exception.InvokeTimeoutException;
 import com.newlandframework.rpc.exception.RejectResponeException;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
+import com.newlandframework.rpc.netty.server.MethodInvokeStatus;
 
 
 public class MessageCallBack {
@@ -31,15 +32,12 @@ public class MessageCallBack {
             lock.lock();
             await();
             if (this.response != null) {
-                boolean isInvokeSucc = getInvokeResult();
-                if (isInvokeSucc) {
-                    if (this.response.getError().isEmpty()) {
-                        return this.response.getResult();
-                    } else {
-                        throw new InvokeModuleException(this.response.getError());
-                    }
-                } else {
+                if (response.getInvokeStatus().isRejected()){
                     throw new RejectResponeException(RpcSystemConfig.FILTER_RESPONSE_MSG);
+                }else if (response.getInvokeStatus().isDone()){
+                    return this.response.getResult();
+                }else{
+                    throw new InvokeModuleException(this.response.getError());
                 }
             } else {
                 return null;
@@ -63,7 +61,7 @@ public class MessageCallBack {
         boolean isTimeout = false;
         try {
             //在finish上阻塞，等待调用结果的返回，默认的等待时间为30s
-            //如果await等待调用结果返回的时间没有超时，而是正常返回，则返回true；如果awiat等待的时间超时了，那么就会返回false
+            //如果await等待调用结果返回的时间没有超时，而是正常返回，则返回true；如果await等待的时间超时了，那么就会返回false
             isTimeout = finish.await(RpcSystemConfig.SYSTEM_PROPERTY_MESSAGE_CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -76,8 +74,4 @@ public class MessageCallBack {
         }
     }
 
-    private boolean getInvokeResult() {
-        return (!this.response.getError().equals(RpcSystemConfig.FILTER_RESPONSE_MSG) &&
-                (!this.response.isReturnNotNull() || (this.response.isReturnNotNull() && this.response.getResult() != null)));
-    }
 }

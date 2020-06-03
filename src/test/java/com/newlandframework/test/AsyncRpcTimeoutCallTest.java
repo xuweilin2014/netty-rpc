@@ -25,6 +25,7 @@ public class AsyncRpcTimeoutCallTest {
                 }
             });
 
+            System.out.println(((AsyncCallObject) elapse0)._getStatus());
             System.out.println("1 async nettyrpc call:[" + "result:" + elapse0 + ", status:[" + ((AsyncCallObject) elapse0)._getStatus() + "]");
         } catch (InvokeTimeoutException e) {
             System.err.println(e.getMessage());

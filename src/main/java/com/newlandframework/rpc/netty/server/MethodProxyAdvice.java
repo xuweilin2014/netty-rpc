@@ -17,16 +17,19 @@ import java.util.Map;
  * 来对客户端的RPC服务请求进行过滤
  */
 public class MethodProxyAdvice implements MethodInterceptor {
+
     private Map<String, Object> handlerMap;
-    private boolean returnNotNull = true;
 
-    public boolean isReturnNotNull() {
-        return returnNotNull;
+
+    public MethodInvokeStatus getInvokeStatus() {
+        return invokeStatus;
     }
 
-    public void setReturnNotNull(boolean returnNotNull) {
-        this.returnNotNull = returnNotNull;
+    public void setInvokeStatus(MethodInvokeStatus invokeStatus) {
+        this.invokeStatus = invokeStatus;
     }
+
+    private MethodInvokeStatus invokeStatus = MethodInvokeStatus.INIT;
 
     public MethodProxyAdvice(Map<String, Object> handlerMap) {
         this.handlerMap = handlerMap;
@@ -49,26 +52,33 @@ public class MethodProxyAdvice implements MethodInterceptor {
         ServiceFilterBinder binder = (ServiceFilterBinder) serviceBean;
         ((MethodInvoker) invocation.getThis()).setServiceBean(binder.getObject());
 
-        if (binder.getFilter() != null) {
-            Filter filter = binder.getFilter();
-            Object[] args = ArrayUtils.nullToEmpty(parameters);
-            Class<?>[] parameterTypes = ClassUtils.toClass(args);
-            Method method = MethodUtils.getMatchingAccessibleMethod(binder.getObject().getClass(), methodName, parameterTypes);
-            //Filter接口定义的before方法是在对应RPC服务方法运行之前执行，所以如果before方法返回false，RPC服务端会拒绝执行对应的RPC服务方法。
-            //如果before返回true，则会执行RPC服务方法，执行成功之后，再执行Filter定义的after方法。
-            if (filter.before(method, binder.getObject(), parameters)) {
-                Object result = invocation.proceed();
-                filter.after(method, binder.getObject(), parameters);
-                setReturnNotNull(result != null);
-                return result;
-            } else {
-                return null;
+        try{
+            if (binder.getFilter() != null) {
+                Filter filter = binder.getFilter();
+                Object[] args = ArrayUtils.nullToEmpty(parameters);
+                Class<?>[] parameterTypes = ClassUtils.toClass(args);
+                Method method = MethodUtils.getMatchingAccessibleMethod(binder.getObject().getClass(), methodName, parameterTypes);
+                //Filter接口定义的before方法是在对应RPC服务方法运行之前执行，所以如果before方法返回false，RPC服务端会拒绝执行对应的RPC服务方法。
+                //如果before返回true，则会执行RPC服务方法，执行成功之后，再执行Filter定义的after方法。
+                if (filter.before(method, binder.getObject(), parameters)) {
+                    Object result = invocation.proceed();
+                    filter.after(method, binder.getObject(), parameters);
+                    setInvokeStatus(MethodInvokeStatus.DONE);
+                    return result;
+                } else {
+                    setInvokeStatus(MethodInvokeStatus.REJECTED);
+                    return null;
+                }
             }
-        }
 
-        Object result = invocation.proceed();
-        setReturnNotNull(result != null);
-        return result;
+            Object result = invocation.proceed();
+            setInvokeStatus(MethodInvokeStatus.DONE);
+
+            return result;
+        }catch (Throwable e){
+            setInvokeStatus(MethodInvokeStatus.EXCEPTIONAL);
+            throw e;
+        }
     }
 }
 

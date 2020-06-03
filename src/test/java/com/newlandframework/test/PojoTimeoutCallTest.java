@@ -17,7 +17,6 @@ public class PojoTimeoutCallTest {
             long timeout = 32L;
             manage.query(timeout);
         } catch (InvokeTimeoutException e) {
-            //e.printStackTrace();
             System.err.println(e.getMessage());
         } finally {
             context.destroy();

@@ -32,9 +32,9 @@ public class RpcFilterTest {
             }
         }
 
-        /*Store store = (Store) context.getBean("store");
+        Store store = (Store) context.getBean("store");
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 5; i++) {
             String obj = String.valueOf(i);
             try {
                 store.save(obj);
@@ -42,7 +42,7 @@ public class RpcFilterTest {
             } catch (RejectResponeException ex) {
                 System.out.println("trace:" + ex.getMessage());
             }
-        }*/
+        }
         context.destroy();
     }
 }

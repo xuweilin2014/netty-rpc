@@ -26,7 +26,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
 
     protected static final String METHOD_MAPPED_NAME = "invoke";
 
-    protected boolean returnNotNull = true;
+    protected MethodInvokeStatus invokeStatus = MethodInvokeStatus.INIT;
 
     protected long invokeTimespan;
 
@@ -54,15 +54,14 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
             //增加方法的调用次数
             injectInvoke();
             Object result = reflect(request);
-            boolean isInvokeSucc = (!returnNotNull || result != null);
+
             // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
-            if (isInvokeSucc) {
+            if (invokeStatus.isDone()) {
                 response.setResult(result);
                 response.setError("");
-                response.setReturnNotNull(returnNotNull);
                 // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
                 injectSuccInvoke(invokeTimespan);
-            } else {
+            } else if (invokeStatus.isRejected()){
                 System.err.println(RpcSystemConfig.FILTER_RESPONSE_MSG);
                 response.setResult(null);
                 response.setError(RpcSystemConfig.FILTER_RESPONSE_MSG);
@@ -71,12 +70,16 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
             }
             return Boolean.TRUE;
         } catch (Throwable t) {
+            //如果通过反射调用方法的过程中发生了异常，并且这个异常没有被捕获的话，就会在此被捕获，
+            //并且设置到MessageResponse的error属性中，并且打印出来。
             response.setError(getStackTrace(t));
             t.printStackTrace();
             System.err.printf("Rpc Server invoke error!\n");
             //修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
             injectFailInvoke(t);
             return Boolean.FALSE;
+        } finally {
+            response.setInvokeStatus(invokeStatus);
         }
     }
 
@@ -110,6 +113,14 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         }
     }
 
+    public MethodInvokeStatus getInvokeStatus() {
+        return invokeStatus;
+    }
+
+    public void setInvokeStatus(MethodInvokeStatus invokeStatus) {
+        this.invokeStatus = invokeStatus;
+    }
+
     /**
      * 使用Spring AOP的代理功能，来对真正执行客户端要求调用的方法进行增强。增强的目的是考虑到过滤器对请求进行一些处理
      */
@@ -136,7 +147,10 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         MethodInvoker mi = (MethodInvoker) weaver.getProxy();
         Object obj = invoke(mi, request);
         invokeTimespan = mi.getInvokeTimespan();
-        setReturnNotNull(((MethodProxyAdvice) advisor.getAdvice()).isReturnNotNull());
+
+        //setReturnNotNull(((MethodProxyAdvice) advisor.getAdvice()).isReturnNotNull());
+        setInvokeStatus(((MethodProxyAdvice) advisor.getAdvice()).getInvokeStatus());
+
         return obj;
     }
 
@@ -145,14 +159,6 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         ex.printStackTrace(new PrintWriter(buf));
 
         return buf.toString();
-    }
-
-    public boolean isReturnNotNull() {
-        return returnNotNull;
-    }
-
-    public void setReturnNotNull(boolean returnNotNull) {
-        this.returnNotNull = returnNotNull;
     }
 
     public MessageResponse getResponse() {
