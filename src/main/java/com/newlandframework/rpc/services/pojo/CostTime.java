@@ -4,7 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 
-@Data
+
 public class CostTime implements Serializable {
     public long elapse;
     public String detail;
