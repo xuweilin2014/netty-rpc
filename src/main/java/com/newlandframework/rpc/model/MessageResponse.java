@@ -2,6 +2,7 @@ package com.newlandframework.rpc.model;
 
 import java.io.Serializable;
 
+import com.newlandframework.rpc.netty.server.MethodInvokeStatus;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,7 @@ public class MessageResponse implements Serializable {
     private String messageId;
     private String error;
     private Object result;
-    private boolean returnNotNull;
+    private MethodInvokeStatus invokeStatus;
 
     @Override
     public String toString() {
@@ -47,12 +48,12 @@ public class MessageResponse implements Serializable {
         this.result = result;
     }
 
-    public boolean isReturnNotNull() {
-        return returnNotNull;
+    public MethodInvokeStatus getInvokeStatus() {
+        return invokeStatus;
     }
 
-    public void setReturnNotNull(boolean returnNotNull) {
-        this.returnNotNull = returnNotNull;
+    public void setInvokeStatus(MethodInvokeStatus invokeStatus) {
+        this.invokeStatus = invokeStatus;
     }
 }
 
