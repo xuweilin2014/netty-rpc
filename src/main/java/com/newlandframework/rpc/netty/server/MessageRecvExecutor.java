@@ -115,6 +115,12 @@ public class MessageRecvExecutor implements ApplicationContextAware {
 
         //将客户端发送过来的方法调用请求封装成Task，放入到线程池中，由其它线程去真正调用服务端的方法，如果
         //执行完成后，就会回调FutureCallback中的onSuccess方法，将response(方法的调用结果封装在其中)返回客户端。
+        //在MoreExecutors.listeningDecorator创建线程池中，先执行完提交的Callable任务，也就是task，然后会遍历执行
+        //注册在这个任务之上的所有Listener对象（FutureCallback会被封装成一个Listener）。执行到我们这里所注册的FutureCallback
+        //的话，除非AbstractMessageRecvInitializeTask#call方法在执行的过程中抛出异常，才会去调用onFailure方法，
+        //除此之外，不管返回的结果为Boolean.True还是Boolean.False，都会去调用onSuccess方法。
+        //而在AbstractMessageRecvInitializeTask#call方法中，如果发生了异常，则会直接捕获，保存在MessageResponse的error属性中，
+        //然后返回Boolean.False，因此一般情况下，都会回调FutureCallback中的onSuccess方法，不会去调用onFailure方法
         ListenableFuture<Boolean> listenableFuture = threadPoolExecutor.submit(task);
         Futures.addCallback(listenableFuture, new FutureCallback<Boolean>() {
             @Override
