@@ -1,7 +1,7 @@
 public class ChainFilterAndListenerAnalysis{
 
     public interface ModularProviderHolder {
-        <T> ModuleProvider<T> getProvider(ModuleInvoker<T> invoker, MessageRequest request);
+        <T> ModuleProvider<T> getProvider(ModularInvoker<T> invoker, MessageRequest request);
     }
 
     public interface ModularInvoker<T> {
@@ -11,7 +11,7 @@ public class ChainFilterAndListenerAnalysis{
     }
 
     public interface ModuleProvider<T> {
-        ModuleInvoker<T> getInvoker();
+        ModularInvoker<T> getInvoker();
         void destoryInvoker();
     }
 
