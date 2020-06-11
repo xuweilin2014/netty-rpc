@@ -308,9 +308,11 @@ public class SpringAopAnalysis {
             List<MethodInterceptor> interceptors = new ArrayList<MethodInterceptor>(3);
             Advice advice = advisor.getAdvice();
             /**
-             * MethodInterceptor和其它接口的继承链如下： MethodInterceptor -> Interceptor -> Advice
-             * MethodBeforeAdvice -> BeforeAdvice -> Advice AfterReturningAdvice ->
-             * AfterAdvice -> Advice ThrowsAdvice -> AfterAdvice -> Advice
+             * MethodInterceptor和其它接口的继承链如下： 
+             * MethodInterceptor -> Interceptor -> Advice
+             * MethodBeforeAdvice -> BeforeAdvice -> Advice 
+             * AfterReturningAdvice -> AfterAdvice -> Advice 
+             * ThrowsAdvice -> AfterAdvice -> Advice
              */
             // 如果advice对象就是实现了MethodInterceptor接口的对象，那么直接添加到拦截器列表中
             if (advice instanceof MethodInterceptor) {
@@ -428,26 +430,6 @@ public class SpringAopAnalysis {
             this.advice.before(mi.getMethod(), mi.getArguments(), mi.getThis());
             //通过 MethodInvocation 调用下一个拦截器，若所有拦截器均执行完，则调用目标方法
             return mi.proceed();
-        }
-    }
-
-    public class AfterReturningAdviceInterceptor implements MethodInterceptor, AfterAdvice, Serializable {
-
-        private final AfterReturningAdvice advice;
-
-        /**
-         * Create a new AfterReturningAdviceInterceptor for the given advice.
-         */
-        public AfterReturningAdviceInterceptor(AfterReturningAdvice advice) {
-            Assert.notNull(advice, "Advice must not be null");
-            this.advice = advice;
-        }
-
-        @Override
-        public Object invoke(MethodInvocation mi) throws Throwable {
-            Object retVal = mi.proceed();
-            this.advice.afterReturning(retVal, mi.getMethod(), mi.getArguments(), mi.getThis());
-            return retVal;
         }
     }
 
