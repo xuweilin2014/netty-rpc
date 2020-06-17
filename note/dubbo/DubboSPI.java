@@ -277,7 +277,9 @@ public class DubboSPI {
                 throw new IllegalStateException("Error when load extension class(interface: " + type + ", class line: "
                         + clazz.getName() + "), class " + clazz.getName() + "is not subtype of interface.");
             }
-            //检测目标类上是否有 Adaptive 注解
+            //检测目标类上是否有 Adaptive 注解，如果带有@Adaptive注解的话，就会缓存到cachedAdaptiveClass中，在通过getAdaptieExtension
+            //获取自适应拓展的时候，会用到。
+            //Dubbo 目前只有两个扩展点使用类上Adaptive注解，Compiler 和 ExtensionFactory
             if (clazz.isAnnotationPresent((Class<? extends Annotation>) Adaptive.class)) {
                 if (cachedAdaptiveClass == null) {
                     cachedAdaptiveClass = clazz;
@@ -286,7 +288,8 @@ public class DubboSPI {
                             + cachedAdaptiveClass.getClass().getName()
                             + ", " + clazz.getClass().getName());
                 }
-            //检测 clazz 是否是 Wrapper 类型
+            //检测 clazz 是否是 Wrapper 类型，检查其实就是看clazz是否有一个以type为参数的构造。
+            //如果有，则说明此clazz为Wrapper类型的；如果没有，则说明此clazz不为Wrapper类型
             } else if (isWrapperClass(clazz)) {
                 Set<Class<?>> wrappers = cachedWrapperClasses;
                 if (wrappers == null) {
@@ -333,6 +336,15 @@ public class DubboSPI {
                         }
                     }
                 }
+            }
+        }
+
+        private boolean isWrapperClass(Class<?> clazz) {
+            try {
+                clazz.getConstructor(type);
+                return true;
+            } catch (NoSuchMethodException e) {
+                return false;
             }
         }
 
