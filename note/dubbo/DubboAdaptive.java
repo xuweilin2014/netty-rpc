@@ -46,9 +46,7 @@ public class DubboAdaptive {
         }
     }
 
-    /***********************************
-     * 源码分析***************************************
-     */
+    //    ***********************************源码分析***************************************
     /**
      * Adaptive 可注解在类或方法上。当 Adaptive 注解在类上时，Dubbo 不会为该类生成代理类。 注解在方法（接口方法）上时，Dubbo
      * 则会为该方法生成代理逻辑。 当@Adaptive注解在接口方法上时，表示拓展的加载逻辑需由框架自动生成
@@ -99,7 +97,7 @@ public class DubboAdaptive {
         private T createAdaptiveExtension() {
             try {
                 // 获取自适应拓展类，并通过反射实例化，然后进行依赖注入
-                // Dubbo 中有两种类型的自适应拓展，一种是手工编码的，一种是自动生成的。手工编码的自适应拓展中可能存在着一些依赖，
+                // Dubbo 中有两种类型的自适应拓展，一种是用户自己编写的自适应拓展，一种是程序自动生成的。手工编码的自适应拓展中可能存在着一些依赖，
                 // 而自动生成的 Adaptive 拓展则不会依赖其他类。这里调用 injectExtension 方法的目的是为手工编码的自适应拓展注入依赖
                 return injectExtension((T) getAdaptiveExtensionClass().newInstance());
             } catch (Exception e) {
@@ -109,11 +107,9 @@ public class DubboAdaptive {
         }
 
         private Class<?> getAdaptiveExtensionClass() {
-            // 通过 SPI 获取所有的拓展类，也就是获取到某个接口的全部实现类，比如该方法可以获取 Protocol 接口的
-            // DubboProtocol、HttpProtocol、InjvmProtocol 等实现类。在获取实现类的过程中，如果某个实现类被 Adaptive
-            // 注解修饰了，
-            // 那么该类就会被赋值给 cachedAdaptiveClass 变量，下面一步中就可以直接返回获取到的cachedAdaptiveClass。如果
-            // 如果所有的实现类均未被 Adaptive 注解修饰，那么执行下面第三步逻辑，创建自适应拓展类。
+            // 通过 SPI 获取所有的拓展类，也就是获取到某个接口的全部实现类，比如该方法可以获取 Protocol 接口的DubboProtocol、HttpProtocol、InjvmProtocol 等实现类。
+            // 在获取实现类的过程中，如果某个实现类被 Adaptive 注解修饰了（就表明此拓展是用户自定义的），那么该类就会被赋值给 cachedAdaptiveClass 变量，
+            // 下面一步中就可以直接返回获取到的cachedAdaptiveClass。如果如果所有的实现类均未被 Adaptive 注解修饰，那么执行下面第三步逻辑，创建自适应拓展类。
             getExtensionClasses();
             // 检查缓存，若缓存不为空，则直接返回缓存
             if (cachedAdaptiveClass != null) {

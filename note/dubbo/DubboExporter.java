@@ -246,25 +246,25 @@ public class DubboExporter {
             // 判断如果参数是 Callback，则生成了一个 proxy，因此服务实现类里在调用 Callback 方法的时候，会被传递到 Consumer 端执行
             // Callback 实现类的代码。
              // 获取 ArgumentConfig 列表
-for (遍历 ArgumentConfig 列表) {
-    if (type 不为 null，也不为空串) {    // 分支1
-        1. 通过反射获取 interfaceClass 的方法列表
-        for (遍历方法列表) {
-            1. 比对方法名，查找目标方法
-            2. 通过反射获取目标方法的参数类型数组 argtypes
-            if (index != -1) {    // 分支2
-                1. 从 argtypes 数组中获取下标 index 处的元素 argType
-                2. 检测 argType 的名称与 ArgumentConfig 中的 type 属性是否一致
-                3. 添加 ArgumentConfig 字段信息到 map 中，或抛出异常
-            } else {    // 分支3
-                1. 遍历参数类型数组 argtypes，查找 argument.type 类型的参数
-                2. 添加 ArgumentConfig 字段信息到 map 中
-            }
-        }
-    } else if (index != -1) {    // 分支4
-        1. 添加 ArgumentConfig 字段信息到 map 中
-    }
-}
+             for (遍历 ArgumentConfig 列表) {
+                 if (type 不为 null，也不为空串) {    // 分支1
+                     1. 通过反射获取 interfaceClass 的方法列表
+                     for (遍历方法列表) {
+                         1. 比对方法名，查找目标方法
+                         2. 通过反射获取目标方法的参数类型数组 argtypes
+                         if (index != -1) {    // 分支2
+                             1. 从 argtypes 数组中获取下标 index 处的元素 argType
+                             2. 检测 argType 的名称与 ArgumentConfig 中的 type 属性是否一致
+                             3. 添加 ArgumentConfig 字段信息到 map 中，或抛出异常
+                         } else {    // 分支3
+                             1. 遍历参数类型数组 argtypes，查找 argument.type 类型的参数
+                             2. 添加 ArgumentConfig 字段信息到 map 中
+                         }
+                     }
+                 } else if (index != -1) {    // 分支4
+                     1. 添加 ArgumentConfig 字段信息到 map 中
+                 }
+             }
             //
             if (methods != null && !methods.isEmpty()) {
                 for (MethodConfig method : methods) {
