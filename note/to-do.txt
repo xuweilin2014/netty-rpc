@@ -31,3 +31,4 @@ MultiCalculate	    public int multi(int, int);	            3000	    3000	       
 其中add和multi方法均被调用了3000次，而calculate方法被调用了6次，但是calculate确显示只成功调用了3次，而add方法成功调用了3003次，这说明
 calculate方法统计数据有一部分给了add方法，有可能是visitor获取不正确导致的
 
+
