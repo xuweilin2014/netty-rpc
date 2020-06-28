@@ -8,7 +8,8 @@ public class DubboServiceInvokingProcess {
      * 
      * Dubbo
      * 支持同步和异步两种调用方式，其中异步调用还可细分为"有返回值"的异步调用和"无返回值"的异步调用。所谓"无返回值"异步调用是指服务消费方只管调用，但不关心调用结果，
-     * 此时 Dubbo 会直接返回一个空的 RpcResult。若要使用异步特性，需要服务消费方手动进行配置。默认情况下，Dubbo 使用同步调用方式。
+     * 此时 Dubbo 会直接返回一个空的 RpcResult。若要使用异步特性，需要服务消费方手动进行配置。默认情况下，Dubbo 使用同步调用方式。Dubbo同步与异步的区别在于future对象的
+     * get方法（此方法是阻塞方法）是由谁来调用，如果是同步的话，就是由框架来调用，否则就是由用户自己来调用。
      */
 
     public class JavassistProxyFactory extends AbstractProxyFactory {
@@ -16,9 +17,75 @@ public class DubboServiceInvokingProcess {
         @SuppressWarnings("unchecked")
         public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
             // 生成 Proxy 子类（Proxy 是抽象类）。并调用 Proxy 子类的 newInstance 方法创建 Proxy 实例
+            // 服务消费者通过ProxyFactory获取到一个代理对象proxy，然后调用的实际上是这个代理对象的方法。而在这个代理对象中，实际上是通过调用
+            // invoker的invoke方法来真正向服务器发起调用。
             return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
         }
+    
+        public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
+            // wrapper是由javassist编译器动态生成的一个对象
+            final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+            // 返回一个匿名内部类对象，这个类继承了AbstractProxyInvoker类，并且实现了doInvoke方法。当我们调用invoker的invoke方法时，最终会调用到
+            // wrapper的invokeMethod方法
+            return new AbstractProxyInvoker<T>(proxy, type, url) {
+                @Override
+                protected Object doInvoke(T proxy, String methodName,
+                                          Class<?>[] parameterTypes,
+                                          Object[] arguments) throws Throwable {
+                    return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
+                }
+            };
+        }
+    }
 
+    public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
+
+        private final T proxy;
+    
+        private final Class<T> type;
+    
+        private final URL url;
+    
+        public AbstractProxyInvoker(T proxy, Class<T> type, URL url) {
+            // 参数检查
+            this.proxy = proxy;
+            this.type = type;
+            this.url = url;
+        }
+    
+        public Class<T> getInterface() {
+            return type;
+        }
+    
+        public URL getUrl() {
+            return url;
+        }
+    
+        public boolean isAvailable() {
+            return true;
+        }
+    
+        public void destroy() {
+        }
+    
+        public Result invoke(Invocation invocation) throws RpcException {
+            try {
+                return new RpcResult(doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments()));
+            } catch (InvocationTargetException e) {
+                return new RpcResult(e.getTargetException());
+            } catch (Throwable e) {
+                throw new RpcException("Failed to invoke remote proxy method " + invocation.getMethodName() + " to " + getUrl() + ", cause: " + e.getMessage(), e);
+            }
+        }
+    
+        protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments) throws Throwable;
+    
+        @Override
+        public String toString() {
+            return getInterface() + " -> " + (getUrl() == null ? " " : getUrl().toString());
+        }
+    
+    
     }
 
     /**
@@ -27,6 +94,7 @@ public class DubboServiceInvokingProcess {
         —> MockClusterInvoker#invoke(Invocation)
         —> AbstractClusterInvoker#invoke(Invocation)
         —> FailoverClusterInvoker#doInvoke(Invocation, List<Invoker<T>>, LoadBalance)
+        -> InvokerWrapper#invoke(Invocation)
         —> Filter#invoke(Invoker, Invocation)  // 包含多个 Filter 调用
         —> ListenerInvokerWrapper#invoke(Invocation) 
         —> AbstractInvoker#invoke(Invocation) 
@@ -92,6 +160,10 @@ public class DubboServiceInvokingProcess {
         }
     }
 
+    /**
+     * Mock 是 Stub 的一个子集，便于服务提供方在客户端执行容错逻辑，因经常需要在出现 RpcException (比如网络失败，超时等)时进行容错，而在出现业务异常(比如登录用户名密码错误)时不需要容错，
+     * 如果用 Stub，可能就需要捕获并依赖 RpcException 类，而用 Mock 就可以不依赖 RpcException，因为它的约定就是只有出现 RpcException 时才执行。
+     */
     public class MockClusterInvoker<T> implements Invoker<T> {
 
         private final Invoker<T> invoker;
@@ -129,6 +201,7 @@ public class DubboServiceInvokingProcess {
                             logger.info("fail-mock: " + invocation.getMethodName() + " fail-mock enabled , url : "
                                     + directory.getUrl(), e);
                         }
+                        // 失败之后才是由 Mock 行为
                         result = doMockInvoke(invocation, e);
                     }
                 }
@@ -248,7 +321,7 @@ public class DubboServiceInvokingProcess {
         }
     }
 
-    public class DefaultFuture implements ResponseFuture {
+    public static class DefaultFuture implements ResponseFuture {
 
         private final int timeout;
 
