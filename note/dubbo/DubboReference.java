@@ -13,6 +13,55 @@ public class DubboReference{
      * 并让代理类去调用 Invoker 逻辑。避免了 Dubbo 框架代码对业务代码的侵入，同时也让框架更容易使用。
      */
 
+
+    /**
+     * 在使用懒汉模式进行服务引用的时候，在 RegistryProtocol 类中，会通过集群管理类 Cluster 将多个 Invoker 合并成一个实例，也就是通过下面代码：
+     * 
+     * Invoker invoker = cluster.join(directory);
+     * 
+     * 其中cluster是Cluster$Adaptive类型，也就是在调用join方法的时候，通过自适应扩展机制获取到Cluster的扩展，也就是MockClusterWrapper（在这个Wrapper包装类中，
+     * 封装了Cluster真正的扩展FailoverCluster），然后调用这个wrapper包装类的join方法，得到一个MockClusterInvoker对象，赋值给上面的invoker变量。在MockClusterInvoker中
+     * 封装了FailoverClusterInvoker。
+     * 
+     * MockClusterInvoker中包含有服务降级的逻辑，而在FailoverClusterInvoker中则具有集群容错相关的逻辑。FailoverClusterInvoker中的invokers都是
+     * RegistryDirectory$InvokerDelegate，这个InvokerDelegate是一个内部类，也可以看成是对DubboInvoker的封装。FailoverClusterInvoker调用这些invokers中的
+     * 某一个invoker的invoke方法，如果调用中发生错误或者失败了，那么就尝试调用invokers集合中的下一个Invoker。
+     * 
+     * 综上，服务引用最终返回的代理对象proxy中的invoker为MockClusterInvoker，其中包含了服务降级的逻辑。而MockClusterInvoker中又包含一个FailoverClusterInvoker
+     * 对象，包含集群容错相关的逻辑。而FailoverClusterInvoker中会通过directory获取到invokers集合，这里的invokers集合中invoker的类型为RegistryDirectory$InvokerDelegate，
+     * 其中封装了DubboInvoker对象。
+     * 
+     * public class MockClusterWrapper implements Cluster {
+     *      private Cluster cluster;
+     * 
+     *      public MockClusterWrapper(Cluster cluster) {
+     *          this.cluster = cluster;
+     *      }
+     * 
+     *      public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+     *          return new MockClusterInvoker<T>(directory, this.cluster.join(directory));
+     *      }
+     * }
+     */
+
+    
+    /**
+     * Stub的实现原理：
+     * 
+     * 在调用ExtensionLoader的createExtension方法时，如果存在有一个或者多个wrapper包装对象的话，会将真正的拓展传入到wrapper的
+     * 构造函数中，然后通过反射创建 Wrapper 实例，循环创建 Wrapper 实例,形成Wrapper包装链。
+     * 
+     * stub=org.apache.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper
+     * jdk=org.apache.dubbo.rpc.proxy.jdk.JdkProxyFactory
+     * javassist=org.apache.dubbo.rpc.proxy.javassist.JavassistProxyFactory
+     * 
+     * 其中StubProxyFactoryWrapper作为一个wrapper，使用代理模式包裹在具体拓展的外部，当我们在执行JdkProxyFactory或者JavassistProxyFactory
+     * 的getProxy方法时候（如在ReferenceConfig的createProxy方法中），均会先进入StubProxyFactoryWrapper。在这个wrapper包装类中（其封装了真正的拓展
+     * 也就是JdkProxyFactory或者JavassistProxyFactory类对象）会调用拓展的getProxy方法，生成远程服务的代理对象，然后根据用户的配置创建一个存根对象Stub，
+     * 并且把代理对象传入到这个存根对象Stub的构造方法中。最后返回的为这个存根对象给用户。
+     * 
+     */
+
     //class:ReferenceBean
     //ReferenceBean实现了Spring中FactoryBean接口的getObject方法
     public Object getObject() throws Exception {
@@ -368,7 +417,7 @@ public class DubboReference{
             //设置注册中心和协议
             directory.setRegistry(registry);
             directory.setProtocol(protocol);
-            // all attributes of REFER_KEY
+            //all attributes of REFER_KEY
             Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
 
             //生成服务消费者链接
@@ -387,12 +436,42 @@ public class DubboReference{
                             + "," + Constants.CONFIGURATORS_CATEGORY
                             + "," + Constants.ROUTERS_CATEGORY));
     
-            //一个注册中心可能有多个服务提供者，因此这里需要将多个服务提供者合并为一个
+            //一个注册中心可能有多个服务提供者，因此这里需要将多个服务提供者合并为一个，这里的cluster的类型为Cluster$Adaptive，
+            //也就是说通过自适应扩展机制来获取对应的 Cluster 扩展，并且调用其 join 方法。不过通过ExtensionLoader.getExtensionLoader(Cluster.class).getExtension(cluster)，
+            //不过获取到Cluster扩展实际上是一个Wrapper包装类 MockClusterWrapper，调用的为这个MockClusterWrapper的join方法，它创建一个MockClusterInvoker，这个Invoker中包含了
+            //服务降级的逻辑
             Invoker invoker = cluster.join(directory);
             ProviderConsumerRegTable.registerConsuemr(invoker, url, subscribeUrl, directory);
             return invoker;
         }
 
+    }
+
+    public class MockClusterWrapper implements Cluster {
+
+        private Cluster cluster;
+    
+        //此Wrapper包装内中的Cluster默认为FailoverCluster，在ExtensionLoader#createExtension中将FailoverCluster
+        //（也可能是其它的Cluster类对象）传入此Wrapper的构造方法
+        public MockClusterWrapper(Cluster cluster) {
+            this.cluster = cluster;
+        }
+    
+        public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+            //创建一个MockClusterInvoker对象，其中包含有FailoverClusterInvoker（通过cluster.join(directory)方法创建）
+            return new MockClusterInvoker<T>(directory, this.cluster.join(directory));
+        }
+    
+    }
+
+    public class FailoverCluster implements Cluster {
+
+        public final static String NAME = "failover";
+    
+        public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+            return new FailoverClusterInvoker<T>(directory);
+        }
+    
     }
 
     public class StubProxyFactoryWrapper implements ProxyFactory {
@@ -408,7 +487,48 @@ public class DubboReference{
             //JavassistProxyFactory类的父类AbstractProxyFactory中去
             T proxy = proxyFactory.getProxy(invoker);
             if (GenericService.class != invoker.getInterface()) {
-                //代码省略
+                // 获取 URL 中的 stub 参数，这里 stub 参数有可能是true/false/存根的全类名
+                String stub = invoker.getUrl().getParameter(Constants.STUB_KEY, invoker.getUrl().getParameter(Constants.LOCAL_KEY));
+                if (ConfigUtils.isNotEmpty(stub)) {
+                    // 获取 invoker 实现的接口class对象
+                    Class<?> serviceType = invoker.getInterface();
+                    // 如果 stub 如果是 true/default 的话，就默认存根的类名为：接口名 + Stub，并且位于和接口相同的包下
+                    if (ConfigUtils.isDefault(stub)) {
+                        if (invoker.getUrl().hasParameter(Constants.STUB_KEY)) {
+                            stub = serviceType.getName() + "Stub";
+                        } else {
+                            stub = serviceType.getName() + "Local";
+                        }
+                    }
+                    try {
+                        // 获取存根的实现类，并且判断是否实现了接口
+                        Class<?> stubClass = ReflectUtils.forName(stub);
+                        if (!serviceType.isAssignableFrom(stubClass)) {
+                            throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + serviceType.getName());
+                        }
+                        try {
+                            Constructor<?> constructor = ReflectUtils.findConstructor(stubClass, serviceType);
+                            // 将 proxy 传入存根类（比如说 DemoServiceStub）的构造函数中，然后创建存根类对象赋值给 proxy，然后返回
+                            proxy = (T) constructor.newInstance(new Object[]{proxy});
+                            //export stub service
+                            URL url = invoker.getUrl();
+                            if (url.getParameter(Constants.STUB_EVENT_KEY, Constants.DEFAULT_STUB_EVENT)) {
+                                url = url.addParameter(Constants.STUB_EVENT_METHODS_KEY, StringUtils.join(Wrapper.getWrapper(proxy.getClass()).getDeclaredMethodNames(), ","));
+                                url = url.addParameter(Constants.IS_SERVER_KEY, Boolean.FALSE.toString());
+                                try {
+                                    export(proxy, (Class) invoker.getInterface(), url);
+                                } catch (Exception e) {
+                                    LOGGER.error("export a stub service error.", e);
+                                }
+                            }
+                        } catch (NoSuchMethodException e) {
+                            throw new IllegalStateException("No such constructor \"public " + stubClass.getSimpleName() + "(" + serviceType.getName() + ")\" in stub implementation class " + stubClass.getName(), e);
+                        }
+                    } catch (Throwable t) {
+                        LOGGER.error("Failed to create stub implementation class " + stub + " in consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() + ", cause: " + t.getMessage(), t);
+                        // ignore
+                    }
+                }
             }
             return proxy;
         }
@@ -695,6 +815,7 @@ public class DubboReference{
             Object ret = handler.invoke(this, methods[0], args);
             return (java.lang.String) ret;
         }
+
     }
 
 

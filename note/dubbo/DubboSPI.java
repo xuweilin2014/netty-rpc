@@ -125,12 +125,11 @@ public class DubboSPI {
                 //为生成的实例通过其set方法注入对应的实例，这里实例的获取方式不仅可以通过SPI的方式也可以通过Spring的bean工厂获取
                 injectExtension(instance);
                 Set<Class<?>> wrapperClasses = cachedWrapperClasses;
-                //循环创建 Wrapper 实例，将拓展对象包裹在Wrapper对象中，实现了Dubbo AOP的功能
+                //循环创建 Wrapper 实例，将真正拓展对象包裹在Wrapper对象中，实现了Dubbo AOP的功能
                 if (wrapperClasses != null && !wrapperClasses.isEmpty()) {
                     for (Class<?> wrapperClass : wrapperClasses) {
                         //将当前 instance 作为参数传给 Wrapper 的构造方法，并通过反射创建 Wrapper 实例。
                         //循环创建 Wrapper 实例,形成Wrapper包装链
-                        //然后向 Wrapper 实例中注入依赖，最后将 Wrapper 实例再次赋值给 instance 变量。
                         instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                     }
                 }

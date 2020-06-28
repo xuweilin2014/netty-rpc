@@ -354,7 +354,8 @@ public class DubboDirectory{
                             enabled = url.getParameter(Constants.ENABLED_KEY, true);
                         }
                         if (enabled) {
-                            // 调用 refer 获取 Invoker
+                            // 调用 refer 获取 Invoker，这里使用自适应扩展机制来创建 Protocol 对应的扩展。
+                            // 
                             invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
                         }
                     } catch (Throwable t) {
