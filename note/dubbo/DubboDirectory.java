@@ -217,8 +217,10 @@ public class DubboDirectory{
             return invokers == null ? new ArrayList<Invoker<T>>(0) : invokers;
         }
 
-        //RegistryDirectory 是一个动态服务目录，会随注册中心配置的变化进行动态调整。因此 RegistryDirectory 实现了 NotifyListener 接口，
-        //通过这个接口获取注册中心变更通知。
+        // RegistryDirectory 是一个动态服务目录，会随注册中心配置的变化进行动态调整。因此 RegistryDirectory 实现了 NotifyListener 接口，
+        // 通过这个接口获取注册中心变更通知。
+        // 如上，notify 方法首先是根据 url 的 category 参数对 url 进行分门别类存储，然后通过 toRouters 和 toConfigurators 将 url 列表转成 Router 和 Configurator 列表。
+        // 最后调用 refreshInvoker 方法刷新 Invoker 列表。
         public synchronized void notify(List<URL> urls) {
             // 定义三个集合，分别用于存放服务提供者 url，路由 url，配置器 url
             List<URL> invokerUrls = new ArrayList<URL>();
@@ -247,7 +249,19 @@ public class DubboDirectory{
                 }
             }
 
-            //省略代码
+            // configurators
+            if (configuratorUrls != null && configuratorUrls.size() > 0) {
+                // 将url转变为configurator
+                this.configurators = toConfigurators(configuratorUrls);
+            }
+            // routers
+            if (routerUrls != null && routerUrls.size() > 0) {
+                List<Router> routers = toRouters(routerUrls);
+                if (routers != null) { // null - do nothing
+                    // 将url转变为router
+                    setRouters(routers);
+                }
+            }
 
             // providers
             // 刷新 Invoker 列表
@@ -259,11 +273,15 @@ public class DubboDirectory{
          * 1.根据入参 invokerUrls 的数量和协议头判断是否禁用所有的服务，如果禁用，则销毁所有的 Invoker。
          * 2.若不禁用，则更新本地的 url 缓存
          * 3.将 url 转成 Invoker，得到 <url, Invoker> 的映射关系。
-         * 4.进一步进行转换，得到 <methodName, Invoker 列表> 映射关系。
+         * 4.进一步进行转换，得到 <methodName, Invoker 列表> 映射关系。然后进行多组 Invoker 合并操作，并且将合并操作的结果赋值给 methodInvokerMap，
+         * 这个 methodInvokerMap 在 doList 方法中会用到，doList 方法中会对该方法进行读操作，在这里是写操作。
          * 5.销毁无用的 Invoker，避免服务消费者调用已下线的服务的服务。
          */
         private void refreshInvoker(List<URL> invokerUrls) {
-            //Constants.EMPTY_PROTOCOL的字符串值为empty
+            // Constants.EMPTY_PROTOCOL的字符串值为empty
+            // 首先会根据入参 invokerUrls 的数量和协议头是否为 empty 来判断是否禁用所有的服务，如果禁用，则将 forbidden 设为 true，并销毁所有的 Invoker
+            // 也就是说，如果 invokerUrls 集合中只有一个 url，并且这个 url 的协议为 empty，那么说明没有provider（在providers目录下的子节点为null）或者
+            // 禁用所有服务。
             if (invokerUrls != null && invokerUrls.size() == 1 && invokerUrls.get(0) != null
                     && Constants.EMPTY_PROTOCOL.equals(invokerUrls.get(0).getProtocol())) {
                 // 设置 forbidden 为 true
@@ -285,9 +303,9 @@ public class DubboDirectory{
                 if (invokerUrls.size() == 0) {
                     return;
                 }
-                // 将 url 转换成 Invoker
+                // 将 url 转换成 Invoker，得到 <url, Invoker> 的映射关系
                 Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
-                // 将 newUrlInvokerMap 转成方法名到 Invoker 列表的映射
+                // 将 newUrlInvokerMap 转成 <methodName, Invoker列表> 的映射关系
                 Map<String, List<Invoker<T>>> newMethodInvokerMap = toMethodInvokers(newUrlInvokerMap); // Change method name to map Invoker Map
 
                 // 转换出错，直接打印异常，并返回
@@ -372,7 +390,7 @@ public class DubboDirectory{
                             enabled = url.getParameter(Constants.ENABLED_KEY, true);
                         }
                         if (enabled) {
-                            // 调用 refer 获取 Invoker
+                            // 调用 refer 获取 Invoker，比如 DubboInvoker 对象，这里的 Invoker 对象可以向发起远程服务调用，
                             invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
                         }
                     } catch (Throwable t) {

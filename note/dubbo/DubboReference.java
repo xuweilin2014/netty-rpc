@@ -13,6 +13,17 @@ public class DubboReference{
      * 并让代理类去调用 Invoker 逻辑。避免了 Dubbo 框架代码对业务代码的侵入，同时也让框架更容易使用。
      */
 
+    /**
+     * 在服务的引用过程中，在RegistryProtocol的doRefer过程中，会创建一个RegistryDirectory对象，这个对象可以看成是Invoker对象（比如DubboInvoker）的集合，并且
+     * 会随着注册中心的变化而动态地变化。在创建好directory之后，就会去订阅注册中心上providers、configurators、routers三个目录，也就是在这三个目录注册子节点状态监听器。
+     * 当目录下面的子节点发生变化的时候，就会通知或者说调用directory的notify方法（具体流程可以去看消费者订阅通知流程），更新这个directory中的Invoker对象集合，
+     * 去除掉下线的Invoker，增加新上线的Invoker等等。
+     * 
+     * 订阅好后，就使得此directory具有动态更新的能力，然后再创建集群 Cluster 的时候，会把directory传入进去，从而可以获取到这个directory中所有的Invoker对象。
+     * 
+     * 这里顺便提一下，就是消费者调用远程服务时，FailoverClusterInvoker会使用directory.list获取到Invoker集合，在这个list方法中会首先对获取到的Invoker集合是由路由
+     * 进行筛选，然后在FailoverClusterInvoker中再对经过路由筛选的Invoker集合使用负载均衡算法获取到一个特定的Invoker，进行远程调用，如果失败了，切换尝试下一个Invoker
+     */
 
     /**
      * 在使用懒汉模式进行服务引用的时候，在 RegistryProtocol 类中，会通过集群管理类 Cluster 将多个 Invoker 合并成一个实例，也就是通过下面代码：
@@ -432,7 +443,7 @@ public class DubboReference{
 
             //订阅 providers、configurators、routers 等节点数据
             directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
-                    Constants.PROVIDERS_CATEGORY
+                            Constants.PROVIDERS_CATEGORY
                             + "," + Constants.CONFIGURATORS_CATEGORY
                             + "," + Constants.ROUTERS_CATEGORY));
     
