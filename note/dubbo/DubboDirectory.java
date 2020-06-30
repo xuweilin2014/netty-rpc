@@ -8,16 +8,6 @@ public class DubboDirectory{
      * 它可以看做是 Invoker 集合，且这个集合中的元素会随注册中心的变化而进行动态调整。
      */
 
-    //Registry、Monitor、Invoker等类都实现了Node接口，这个接口包含了一个获取配置信息的方法 getUrl，实现该接口的类可以向外提供配置信息。
-    public interface Node {
-        URL getUrl();
-    
-        boolean isAvailable();
-
-        void destroy();
-
-    }
-
     //Invocation有两个实现类：RpcInvocation和DecodeableRpcInvocation
     public interface Invocation {
 
@@ -43,15 +33,15 @@ public class DubboDirectory{
     public class RpcInvocation implements Invocation, Serializable {
 
         private static final long serialVersionUID = -4355285085441097045L;
-
+        // Rpc调用的方法名称
         private String methodName;
-    
+        // Rpc调用的参数类型
         private Class<?>[] parameterTypes;
-    
+        // Rpc调用的具体参数
         private Object[] arguments;
-    
+        // Rpc调用的附属信息
         private Map<String, String> attachments;
-    
+
         private transient Invoker<?> invoker;
 
         public RpcInvocation() {
@@ -67,11 +57,33 @@ public class DubboDirectory{
 
     }
 
+    // Registry、Monitor、Invoker等类都实现了Node接口，这个接口包含了一个获取配置信息的方法 getUrl，实现该接口的类可以向外提供配置信息。
+    public interface Node {
+        URL getUrl();
+    
+        boolean isAvailable();
+
+        void destroy();
+
+    }
+
+    // 服务目录目前内置的实现类有两个：StaticDirectory和RegistryDirectory，他们都是AbstractDirectory的子类，AbstractDirectory
+    // 实现了Directory接口，这个接口中包含了一个重要方法的定义，那就是list，用于列举invoker
+    public interface Directory<T> extends Node {
+
+        Class<T> getInterface();
+    
+        List<Invoker<T>> list(Invocation invocation) throws RpcException;
+    
+    }
+
     public abstract class AbstractDirectory<T> implements Directory<T>{
 
-        //AbstractDirectory 封装了 Invoker 列举流程，具体的列举逻辑则由子类实现，这是典型的模板模式。list方法的流程如下：
-        //1.调用 doList 获取 Invoker 列表
-        //2.根据 Router 的 getUrl 返回值为空与否，以及 runtime 参数决定是否进行服务路由
+        private volatile boolean destroyed = false;
+
+        // AbstractDirectory 封装了 Invoker 列举流程，具体的列举逻辑则由子类实现，这是典型的模板模式。list方法的流程如下：
+        // 1.调用 doList 获取 Invoker 列表
+        // 2.根据 Router 的 getUrl 返回值为空与否，以及 runtime 参数决定是否进行服务路由
         public List<Invoker<T>> list(Invocation invocation) throws RpcException {
             if (destroyed) {
                 throw new RpcException("Directory already destroyed .url: " + getUrl());
@@ -85,6 +97,8 @@ public class DubboDirectory{
                 for (Router router : localRouters) {
                     try {
                         // 获取 runtime 参数，并根据参数决定是否进行路由
+                        // runtime 参数这里简单说明一下，这个参数决定了是否在每次调用服务时都执行路由规则。如果 runtime 为 true，
+                        // 那么每次调用服务前，都需要进行服务路由。这个对性能造成影响，配置时需要注意。
                         if (router.getUrl() == null || router.getUrl().getParameter(Constants.RUNTIME_KEY, false)) {
                             // 进行服务路由
                             invokers = router.route(invokers, getConsumerUrl(), invocation);
@@ -95,6 +109,10 @@ public class DubboDirectory{
                 }
             }
             return invokers;
+        }
+
+        public void destroy() {
+            destroyed = true;
         }
 
         // 模板方法，由子类实现
@@ -354,8 +372,7 @@ public class DubboDirectory{
                             enabled = url.getParameter(Constants.ENABLED_KEY, true);
                         }
                         if (enabled) {
-                            // 调用 refer 获取 Invoker，这里使用自适应扩展机制来创建 Protocol 对应的扩展。
-                            // 
+                            // 调用 refer 获取 Invoker
                             invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
                         }
                     } catch (Throwable t) {

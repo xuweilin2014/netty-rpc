@@ -163,6 +163,7 @@ public class DubboServiceInvokingProcess {
     /**
      * Mock 是 Stub 的一个子集，便于服务提供方在客户端执行容错逻辑，因经常需要在出现 RpcException (比如网络失败，超时等)时进行容错，而在出现业务异常(比如登录用户名密码错误)时不需要容错，
      * 如果用 Stub，可能就需要捕获并依赖 RpcException 类，而用 Mock 就可以不依赖 RpcException，因为它的约定就是只有出现 RpcException 时才执行。
+     * MockClusterInvoker中包含的invoker实例是FailoverClusterInvoker（默认），也有可能是其它集群管理类。
      */
     public class MockClusterInvoker<T> implements Invoker<T> {
 
