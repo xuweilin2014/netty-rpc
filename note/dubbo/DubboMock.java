@@ -290,6 +290,7 @@ public class DubboMock {
     }
 
     public class Wrapper1 extends Wrapper implements ClassGenerator.DC {
+        
         public static String[] pns;
         public static Map pts;
         public static String[] mns;
