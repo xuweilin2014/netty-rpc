@@ -647,6 +647,7 @@ public class DubboServiceInvokingProcess {
 
                     throw cause;
                 }
+            }
             } catch (Throwable e) {
                 throw new RemotingException(this, "Failed to send message " + message + " to " + getRemoteAddress() + ", cause: " + e.getMessage(), e);
             }
