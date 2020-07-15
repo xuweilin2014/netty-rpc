@@ -81,6 +81,20 @@ public class DubboReference{
 
     public class ReferenceConfig<T> extends AbstractReferenceConfig{
 
+        private static final Protocol refprotocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+
+        private static final Cluster cluster = ExtensionLoader.getExtensionLoader(Cluster.class).getAdaptiveExtension();
+
+        private static final ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+
+        private final List<URL> urls = new ArrayList<URL>();
+
+        private List<MethodConfig> methods;
+
+        // interface name
+        private String interfaceName;
+        private Class<?> interfaceClass;
+
         private transient volatile T ref;
         private transient volatile Invoker<?> invoker;
         private transient volatile boolean initialized;
@@ -96,6 +110,14 @@ public class DubboReference{
                 init();
             }
             return ref;
+        }
+
+        // 创建ConsumerConfig字段，并且把<dubbo:consumer/>标签中的信息保存到ConsumerConfig对象中
+        private void checkDefault() {
+            if (consumer == null) {
+                consumer = new ConsumerConfig();
+            }
+            appendProperties(consumer);
         }
 
         /**
@@ -177,6 +199,8 @@ public class DubboReference{
                     logger.warn("NO method found in service interface " + interfaceClass.getName());
                     map.put("methods", Constants.ANY_VALUE);
                 } else {
+                    // 将interfaceClass中的所有方法名使用逗号,作为分隔符，比如某接口中有A和B两个方法，则map中会存放
+                    // methods -> A,B 键值对
                     map.put("methods", StringUtils.join(new HashSet<String>(Arrays.asList(methods)), ","));
                 }
             }
@@ -226,6 +250,8 @@ public class DubboReference{
             } else if (isInvalidLocalHost(hostToRegistry)) {
                 throw new IllegalArgumentException("Specified invalid registry ip from property:" + Constants.DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
             }
+            // 在map中保存服务消费者的ip地址，其中Constants.REGISTER_IP_KEY的值为：register.ip
+            // 放入的键值对为：<register.ip, 169.254.207.250>
             map.put(Constants.REGISTER_IP_KEY, hostToRegistry);
     
             //存储 attributes 到系统上下文中
