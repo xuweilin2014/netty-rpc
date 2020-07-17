@@ -98,6 +98,39 @@ public class DubboSubscribeNotify {
 
     }
 
+    public static class UrlUtils{
+
+        public static boolean isMatch(URL consumerUrl, URL providerUrl) {
+
+            String consumerInterface = consumerUrl.getServiceInterface();
+            String providerInterface = providerUrl.getServiceInterface();
+            if (!(Constants.ANY_VALUE.equals(consumerInterface) || StringUtils.isEquals(consumerInterface, providerInterface)))
+                return false;
+    
+            if (!isMatchCategory(providerUrl.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY),
+                    consumerUrl.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY))) {
+                return false;
+            }
+            if (!providerUrl.getParameter(Constants.ENABLED_KEY, true)
+                    && !Constants.ANY_VALUE.equals(consumerUrl.getParameter(Constants.ENABLED_KEY))) {
+                return false;
+            }
+    
+            String consumerGroup = consumerUrl.getParameter(Constants.GROUP_KEY);
+            String consumerVersion = consumerUrl.getParameter(Constants.VERSION_KEY);
+            String consumerClassifier = consumerUrl.getParameter(Constants.CLASSIFIER_KEY, Constants.ANY_VALUE);
+    
+            String providerGroup = providerUrl.getParameter(Constants.GROUP_KEY);
+            String providerVersion = providerUrl.getParameter(Constants.VERSION_KEY);
+            String providerClassifier = providerUrl.getParameter(Constants.CLASSIFIER_KEY, Constants.ANY_VALUE);
+
+            return (Constants.ANY_VALUE.equals(consumerGroup) || StringUtils.isEquals(consumerGroup, providerGroup) || StringUtils.isContains(consumerGroup, providerGroup))
+                    && (Constants.ANY_VALUE.equals(consumerVersion) || StringUtils.isEquals(consumerVersion, providerVersion))
+                    && (consumerClassifier == null || Constants.ANY_VALUE.equals(consumerClassifier) || StringUtils.isEquals(consumerClassifier, providerClassifier));
+        }
+
+    }
+
     public abstract class AbstractRegistry implements Registry {
 
         private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
@@ -127,6 +160,8 @@ public class DubboSubscribeNotify {
 
             Map<String, List<URL>> result = new HashMap<String, List<URL>>();
             // result中存储的为zookeeper中各个目录（category）下的url，也就是category -> urls 的映射关系
+            // 并且还会检测这些url和消费者的url是否相匹配（传进来的参数中，url为消费者的URL，表示要调用服务的相关配置信息，比如服务的接口名是否相同，
+            // 版本，组等等）
             for (URL u : urls) {
                 if (UrlUtils.isMatch(url, u)) {
                     String category = u.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY);
@@ -141,6 +176,7 @@ public class DubboSubscribeNotify {
             if (result.size() == 0) {
                 return;
             }
+            
             // 已经通知过的category
             Map<String, List<URL>> categoryNotified = notified.get(url);
             if (categoryNotified == null) {
@@ -255,6 +291,29 @@ public class DubboSubscribeNotify {
                 throw new RpcException("Failed to subscribe " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
             }
         }
+
+        private String toServicePath(URL url) {
+            String name = url.getServiceInterface();
+            if (Constants.ANY_VALUE.equals(name)) {
+                return toRootPath();
+            }
+            return toRootDir() + URL.encode(name);
+        }
+    
+        private String[] toCategoriesPath(URL url) {
+            String[] categroies;
+            if (Constants.ANY_VALUE.equals(url.getParameter(Constants.CATEGORY_KEY))) {
+                categroies = new String[]{Constants.PROVIDERS_CATEGORY, Constants.CONSUMERS_CATEGORY,
+                        Constants.ROUTERS_CATEGORY, Constants.CONFIGURATORS_CATEGORY};
+            } else {
+                categroies = url.getParameter(Constants.CATEGORY_KEY, new String[]{Constants.DEFAULT_CATEGORY});
+            }
+            String[] paths = new String[categroies.length];
+            for (int i = 0; i < categroies.length; i++) {
+                paths[i] = toServicePath(url) + Constants.PATH_SEPARATOR + categroies[i];
+            }
+            return paths;
+        }
     }
 
     public interface ChildListener {
@@ -347,51 +406,6 @@ public class DubboSubscribeNotify {
             return watchForChilds(path);
         }
 
-    }
-
-    /******************************************** ✨Zookeeper的Curator客户端✨ ***************************************** */
-
-    public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorWatcher> {
-
-        public CuratorWatcher createTargetChildListener(String path, ChildListener listener) {
-            return new CuratorWatcherImpl(listener);
-        }
-
-        private class CuratorWatcherImpl implements CuratorWatcher {
-
-            private volatile ChildListener listener;
-    
-            public CuratorWatcherImpl(ChildListener listener) {
-                this.listener = listener;
-            }
-    
-            public void unwatch() {
-                this.listener = null;
-            }
-    
-            public void process(WatchedEvent event) throws Exception {
-                if (listener != null) {
-                    String path = event.getPath() == null ? "" : event.getPath();
-                    listener.childChanged(path,
-                            // if path is null, curator using watcher will throw NullPointerException.
-                            // if client connect or disconnect to server, zookeeper will queue
-                            // watched event(Watcher.Event.EventType.None, .., path = null).
-                            StringUtils.isNotEmpty(path)
-                                    ? client.getChildren().usingWatcher(this).forPath(path)
-                                    : Collections.<String>emptyList());
-                }
-            }
-        }
-
-        public List<String> addTargetChildListener(String path, CuratorWatcher listener) {
-            try {
-                return client.getChildren().usingWatcher(listener).forPath(path);
-            } catch (NoNodeException e) {
-                return null;
-            } catch (Exception e) {
-                throw new IllegalStateException(e.getMessage(), e);
-            }
-        }
     }
 
 

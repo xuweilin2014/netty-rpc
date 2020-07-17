@@ -174,6 +174,9 @@ public class DubboDirectory{
     }
 
     /**
+     * RegistryDirectory 可以看成是一个注册在一个注册中心上一个服务目录下的监听器，并且还含有Invoker的集合。它会根据服务目录下子节点的变化（增加或者删除）来动态地
+     * 修改它持有的Invoker集合。
+     * 
      * RegistryDirectory 是一种动态服务目录，实现了 NotifyListener 接口。当注册中心服务配置发生变化后，RegistryDirectory 可收到与当前服务相关的变化。收到变更通知后，
      * RegistryDirectory 可根据配置变更信息刷新 Invoker 列表。RegistryDirectory 中有几个比较重要的逻辑:
      * 第一是 Invoker 的列举逻辑，第二是接收服务配置变更的逻辑，第三是 Invoker 列表的刷新逻辑。

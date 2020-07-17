@@ -55,6 +55,74 @@ public class DubboReference{
      * }
      */
 
+    /**
+     * Invoker：
+     * 
+     * Invoker 是 Dubbo 的核心模型，代表一个可执行体。在服务提供方，Invoker 用于调用服务提供类。在服务消费方，Invoker 用于执行远程调用。服务消费方的 Invoker 是由 Protocol 实现类构建而来；
+     * 而服务提供方的 Invoker 是由 ProxyFactory 的 getInvoker 方法创建。 
+     * 
+     * 在Dubbo中，Invoker类一般有两个抽象类AbstractInvoker和AbstractProxyInvoker，其中AbstractInvoker有子类DubboInvoker和InjvmInvoker以及一些内部类。
+     * 而AbstractProxyInvoker的子类为JdkProxyFactory和JavassistProxyFactory中的内部类。
+     * 
+     * AbstractProxyInvoker的子类对象是提供者端的Invoker，子类中的doInvoke方法用于调用wrapper对象的invokeMethod方法，从而真正地调用具体的方法。
+     * AbstractInvoker的子类对象是消费者端的Invoker，子类中的doInvoke方法（比如DubboInvoker）用于向服务器端发起调用。
+     * 
+     * ProxyFactory：
+     * 
+     * 在Dubbo中，在ProxyFactory接口中有两个方法，一个是getProxy方法，另外一个是getInvoker方法。其中getProxy方法用于为消费者端生成一个远程服务代理。而getInvoker
+     * 方法则为提供者端生成一个方法调用的封装。
+     * 
+     * 消费者端：
+     * 
+     * 在对一个<dubbo:reference/>标签进行服务引用的时候，先通过RegistryProtocol的refer方法获得到一个MockClusterInvoker类对象，在这个对象中还封装了一个
+     * FailoverClusterInvoker对象。其中MockClusterInvoker的invoke方法中包含了服务降级的逻辑，而在FailoverClusterInvoker包含了集群容错的逻辑（就是一个invoker调用
+     * 失败了之后，切换到另外一个invoker进行调用）。在我们调用代理对象的某个方法时，会进入到AbstractClusterInvoker中的invoke方法中，首先会通过directory获取到可调用的invoker集合（通过了路由
+     * 规则的筛选），然后再在FailoverClusterInvoker#doInvoke方法中，通过负载均衡策略筛选出一个Invoker，进行调用。这里的Invoker（我们以DubboInvoker为例），
+     * 就会向服务器端发起调用请求。
+     * 
+     * 而directory中，确切地说是RegistryDirectory对象中的Invoker集合，是在RegistryDirectory中的refreshInvoker中创建并且进行更新的。具体调用链如下：
+     * 
+     * notify -> refreshInvoker -> toInvokers方法
+     * 
+     * 在toInvokers方法中，会把protocol.refer方法得到的Invoker封装在InvokerDelegate对象中。
+
+     * 
+     * 提供者端：
+     * 
+     * 在提供者端，生成的Invoker一般都是通过 proxyFactory.getInvoker(...) 方法生成的。proxyFactory一般是JavassistProxyFactory对象，其getInvoker代码如下：
+     * 
+     * public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
+     *      // wrapper是由javassist编译器动态生成的一个对象
+     *      final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+     *      // 返回一个匿名内部类对象，这个类继承了AbstractProxyInvoker类，并且实现了doInvoke方法。当我们调用invoker的invoke方法时，最终会调用到
+     *      // wrapper的invokeMethod方法
+     *      return new AbstractProxyInvoker<T>(proxy, type, url) {
+     *          @Override
+     *          protected Object doInvoke(T proxy, String methodName,
+     *                                    Class<?>[] parameterTypes,
+     *                                    Object[] arguments) throws Throwable {
+     *              return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
+     *          }
+     *      };
+     *  }
+     * 
+     * 也就是提供者端生成的Invoker对象是AbstractProxyInvoker抽象类的子类对象，所以当我们调用proxyFatcory生成的invoker的invoke方法时，最终会调用到wrapper的
+     * invokeMethod方法，从而可以调用具体的方法。
+     * 
+     * 服务器端在进行服务导出的时候，会把前面通过proxyFactory生成的invoker，封装进exporter对象中。比如在ServiceConfig的doExportUrlsFor1Protocol方法中，有如下代码：
+     * 
+     * Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
+     * DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+     * Exporter<?> exporter = protocol.export(wrapperInvoker);
+     * exporters.add(exporter);
+     * 
+     * 上面第一行代码首先通过proxyFactory生成一个invoker，然后封装到DelegateProviderMetaDataInvoker对象中，接着通过protocol.export对服务进行导出，并且把这个
+     * invoker封装到其中。最终生成的这个Exporter对象类型很复杂，经过了层层封装，但是其中有一个最关键的对象，就是DubboExporter类型的对象。我们前面创建的
+     * wrapperInvoker，就封装在这个对象中。
+     * 
+     * 并且在调用DubboProtocol的export方法时，会创建一个DubboExporter对象，然后将其保存到exporterMap中，等到消费者对应的调用传送到服务器之后，根据url取出对应的
+     * DubboExporter对象，进而获取到封装在DubboExporter对象中的Invoker类型的对象，再调用这个Invoker对象的invoke方法，就可以调用执行具体的方法。
+     */
     
     /**
      * Stub的实现原理：
@@ -70,7 +138,6 @@ public class DubboReference{
      * 的getProxy方法时候（如在ReferenceConfig的createProxy方法中），均会先进入StubProxyFactoryWrapper。在这个wrapper包装类中（其封装了真正的拓展
      * 也就是JdkProxyFactory或者JavassistProxyFactory类对象）会调用拓展的getProxy方法，生成远程服务的代理对象，然后根据用户的配置创建一个存根对象Stub，
      * 并且把代理对象传入到这个存根对象Stub的构造方法中。最后返回的为这个存根对象给用户。
-     * 
      */
 
     //class:ReferenceBean
@@ -344,20 +411,40 @@ public class DubboReference{
                     }
                 }
     
-                //单个注册中心或者单个服务提供者
+                /**
+                 * 在进行服务引用时，可能只在一个注册中心上有提供者，也有可能在多个注册中心上都有提供者。
+                 * 
+                 * 1）对于第一种情况，先通过RegistryProtocol的refer方法获得到一个MockClusterInvoker类对象，在这个对象中还封装了一个
+                 * FailoverClusterInvoker对象。在FailoverClusterInvoker对象中还持有一个RegistryDirectory，用于保存Invoker对象的集合。在我们调用代理对象的某个方法时，
+                 * 会进入到AbstractClusterInvoker中的invoke方法中，首先会通过directory获取到可调用的invoker集合（通过了路由规则的筛选），然后再在FailoverClusterInvoker#doInvoke方法中，
+                 * 通过负载均衡策略筛选出一个Invoker，进行调用。这里的Invoker（我们以DubboInvoker为例），就会向服务器端发起调用请求。而directory中，确切地说是RegistryDirectory对象中的Invoker集合，
+                 * 是在RegistryDirectory中的refreshInvoker中创建并且进行更新的
+                 * 
+                 * 2）对于第二种情况，对于每个注册中心上的提供者，或者说urls中的每个url，和前面的流程一样，都是先通过RegistryProtocol的refer方法生成一个MockClusterInvoker，这个对象里面同样封装了
+                 * FailoverClusterInvoker对象以及其他东西。接着，创建一个StaticDirectory对象，包含前面创建的每个MockClusterInvoker。接着，此时的cluster的类型仍然是MockClusterWrapper
+                 * 
+                 * cluster.join(new StaticDirectory(u, invokers))
+                 * 
+                 * 因此上述代码的结果依旧是创建一个MockClusterInvoker，不过这里的MockClusterInvoker和上面的不是同一个。而在MockClusterWrapper中的cluster则为AvailableCluster类型，因此，这里的
+                 * MockClusterInvoker封装了AvailableCluster的join方法创建的一个ClusterInvoker，并且持有StaticDirectory，用来保存前面所说的每个MockClusterInvoker（每个都代表一个注册中心上的
+                 * 所有提供者）。
+                 * 
+                 * 调用上面的cluster.join创建的Invoker的invoke方法时，会从StaticDirectory中保存的MockClusterInvoker里面选一个可用的，调用其invoke方法。接着的逻辑就和第一种情况一样。
+                 */
+
+                //单个注册中心或者单个服务直连url
                 if (urls.size() == 1) {
                     //调用 RegistryProtocol 的 refer 构建 Invoker 实例
                     invoker = refprotocol.refer(interfaceClass, urls.get(0));
-
-                //多个注册中心或者多个服务提供者
+                // 多个注册中心或者多个服务直连url
                 } else {
                     List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
                     URL registryURL = null;
 
-                    //获取所有的 Invoker
+                    // 获取所有的 Invoker
                     for (URL url : urls) {
-                        //通过 refprotocol 调用 refer 构建 Invoker，refprotocol 会在运行时根据 url 协议头加载指定的 Protocol 实例，并调用实例的 refer 方法。
-                        //这里一般是调用RegistryProtocol的refer方法
+                        // 通过 refprotocol 调用 refer 构建 Invoker，refprotocol 会在运行时根据 url 协议头加载指定的 Protocol 实例，并调用实例的 refer 方法。
+                        // 这里一般是调用RegistryProtocol的refer方法
                         invokers.add(refprotocol.refer(interfaceClass, url));
                         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
                             registryURL = url; // use last registry url
@@ -365,9 +452,12 @@ public class DubboReference{
                     }
 
                     if (registryURL != null) { 
-                        //如果注册中心链接不为空，则将使用 AvailableCluster
+                        // 如果注册中心链接不为空，则将使用 AvailableCluster
                         URL u = registryURL.addParameter(Constants.CLUSTER_KEY, AvailableCluster.NAME);
-                        //创建 StaticDirectory 实例，并由 Cluster 对多个 Invoker 进行合并
+                        // 创建 StaticDirectory 实例，并由 Cluster 对多个 Invoker 进行合并，这里会使用AvailableCluster创建一个Invoker，不过同样会把这个
+                        // invoker封装在MockClusterInvoker对象中（有服务降级的逻辑），而这个MockClusterInvoker中的directory则是StaticDirectory。
+                        // 这个StaticDirectory中Invoker集合中的每一个都可以代表一个注册中心中providers目录下所有的invoker的代表（其实是通过FailoverClusterInvoker
+                        // 中的RegistryDirectory进行管理），在真正调用时，直接从StaticDirectory的invoker集合中选一个可用的，调用其invoke方法
                         invoker = cluster.join(new StaticDirectory(u, invokers));
                     } else { // not a registry url
                         invoker = cluster.join(new StaticDirectory(invokers));
@@ -399,6 +489,90 @@ public class DubboReference{
             return (T) proxyFactory.getProxy(invoker);
         }
 
+    }
+
+    public class MockClusterWrapper implements Cluster {
+
+        private Cluster cluster;
+    
+        public MockClusterWrapper(Cluster cluster) {
+            this.cluster = cluster;
+        }
+    
+        public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+            return new MockClusterInvoker<T>(directory,
+                    this.cluster.join(directory));
+        }
+    
+    }
+
+    public class AvailableCluster implements Cluster {
+
+        public static final String NAME = "available";
+    
+        public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+    
+            return new AbstractClusterInvoker<T>(directory) {
+                public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+                    for (Invoker<T> invoker : invokers) {
+                        if (invoker.isAvailable()) {
+                            return invoker.invoke(invocation);
+                        }
+                    }
+                    throw new RpcException("No provider available in " + invokers);
+                }
+            };
+    
+        }
+    
+    }
+
+    public class StaticDirectory<T> extends AbstractDirectory<T> {
+
+        private final List<Invoker<T>> invokers;
+    
+        public StaticDirectory(List<Invoker<T>> invokers) {
+            this(null, invokers, null);
+        }
+    
+        public StaticDirectory(List<Invoker<T>> invokers, List<Router> routers) {
+            this(null, invokers, routers);
+        }
+    
+        public StaticDirectory(URL url, List<Invoker<T>> invokers) {
+            this(url, invokers, null);
+        }
+    
+        public StaticDirectory(URL url, List<Invoker<T>> invokers, List<Router> routers) {
+            super(url == null && invokers != null && invokers.size() > 0 ? invokers.get(0).getUrl() : url, routers);
+            if (invokers == null || invokers.size() == 0)
+                throw new IllegalArgumentException("invokers == null");
+            this.invokers = invokers;
+        }
+    
+        public Class<T> getInterface() {
+            return invokers.get(0).getInterface();
+        }
+    
+        public boolean isAvailable() {
+            if (isDestroyed()) {
+                return false;
+            }
+            for (Invoker<T> invoker : invokers) {
+                if (invoker.isAvailable()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    
+        // 省略代码......
+    
+        @Override
+        protected List<Invoker<T>> doList(Invocation invocation) throws RpcException {
+            return invokers;
+        }
+    
     }
 
     @SPI("javassist")
@@ -448,35 +622,35 @@ public class DubboReference{
          * 并生成一个 Invoker。
          */
         private <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
-            //创建 RegistryDirectory 实例
+            // 创建 RegistryDirectory 实例
             RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);
 
-            //设置注册中心和协议
+            // 设置注册中心和协议
             directory.setRegistry(registry);
             directory.setProtocol(protocol);
-            //all attributes of REFER_KEY
+            // all attributes of REFER_KEY
             Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());
 
-            //生成服务消费者链接
+            // 生成服务消费者链接
             URL subscribeUrl = new URL(Constants.CONSUMER_PROTOCOL, parameters.remove(Constants.REGISTER_IP_KEY), 0, type.getName(), parameters);
 
-            //注册服务消费者，在 consumers 目录下新节点
+            // 注册服务消费者，生成consumers新目录节点
             if (!Constants.ANY_VALUE.equals(url.getServiceInterface())
                     && url.getParameter(Constants.REGISTER_KEY, true)) {
                 registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
                         Constants.CHECK_KEY, String.valueOf(false)));
             }
 
-            //订阅 providers、configurators、routers 等节点数据
+            // 订阅 providers、configurators、routers 等节点数据
             directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
                             Constants.PROVIDERS_CATEGORY
                             + "," + Constants.CONFIGURATORS_CATEGORY
                             + "," + Constants.ROUTERS_CATEGORY));
     
-            //一个注册中心可能有多个服务提供者，因此这里需要将多个服务提供者合并为一个，这里的cluster的类型为Cluster$Adaptive，
-            //也就是说通过自适应扩展机制来获取对应的 Cluster 扩展，并且调用其 join 方法。不过通过ExtensionLoader.getExtensionLoader(Cluster.class).getExtension(cluster)，
-            //不过获取到Cluster扩展实际上是一个Wrapper包装类 MockClusterWrapper，调用的为这个MockClusterWrapper的join方法，它创建一个MockClusterInvoker，这个Invoker中包含了
-            //服务降级的逻辑
+            // 一个注册中心可能有多个服务提供者，因此这里需要将多个服务提供者合并为一个，这里的cluster的类型为Cluster$Adaptive，
+            // 也就是说通过自适应扩展机制来获取对应的 Cluster 扩展，并且调用其 join 方法。不过通过ExtensionLoader.getExtensionLoader(Cluster.class).getExtension(cluster)，
+            // 不过获取到Cluster扩展实际上是一个Wrapper包装类 MockClusterWrapper，调用的为这个MockClusterWrapper的join方法，它创建一个MockClusterInvoker，这个Invoker中包含了
+            // 服务降级的逻辑
             Invoker invoker = cluster.join(directory);
             ProviderConsumerRegTable.registerConsuemr(invoker, url, subscribeUrl, directory);
             return invoker;

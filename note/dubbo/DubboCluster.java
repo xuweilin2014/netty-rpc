@@ -33,6 +33,27 @@ public class DubboCluster{
     
     }
 
+    public class AvailableCluster implements Cluster {
+
+        public static final String NAME = "available";
+    
+        public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+    
+            return new AbstractClusterInvoker<T>(directory) {
+                public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+                    for (Invoker<T> invoker : invokers) {
+                        if (invoker.isAvailable()) {
+                            return invoker.invoke(invocation);
+                        }
+                    }
+                    throw new RpcException("No provider available in " + invokers);
+                }
+            };
+    
+        }
+    
+    }
+
     /**
      * Cluster invoker 的 invoke 过程大致分为两个过程：
      * 1.通过 url 参数获取到用户所使用的负载均衡策略

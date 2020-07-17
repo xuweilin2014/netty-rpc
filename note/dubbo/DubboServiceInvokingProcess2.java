@@ -274,8 +274,7 @@ public class DubboServiceInvokingProcess2 {
             String serviceKey = serviceKey(port, path, inv.getAttachments().get(Constants.VERSION_KEY),
                     inv.getAttachments().get(Constants.GROUP_KEY));
 
-            // 从 exporterMap 查找与 serviceKey 相对应的 DubboExporter 对象，
-            // 服务导出过程中会将 <serviceKey, DubboExporter> 映射关系存储到 exporterMap 集合中
+            // 从 exporterMap 查找与 serviceKey 相对应的 DubboExporter 对象，服务导出过程中会将 <serviceKey, DubboExporter> 映射关系存储到 exporterMap 集合中
             DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);
 
             if (exporter == null)
