@@ -12,6 +12,28 @@ public class DubboServiceInvokingProcess {
      * get方法（此方法是阻塞方法）是由谁来调用，如果是同步的话，就是由框架来调用，否则就是由用户自己来调用。
      */
 
+    /**
+     * 本节主要分析消费者发起RPC调用的过程
+     * 
+     * proxy0#sayHello(String)
+     *  —> InvokerInvocationHandler#invoke(Object, Method, Object[])
+     *  —> MockClusterInvoker#invoke(Invocation)
+     *  —> AbstractClusterInvoker#invoke(Invocation)
+     *  —> FailoverClusterInvoker#doInvoke(Invocation, List<Invoker<T>>, LoadBalance)
+     *  -> InvokerWrapper#invoke(Invocation)
+     *  —> Filter#invoke(Invoker, Invocation)  // 包含多个 Filter 调用
+     *  —> ListenerInvokerWrapper#invoke(Invocation) 
+     *  —> AbstractInvoker#invoke(Invocation) 
+     *  —> DubboInvoker#doInvoke(Invocation)
+     *  —> ReferenceCountExchangeClient#request(Object, int)
+     *  —> HeaderExchangeClient#request(Object, int)
+     *  —> HeaderExchangeChannel#request(Object, int)
+     *  —> AbstractPeer#send(Object)
+     *  —> AbstractClient#send(Object, boolean)
+     *  —> NettyChannel#send(Object, boolean)
+     *  —> NioClientSocketChannel#write(Object)
+     */
+
     public class JavassistProxyFactory extends AbstractProxyFactory {
 
         @SuppressWarnings("unchecked")
@@ -87,26 +109,6 @@ public class DubboServiceInvokingProcess {
     
     
     }
-
-    /**
-     * proxy0#sayHello(String)
-     *  —> InvokerInvocationHandler#invoke(Object, Method, Object[])
-     *  —> MockClusterInvoker#invoke(Invocation)
-     *  —> AbstractClusterInvoker#invoke(Invocation)
-     *  —> FailoverClusterInvoker#doInvoke(Invocation, List<Invoker<T>>, LoadBalance)
-     *  -> InvokerWrapper#invoke(Invocation)
-     *  —> Filter#invoke(Invoker, Invocation)  // 包含多个 Filter 调用
-     *  —> ListenerInvokerWrapper#invoke(Invocation) 
-     *  —> AbstractInvoker#invoke(Invocation) 
-     *  —> DubboInvoker#doInvoke(Invocation)
-     *  —> ReferenceCountExchangeClient#request(Object, int)
-     *  —> HeaderExchangeClient#request(Object, int)
-     *  —> HeaderExchangeChannel#request(Object, int)
-     *  —> AbstractPeer#send(Object)
-     *  —> AbstractClient#send(Object, boolean)
-     *  —> NettyChannel#send(Object, boolean)
-     *  —> NioClientSocketChannel#write(Object)
-     */
 
     public class proxy0 implements ClassGenerator.DC, EchoService, DemoService {
         // 方法数组
@@ -216,6 +218,8 @@ public class DubboServiceInvokingProcess {
 
         private final Map<String, String> attachment;
 
+        // invoke方法的大部分代码用于添加信息到 RpcInvocation#attachment 变量中，添加完毕后，调用 doInvoke 执行后续的调用。
+        // doInvoke 是一个抽象方法，需要由子类实现
         public Result invoke(Invocation inv) throws RpcException {
             if (destroyed.get()) {
                 throw new RpcException("Rpc invoker for service is DESTROYED, can not be invoked any more!");
@@ -262,8 +266,8 @@ public class DubboServiceInvokingProcess {
         private final AtomicPositiveInteger index = new AtomicPositiveInteger();
 
         /**
-         * 前面说过，Dubbo的调用方式可以细分为3种：同步调用、异步无返回值（单向通信）、异步有返回值 同步调用和异步调用的区别是由谁调用 RpcFuture 的
-         * get 方法，同步调用是由框架自身调用 get 方法，而异步调用则是由用户调用 get 方法
+         * 前面说过，Dubbo 的调用方式可以细分为3种：同步调用、异步无返回值（单向通信）、异步有返回值。
+         * 同步调用和异步调用的区别是由谁调用 RpcFuture 的get 方法，同步调用是由框架自身调用 get 方法，而异步调用则是由用户调用 get 方法
          */
         protected Result doInvoke(final Invocation invocation) throws Throwable {
             RpcInvocation inv = (RpcInvocation) invocation;
@@ -277,6 +281,7 @@ public class DubboServiceInvokingProcess {
                 // 从 clients 中数组中获取 ExchangeClient
                 currentClient = clients[0];
             } else {
+                // 如果有多个到服务器端的连接，那么按其在数组中的递增顺序从其中选一个
                 currentClient = clients[index.getAndIncrement() % clients.length];
             }
 
@@ -296,7 +301,8 @@ public class DubboServiceInvokingProcess {
                     RpcContext.getContext().setFuture(null);
                     // 返回一个空的 RpcResult
                     return new RpcResult();
-                    // 如果是异步有返回值的话
+
+                // 如果是异步有返回值的话
                 } else if (isAsync) {
                     // 发送请求，并得到一个 ResponseFuture 实例
                     ResponseFuture future = currentClient.request(inv, timeout);
@@ -304,10 +310,11 @@ public class DubboServiceInvokingProcess {
                     RpcContext.getContext().setFuture(new FutureAdapter<Object>(future));
                     // 暂时返回一个空结果
                     return new RpcResult();
+                
+                // 如果是同步调用的话
                 } else {
                     RpcContext.getContext().setFuture(null);
-                    // 发送请求，得到一个 ResponseFuture 实例，并调用该实例的 get 方法进行等待。
-                    // ResponseFuture 是一个接口，而DefaultFuture 则是它的默认实现类
+                    // 发送请求，得到一个 ResponseFuture 实例，并调用该实例的 get 方法进行等待。ResponseFuture 是一个接口，而DefaultFuture 则是它的默认实现类
                     return (Result) currentClient.request(inv, timeout).get();
                 }
             } catch (TimeoutException e) {
@@ -322,6 +329,13 @@ public class DubboServiceInvokingProcess {
         }
     }
 
+    /**
+     * 本篇文章在多个地方都强调过调用编号很重要，但一直没有解释原因，这里简单说明一下。一般情况下，服务消费方会并发调用多个服务，每个用户线程发送请求后，会调用不同 DefaultFuture 对象的
+     * get 方法进行等待。 一段时间后，服务消费方的线程池会收到多个响应对象。这个时候要考虑一个问题，如何将每个响应对象传递给相应的 DefaultFuture 对象，且不出错。答案是通过调用编号。
+     * DefaultFuture 被创建时，会要求传入一个 Request 对象。此时 DefaultFuture 可从 Request 对象中获取调用编号，并将 <调用编号, DefaultFuture 对象> 映射关系存入到静态 Map 中，
+     * 即 FUTURES。线程池中的线程在收到 Response 对象后，会根据 Response 对象中的调用编号到 FUTURES 集合中取出相应的 DefaultFuture 对象，然后再将 Response 对象设置到 DefaultFuture 对象中。
+     * 最后再唤醒用户线程，这样用户线程即可从 DefaultFuture 对象中获取调用结果了。
+     */
     public static class DefaultFuture implements ResponseFuture {
 
         private final int timeout;
@@ -467,6 +481,10 @@ public class DubboServiceInvokingProcess {
 
     }
 
+    /**
+     * ReferenceCountExchangeClient 内部定义了一个引用计数变量 referenceCount，每当该对象被引用一次 referenceCount 都会进行自增。每当 close 方法被调用时，referenceCount 进行自减。
+     * ReferenceCountExchangeClient 内部仅实现了一个引用计数的功能，其他方法并无复杂逻辑，均是直接调用被装饰对象的相关方法。可以说，ReferenceCountExchangeClient 专注于引用技术的逻辑
+     */
     final class ReferenceCountExchangeClient implements ExchangeClient {
 
         private ExchangeClient client;
@@ -475,12 +493,14 @@ public class DubboServiceInvokingProcess {
 
         private final AtomicInteger refenceCount = new AtomicInteger(0);
 
-        public ReferenceCountExchangeClient(ExchangeClient client,
-                ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap) {
+        public ReferenceCountExchangeClient(ExchangeClient client, ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap) {
             this.client = client;
             refenceCount.incrementAndGet();
             this.url = client.getUrl();
-            // 省略代码
+            if (ghostClientMap == null) {
+                throw new IllegalStateException("ghostClientMap can not be null, url: " + url);
+            }
+            this.ghostClientMap = ghostClientMap;
         }
 
         public ResponseFuture request(Object request) throws RemotingException {
@@ -493,23 +513,102 @@ public class DubboServiceInvokingProcess {
             return client.request(request, timeout);
         }
 
+        public void send(Object message) throws RemotingException {
+            client.send(message);
+        }
+
+        public void send(Object message, boolean sent) throws RemotingException {
+            client.send(message, sent);
+        }
+
+       // referenceCount 引用计数自增，该方法由外部调用
+        public void incrementAndGetCount() {
+            refenceCount.incrementAndGet();
+        }
+
+        public void close() {
+            close(0);
+        }
+    
+        public void close(int timeout) {
+            // referenceCount 引用计数自减
+            if (refenceCount.decrementAndGet() <= 0) {
+                if (timeout == 0) {
+                    client.close();
+                } else {
+                    client.close(timeout);
+                }
+                client = replaceWithLazyClient();
+            }
+        }
     }
 
+    /**
+     * 提供心跳检查功能；将send、request、close等事件转由HeaderExchangeChannel处理，HeaderExchangeChannel对象中的Channel为所选的NIO框架对应的client对象。
+     * ExchangeClient 实际上并不具备通信能力，它需要基于更底层的客户端实例进行通信，比如 NettyClient。HeaderExchangeClient 中很多方法只有一行代码，
+     * 即调用 HeaderExchangeChannel 对象的同签名方法。那 HeaderExchangeClient 有什么用处呢？答案是封装了一些关于心跳检测的逻辑。
+     */
     public class HeaderExchangeClient implements ExchangeClient {
 
+        private static final ScheduledThreadPoolExecutor scheduled = new ScheduledThreadPoolExecutor(2, new NamedThreadFactory("dubbo-remoting-client-heartbeat", true));
         private final Client client;
-
         private final ExchangeChannel channel;
+        // heartbeat timer
+        private ScheduledFuture<?> heartbeatTimer;
+        private int heartbeat;
+        // heartbeat timeout (ms), default value is 0 , won't execute a heartbeat.
+        private int heartbeatTimeout;
 
         public HeaderExchangeClient(Client client, boolean needHeartbeat) {
             if (client == null) {
                 throw new IllegalArgumentException("client == null");
             }
             this.client = client;
-            // 创建 HeaderExchangeChannel 对象
             this.channel = new HeaderExchangeChannel(client);
+            String dubbo = client.getUrl().getParameter(Constants.DUBBO_VERSION_KEY);
+            this.heartbeat = client.getUrl().getParameter(Constants.HEARTBEAT_KEY, dubbo != null && dubbo.startsWith("1.0.") ? Constants.DEFAULT_HEARTBEAT : 0);
+            this.heartbeatTimeout = client.getUrl().getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartbeat * 3);
+            if (heartbeatTimeout < heartbeat * 2) {
+                throw new IllegalStateException("heartbeatTimeout < heartbeatInterval * 2");
+            }
+            if (needHeartbeat) {
+                startHeatbeatTimer();
+            }
+        }
 
-            // 省略心跳包代码
+        private void startHeatbeatTimer() {
+            // 开始新的心跳之前，先从线程池中移除掉之前的心跳包发送任务
+            stopHeartbeatTimer();
+            if (heartbeat > 0) {
+                // 以固定的时间间隔向服务器发送心跳包，第一个heartbeat是initialDelay，第二个heartbeat是delay
+                heartbeatTimer = scheduled.scheduleWithFixedDelay(
+                        new HeartBeatTask(new HeartBeatTask.ChannelProvider() {
+                            public Collection<Channel> getChannels() {
+                                // 这个方法主要用于只有一个元素的优化，减少内存分配，无需分配额外的内存，可以从SingletonList内部类看得出来,由于只有一个element,因此可以做到内存分配最小化。
+                                // 采用这种方式是因为一个客户端ExchangeClient对应于一个Channel，只需要往一个Channel上发送心跳包，而一个服务器Server则对应于多个Channel，需要往多个Channel上发送
+                                // 同样的心跳包，两者都使用同样的HeartBeatTask类对象。因此对于客户端，即使只有一个Channel，也要将其包装成Collection对象
+                                return Collections.<Channel>singletonList(HeaderExchangeClient.this);
+                            }
+                        }, heartbeat, heartbeatTimeout),
+                        heartbeat, heartbeat, TimeUnit.MILLISECONDS);
+            }
+        }
+
+        private void stopHeartbeatTimer() {
+            // 如果之前启动了心跳任务（heartbeatTimer不为null）且还没有被取消，则cancel掉这个心跳包发送任务，
+            // 并且将其从线程池中清除掉
+            if (heartbeatTimer != null && !heartbeatTimer.isCancelled()) {
+                try {
+                    heartbeatTimer.cancel(true);
+                    // purge会把线程池的任务队列中已经被取消的任务移除掉
+                    scheduled.purge();
+                } catch (Throwable e) {
+                    if (logger.isWarnEnabled()) {
+                        logger.warn(e.getMessage(), e);
+                    }
+                }
+            }
+            heartbeatTimer = null;
         }
 
         public ResponseFuture request(Object request) throws RemotingException {
@@ -522,8 +621,31 @@ public class DubboServiceInvokingProcess {
             return channel.request(request, timeout);
         }
 
+        public void send(Object message) throws RemotingException {
+            channel.send(message);
+        }
+    
+        public void send(Object message, boolean sent) throws RemotingException {
+            channel.send(message, sent);
+        }
+
+        public void close() {
+            doClose();
+            channel.close();
+        }
+
+        private void doClose() {
+            stopHeartbeatTimer();
+        }
+
     }
 
+    /**
+     * 主要是完成同步转异步，在request(Object request,int timeout)方法中，将请求转换成Request对象，将请求消息设置到data属性上，
+     * 构建DefaultFuture对象，调用NIO框架对应的Client对象（默认NettyClient）的send方法将消息发送出去，返回DefultFuture对象。
+     * 
+     * Exchange 层为框架引入 Request 和 Response 语义
+     */
     final class HeaderExchangeChannel implements ExchangeChannel {
 
         private final Channel channel;
@@ -532,7 +654,7 @@ public class DubboServiceInvokingProcess {
             if (channel == null) {
                 throw new IllegalArgumentException("channel == null");
             }
-            // 这里的 channel 指向的是 NettyClient
+            // 这里的 channel 就是前面 HeaderExchangeClient 的构造函数中 client 对象，其实指向的是 NettyClient
             this.channel = channel;
         }
 
@@ -552,12 +674,11 @@ public class DubboServiceInvokingProcess {
             // 设置双向通信标志为 true
             req.setTwoWay(true);
             // 这里的 request 变量类型为 RpcInvocation
-            req.setData(request);
-                                        
+            req.setData(request);        
             // 创建 DefaultFuture 对象
             DefaultFuture future = new DefaultFuture(channel, req, timeout);
             try {
-                // 调用 NettyClient 的 send 方法发送请求
+                // 调用 NettyClient 的 send 方法发送请求，需要说明的是，NettyClient 中并未实现 send 方法，该方法继承自父类 AbstractPeer
                 channel.send(req);
             } catch (RemotingException e) {
                 future.cancel();
@@ -566,24 +687,177 @@ public class DubboServiceInvokingProcess {
             // 返回 DefaultFuture 对象
             return future;
         }
+
+        public void send(Object message) throws RemotingException {
+            send(message, getUrl().getParameter(Constants.SENT_KEY, false));
+        }
+    
+        public void send(Object message, boolean sent) throws RemotingException {
+            if (closed) {
+                throw new RemotingException(this.getLocalAddress(), null, "Failed to send message " + message + ", cause: The channel " + this + " is closed!");
+            }
+            if (message instanceof Request
+                    || message instanceof Response
+                    || message instanceof String) {
+                channel.send(message, sent);
+            } else {
+                // 如果message不是Request或者Response对象的话，就将其封装到Request对象中，然后调用NettyClient的send方法进行发送
+                Request request = new Request();
+                request.setVersion("2.0.0");
+                request.setTwoWay(false);
+                request.setData(message);
+                channel.send(request, sent);
+            }
+        }
     }
 
-    //class:AbstractPeer
+    // class:AbstractPeer
     public void send(Object message) throws RemotingException {
         send(message, url.getParameter(Constants.SENT_KEY, false));
     }
 
-    public class AbstractClient extends AbstractEndpoint implements Client {
+    // AbstractClient的子类有GrizzlyClient，MinaClient，NettyClient，NettyClient（分别是Netty3和Netty4）
+    public abstract class AbstractClient extends AbstractEndpoint implements Client {
  
+        private final boolean send_reconnect;
+
+        private final AtomicInteger reconnect_count = new AtomicInteger(0);
+
+        // Reconnection error log has been called before?
+        private final AtomicBoolean reconnect_error_log_flag = new AtomicBoolean(false);
+
+        private final long shutdown_timeout;
+
+        private final int reconnect_warning_period;
+
+        private long lastConnectedTime = System.currentTimeMillis();
+
+        public AbstractClient(URL url, ChannelHandler handler) throws RemotingException {
+            super(url, handler);
+    
+            /**
+             * 客户端需要提供重连机制，所以初始化的几个参数都和重连有关：
+             */
+
+            // send_reconnect表示在发送消息时发现连接已经断开是否发起重连
+            send_reconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
+            // shutdown_timeout表示连接服务器一直连接不上的超时时间
+            shutdown_timeout = url.getParameter(Constants.SHUTDOWN_TIMEOUT_KEY, Constants.DEFAULT_SHUTDOWN_TIMEOUT);
+            // The default reconnection interval is 2s, 1800 means warning interval is 1 hour.
+            // reconnect_warning_period表示经过多少次重连尝试之后报一次重连警告
+            reconnect_warning_period = url.getParameter("reconnect.waring.period", 1800);
+    
+            try {
+                doOpen();
+            } catch (Throwable t) {
+                // 省略代码....
+            }
+            try {
+                // connect.
+                connect();
+                if (logger.isInfoEnabled()) {
+                    logger.info("Start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress() + " connect to the server " + getRemoteAddress());
+                }
+            } catch (RemotingException t) {
+                // 省略代码....
+            } catch (Throwable t) {
+                // 省略代码....
+            }
+    
+            executor = (ExecutorService) ExtensionLoader.getExtensionLoader(DataStore.class)
+                    .getDefaultExtension().get(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
+            ExtensionLoader.getExtensionLoader(DataStore.class)
+                    .getDefaultExtension().remove(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
+        }
+
+        protected void connect() throws RemotingException {
+            connectLock.lock();
+            try {
+                // 判断是否已经连接
+                if (isConnected()) {
+                    return;
+                }
+                // 初始化连接状态检查器，定期检查channel是否连接，连接断开会进行重连操作
+                initConnectStatusCheckCommand();
+                doConnect();
+                if (!isConnected()) {
+                    throw new RemotingException(this, "Failed connect to server ....");
+                } else {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Successed connect to server ...." );
+                    }
+                }
+                // 连接建立好或者重新建立好之后，将reconnect_count（表示重连次数）以及reconnect_error_log_flag（是否已经记录了重连警告信息）
+                // 重置为初始值0和false
+                reconnect_count.set(0);
+                reconnect_error_log_flag.set(false);
+            } catch (RemotingException e) {
+                throw e;
+            } catch (Throwable e) {
+                throw new RemotingException(this, "Failed connect to server " + getRemoteAddress() + " from " + getClass().getSimpleName() + " "
+                        + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
+                        + ", cause: " + e.getMessage(), e);
+            } finally {
+                connectLock.unlock();
+            }
+        }
+
+        // 创建了一个Runnable，用来检测是否连接，如果连接断开，调用connect方法；定时调度交给ScheduledThreadPoolExecutor来执行
+        private synchronized void initConnectStatusCheckCommand() {
+            // reconnect=false to close reconnect
+            // 获取到<dubbo:reference/>中的reconnect参数。参数的值可以为true/false，也可以为进行重连接操作的间隔。reconnect参数如果为false，将其设置为0，
+            // 表示进行重连接操作，reconnect如果为true，就将其设置为 2000ms，或者用户自己设置的时间间隔数
+            int reconnect = getReconnectParam(getUrl());
+
+            // reconnectExecutorFuture == null || reconnectExecutorFuture.isCancelled() 这个判断条件保证了当再一次
+            if (reconnect > 0 && (reconnectExecutorFuture == null || reconnectExecutorFuture.isCancelled())) {
+                Runnable connectStatusCheckCommand = new Runnable() {
+                    public void run() {
+                        try {
+                            if (!isConnected()) {
+                                connect();
+                            } else {
+                                lastConnectedTime = System.currentTimeMillis();
+                            }
+                        } catch (Throwable t) {
+                            String errorMsg = "client reconnect to " + getUrl().getAddress() + " find error . url: "
+                                    + getUrl();
+                            // wait registry sync provider list
+                            // shutdown_timeout表示服务器一直连不上的超时时间，如果距离上次连上的时间间隔（lastConnectedTime）超过
+                            // 了shutdown_timeout，且还没有在日志中记录重连警告，那么就在日志里面进行记录
+                            if (System.currentTimeMillis() - lastConnectedTime > shutdown_timeout) {
+                                if (!reconnect_error_log_flag.get()) {
+                                    reconnect_error_log_flag.set(true);
+                                    logger.error(errorMsg, t);
+                                    return;
+                                }
+                            }
+                            // 重连次数达到 reconnect_warning_period 或者其整数倍之后，才会报一次重连警告
+                            if (reconnect_count.getAndIncrement() % reconnect_warning_period == 0) {
+                                logger.warn(errorMsg, t);
+                            }
+                        }
+                    }
+                };
+                // 创建好定时任务之后，就交给 ScheduledThreadPoolExecutor 来执行
+                reconnectExecutorFuture = reconnectExecutorService
+                                                .scheduleWithFixedDelay(connectStatusCheckCommand, reconnect, reconnect, TimeUnit.MILLISECONDS);
+            }
+        }
+
         public void send(Object message, boolean sent) throws RemotingException {
+            // 在发送时，如果没有连接，那么就会调用AbstractClient中的connect方法进行连接
             if (send_reconnect && !isConnected()) {
                 connect();
             }
+
+            // 获取的并不是网络通讯框架的channel，比如Netty中的原生channel，而是Dubbo对这个channel的封装类对象，比如NettyChannel
             Channel channel = getChannel();
-            //TODO Can the value returned by getChannel() be null? need improvement.
             if (channel == null || !channel.isConnected()) {
                 throw new RemotingException(this, "message can not send, because channel is closed . url:" + getUrl());
             }
+
+            // 调用 NettyChannel 的 send 方法
             channel.send(message, sent);
         }
 
@@ -593,18 +867,131 @@ public class DubboServiceInvokingProcess {
 
     public class NettyClient extends AbstractClient {
 
+        private volatile Channel channel;
+
+        private static final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(Constants.DEFAULT_IO_THREADS, new DefaultThreadFactory("NettyClientWorker", true));
+
+        private Bootstrap bootstrap;
+
+        public NettyClient(final URL url, final ChannelHandler handler) throws RemotingException {
+            super(url, wrapChannelHandler(url, handler));
+        }
+
+        // 设置Netty客户端的一些启动参数
+        @Override
+        protected void doOpen() throws Throwable {
+            NettyHelper.setNettyLoggerFactory();
+            final NettyClientHandler nettyClientHandler = new NettyClientHandler(getUrl(), this);
+            bootstrap = new Bootstrap();
+            bootstrap.group(nioEventLoopGroup)
+                    .option(ChannelOption.SO_KEEPALIVE, true)
+                    .option(ChannelOption.TCP_NODELAY, true)
+                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                    //.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout())
+                    .channel(NioSocketChannel.class);
+    
+            if (getTimeout() < 3000) {
+                bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
+            } else {
+                bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout());
+            }
+    
+            bootstrap.handler(new ChannelInitializer() {
+                protected void initChannel(Channel ch) throws Exception {
+                    NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
+                    ch.pipeline().addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
+                            .addLast("decoder", adapter.getDecoder())
+                            .addLast("encoder", adapter.getEncoder())
+                            .addLast("handler", nettyClientHandler);
+                }
+            });
+        }
+
+        // 和服务端建立新连接，并且替换掉旧的连接
+        // 替换掉就得连接的原因是在 AbstractClient 的connect代码中，会添加一个定时任务主动检测客户端到服务端的连接是否已经断开，如果断开则会进行重连
+        // 所以，doConnect有可能会被反复调用，因此在进行重连的时候，必须要替换掉之前的channel
+        protected void doConnect() throws Throwable {
+            long start = System.currentTimeMillis();
+            ChannelFuture future = bootstrap.connect(getConnectAddress());
+            try {
+                boolean ret = future.awaitUninterruptibly(3000, TimeUnit.MILLISECONDS);
+                // 如果连接建立成功的话，若存在旧的连接，那么就将旧的连接关闭掉。
+                // 但是若客户端已经关闭了的话，就把新建立的连接也关闭掉，并且把 NettyClient.this.channel 置为null
+                // 若客户端仍然正常，那么就将新连接保存到 NettyClient.this.channel 中
+                if (ret && future.isSuccess()) {
+                    Channel newChannel = future.channel();
+                    try {
+                        // Close old channel
+                        Channel oldChannel = NettyClient.this.channel; // copy reference
+                        if (oldChannel != null) {
+                            try {
+                                if (logger.isInfoEnabled()) {
+                                    logger.info("Close old netty channel " + oldChannel + " on create new netty channel " + newChannel);
+                                }
+                                oldChannel.close();
+                            } finally {
+                                NettyChannel.removeChannelIfDisconnected(oldChannel);
+                            }
+                        }
+                    } finally {
+                        if (NettyClient.this.isClosed()) {
+                            try {
+                                if (logger.isInfoEnabled()) {
+                                    logger.info("Close new netty channel " + newChannel + ", because the client closed.");
+                                }
+                                newChannel.close();
+                            } finally {
+                                NettyClient.this.channel = null;
+                                NettyChannel.removeChannelIfDisconnected(newChannel);
+                            }
+                        } else {
+                            NettyClient.this.channel = newChannel;
+                        }
+                    }
+                } else if (future.cause() != null) {
+                    throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
+                            + getRemoteAddress() + ", error message is:" + future.cause().getMessage(), future.cause());
+                } else {
+                    throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
+                            + getRemoteAddress() + " client-side timeout "
+                            + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "
+                            + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion());
+                }
+            } finally {
+                if (!isConnected()) {
+                    //future.cancel(true);
+                }
+            }
+        }
+
         @Override
         protected com.alibaba.dubbo.remoting.Channel getChannel() {
+            // 这里的channel就是上面doConnect方法中创建并且保存的，并且是Netty中的原生channel
             Channel c = channel;
             if (c == null || !c.isConnected())
                 return null;
+
+            // 获取/创建一个 NettyChannel 类型对象
             return NettyChannel.getOrAddChannel(c, getUrl(), this);
         }
+
     }
 
-    final class NettyChannel extends AbstractChannel {
+    final static class NettyChannel extends AbstractChannel {
 
-        // ch为Netty中的Channel对象
+        private static final ConcurrentMap<Channel, NettyChannel> channelMap = new ConcurrentHashMap<Channel, NettyChannel>();
+
+        // 这里的channel为Netty中的channel
+        private final Channel channel;
+
+        private NettyChannel(Channel channel, URL url, ChannelHandler handler) {
+            super(url, handler);
+            if (channel == null) {
+                throw new IllegalArgumentException("netty channel == null;");
+            }
+            this.channel = channel;
+        }
+
         static NettyChannel getOrAddChannel(org.jboss.netty.channel.Channel ch, URL url, ChannelHandler handler) {
             if (ch == null) {
                 return null;
@@ -615,21 +1002,23 @@ public class DubboServiceInvokingProcess {
                 // 创建一个NettyChannel对象，并且将 <Channel, NettyChannel> 键值对存入 channelMap 集合中
                 NettyChannel nc = new NettyChannel(ch, url, handler);
                 if (ch.isConnected()) {
+                    // return the previous value associated with the specified key, or null if there was no mapping for the key
                     ret = channelMap.putIfAbsent(ch, nc);
                 }
                 if (ret == null) {
                     ret = nc;
                 }
-
+            }
             return ret;
         }
 
         public void send(Object message, boolean sent) throws RemotingException {
             super.send(message, sent);
      
-            boolea uccess = true;
+            boolea success = true;
             int timeout = 0;
             try {
+                // 最终调用Netty中原生的channel将这个message发送出去
                 ChannelFuture future = channel.write(message);
                 // sent 的值源于 <dubbo:method sent="true/false" /> 中 sent 的配置值，有两种配置值：
                 //   1. true: 等待消息发出，消息发送失败将抛出异常
@@ -642,12 +1031,6 @@ public class DubboServiceInvokingProcess {
                     // 就直接返回 false，同时 await 方法默认响应中断，如果等待任务执行完成的过程中被中断，那么会抛出中断异常
                     success = future.await(timeout);
                 }
-                        
-             
-
-                    throw cause;
-                }
-            }
             } catch (Throwable e) {
                 throw new RemotingException(this, "Failed to send message " + message + " to " + getRemoteAddress() + ", cause: " + e.getMessage(), e);
             }
@@ -655,15 +1038,15 @@ public class DubboServiceInvokingProcess {
         }
     }
 
-    // ExchangeClient 有3个子类：HeaderExchangeClient、ReferenceCountExchangeClient、HeaderExchangeClient
+    // ExchangeClient 有3个子类：HeaderExchangeClient、ReferenceCountExchangeClient、LazyConnectExchangeClient
     public interface ExchangeClient extends Client, ExchangeChannel {
     }
 
 
-    // ExchangeChannel 有4个子类:HeaderExchangerChannel、HeaderExchangeClient、ReferenceCountExchangeClient、HeaderExchangeClient
+    // ExchangeChannel 有4个子类:HeaderExchangerChannel、HeaderExchangeClient、ReferenceCountExchangeClient、LazyConnectExchangeClient
     public interface ExchangeChannel extends Channel{
 
-        ResponseFuture request(O
+        ResponseFuture request(Object request);
 
         ResponseFuture request(Object request, int timeout) throws RemotingException;
     
