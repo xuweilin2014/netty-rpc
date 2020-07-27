@@ -69,7 +69,7 @@ public class MessageRecvExecutor implements ApplicationContextAware {
     private static final int PARALLEL = RpcSystemConfig.SYSTEM_PROPERTY_PARALLEL * 2;
 
     //threadPoolExecutor线程池中线程的数量，默认为16
-    private static int threadNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS;
+    private static int threadNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS + 100;
 
     //threadPoolExecutor线程池中任务队列的大小，默认为-1
     private static int queueNums = RpcSystemConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS;

@@ -13,8 +13,6 @@ public class DubboServiceInvokingProcess2{
      */
 
     /**    
-     * 
-     * 
      * 1.服务器端接收到客户端发过来的Request请求：
      * 
      * 解码器将数据包解析成 Request 对象后，NettyServerHandler 的 channelRead 方法紧接着会收到这个对象，并将这个对象继续向下传递。这期间该对象会被依次传递给

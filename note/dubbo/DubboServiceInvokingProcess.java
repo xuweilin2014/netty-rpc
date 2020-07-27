@@ -289,10 +289,15 @@ public class DubboServiceInvokingProcess {
                 // 获取异步配置
                 boolean isAsync = RpcUtils.isAsync(getUrl(), invocation);
                 // isOneway 为 true，表明单向通信，也就是异步无返回值
+                // isOneway其实就是根据url中return参数的值，如果return为false，则表明不关注返回值，因此在后面中不会在RpcContext中设置future
                 boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
                 int timeout = getUrl().getMethodParameter(methodName, Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
 
                 // 如果是异步无返回值的话
+                // 一些特殊场景下，为了尽快调用返回，可以设置是否等待消息发出:
+                // sent="true" 等待消息发出，消息发送失败将抛出异常；
+                // sent="false" 不等待消息发出，将消息放入 IO 队列，即刻返回。
+                // 默认为false
                 if (isOneway) {
                     boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
                     // 发送请求
