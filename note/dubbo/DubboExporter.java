@@ -16,8 +16,9 @@ public class DubboExporter {
                  * 1.对配置进行检查 
                  * 2.将前面的各种配置信息组装成为一个URL
                  * 3.导出服务到本地
-                 * 4.导出服务到远程，导出服务到远程的时候还会启动服务器。并且还会向注册中心注册服务。如果<dubbo:service/>指明了多个协议以及多个注册中心，
-                 * 那么就会将此服务使用每种协议注册到所有的注册中心上。2,3,4都是在doExportUrlsFor1Protocol方法中完成的
+                 * 4.导出服务到远程，导出服务到远程的时候还会启动服务器，同时还会向注册中心注册服务。如果<dubbo:service/>指明了多个协议以及多个注册中心，
+                 * 那么就会将此服务使用每种协议注册到所有的注册中心上。
+                 * 上面2,3,4都是在doExportUrlsFor1Protocol方法中完成的
                  */
                 export();
             }
@@ -115,8 +116,20 @@ public class DubboExporter {
             }
 
             // 检测 ref 是否泛化服务类型
+            /**
+             * 通过 Spring 暴露泛化服务：
+             * <bean id="genericService" class="com.foo.MyGenericService" />
+             * <dubbo:service interface="com.foo.BarService" ref="genericService" />
+             */
             if (ref instanceof GenericService) {
-                // 省略代码
+                // 设置 interfaceClass 为 GenericService.class
+                interfaceClass = GenericService.class;
+                if (StringUtils.isEmpty(generic)) {
+                    // 设置 generic = "true"
+                    generic = Boolean.TRUE.toString();
+                }
+            
+            // ref 非 GenericService 类型
             } else {
                 try {
                     // 这里获得的就是接口名所指定的接口类对象，比如HelloService.class
@@ -140,8 +153,7 @@ public class DubboExporter {
             }
 
             // stub属性用来配置dubbo的存根属性，stub属性有两种配置方式：
-            // 1.stub="true"：指定 stub="true" 来告诉 Dubbo
-            // 框架使用本地存根，并且使用约定的方式，这个时候，本地存根的包名需要和服务接口的包名一致，
+            // 1.stub="true"：指定 stub="true" 来告诉 Dubbo 框架使用本地存根，并且使用约定的方式，这个时候，本地存根的包名需要和服务接口的包名一致，
             // 类名必须在服务接口的类名后加上 Stub 的后缀
             // 2.stub="存根的全类名"：不使用约定的方式，直接指定我们定义的存根的全类名
             if (stub != null) {
@@ -183,22 +195,28 @@ public class DubboExporter {
         }
 
         /**
+         * 
          * <dubbo:registry/>用来配置注册中心，address属性为注册中心服务器地址，如果地址没有端口缺省为9090。同一集群内的多个地址用逗号分隔，
-         * 如：ip:port,ip:port，不同集群的注册中心，请配置多个<dubbo:registry>标签。<dubbo:registry/>标签中还有两个属性：
+         * 如：ip:port,ip:port，不同集群的注册中心，请配置多个<dubbo:registry>标签。
+         * 
+         * <dubbo:registry/>标签中还有两个属性：
          * register:是否向此注册中心注册服务，如果设为false，将只订阅，不注册，默认为true。
          * subscribe:是否向此注册中心订阅服务，如果设为false，将只注册，不订阅，默认为true。
-         * <dubbo:service/>中registry标签如果没有配置的话，默认向所有registry注册。如果配置了的话，向指定注册中心注册，在多个注册中心时使用，
+         * 
+         * <dubbo:service/>中registry标签如果没有配置的话，默认向所有registry注册。如果配置了的话，则只会向指定注册中心注册。在多个注册中心时使用，
          * 值为<dubbo:registry>的id属性，多个注册中心ID用逗号分隔，如果不想将该服务注册到任何registry，可将值设为N/A
+         * 
          * <dubbo:service/>中protocol标签使用指定的协议暴露服务，在多协议时使用，值为<dubbo:protocol>的id属性，多个协议ID用逗号分隔
          * 
-         * *************************************************总结******************************************
+         * *************************************************总结************************************************************************
+         * 
          * 根据用户在每一个<dubbo:service/>标签中配置的注册中心的个数，依据<dubbo:registry/>、<dubbo:application/>等标签中的
          * 属性，组装好所有注册中心的URL。然后将<dubbo:service/>中的服务注册到这些注册中心上（不同的协议要注册不同的次数）
+         * 
          */
         private void doExportUrls() {
 
-            // 首先是通过 loadRegistries
-            // 加载注册中心链接，用户可能在<dubbo:service/>中指定了多个注册中心。所以，获得的registryURLs可能有多个，
+            // 首先是通过 loadRegistries 加载注册中心链接，用户可能在<dubbo:service/>中指定了多个注册中心。所以，获得的registryURLs可能有多个，
             // 要把此服务注册到这些注册中心上去。
             List<URL> registryURLs = loadRegistries(true);
 
@@ -237,34 +255,36 @@ public class DubboExporter {
             // methods 为 MethodConfig 集合，MethodConfig 中存储了 <dubbo:method> 标签的配置信息。
             // <dubbo:method/>标签为<dubbo:service/>或者<dubbo:reference/>标签的子标签，用于控制到方法级。
             // <dubbo:argument/>方法参数配置，标签为 <dubbo:method> 的子标签，用于方法参数的特征描述。
+            //
             // <dubbo:method name="findXxx" timeout="3000" retries="2">
-            // <dubbo:argument index="0" callback="true" />
+            //      <dubbo:argument index="0" callback="true" />
             // </dubbo:method>
+            //
             // 其中callback的作用是:如果为callback，服务提供方将生成反向代理，可以从服务提供方反向调用消费方，通常用于事件推送。
             // Callback 接口的实现类在 Consumer 端，当方法发生调用时，Consumer 端会自动 export 一个 Callback 服务。而
-            // Provider 端在处理调用时，
-            // 判断如果参数是 Callback，则生成了一个 proxy，因此服务实现类里在调用 Callback 方法的时候，会被传递到 Consumer 端执行
-            // Callback 实现类的代码。
-             // 获取 ArgumentConfig 列表
-             for (遍历 ArgumentConfig 列表) {
-                 if (type 不为 null，也不为空串) {    // 分支1
-                     1. 通过反射获取 interfaceClass 的方法列表
-                     for (遍历方法列表) {
-                         1. 比对方法名，查找目标方法
-                         2. 通过反射获取目标方法的参数类型数组 argtypes
-                         if (index != -1) {    // 分支2
-                             1. 从 argtypes 数组中获取下标 index 处的元素 argType
-                             2. 检测 argType 的名称与 ArgumentConfig 中的 type 属性是否一致
-                             3. 添加 ArgumentConfig 字段信息到 map 中，或抛出异常
-                         } else {    // 分支3
-                             1. 遍历参数类型数组 argtypes，查找 argument.type 类型的参数
-                             2. 添加 ArgumentConfig 字段信息到 map 中
-                         }
-                     }
-                 } else if (index != -1) {    // 分支4
-                     1. 添加 ArgumentConfig 字段信息到 map 中
-                 }
-             }
+            // Provider 端在处理调用时，判断如果参数是 Callback，则生成了一个 proxy，因此服务实现类里在调用 Callback 方法的时候，
+            // 会被传递到 Consumer 端执行Callback 实现类的代码。
+            //
+            // 获取 ArgumentConfig 列表
+            // for (遍历 ArgumentConfig 列表) {
+            //      if (type 不为 null，也不为空串) {    // 分支1
+            //      1. 通过反射获取 interfaceClass 的方法列表
+            //      for (遍历方法列表) {
+            //           1. 比对方法名，查找目标方法
+            //           2. 通过反射获取目标方法的参数类型数组 argtypes
+            //           if (index != -1) {    // 分支2
+            //                  1. 从 argtypes 数组中获取下标 index 处的元素 argType
+            //                  2. 检测 argType 的名称与 ArgumentConfig 中的 type 属性是否一致
+            //                  3. 添加 ArgumentConfig 字段信息到 map 中，或抛出异常
+            //              } else {    // 分支3
+            //                  1. 遍历参数类型数组 argtypes，查找 argument.type 类型的参数
+            //                  2. 添加 ArgumentConfig 字段信息到 map 中
+            //              }
+            //          }
+            //      } else if (index != -1) {    // 分支4
+            //          1. 添加 ArgumentConfig 字段信息到 map 中
+            //      }
+            //  }
             //
             if (methods != null && !methods.isEmpty()) {
                 for (MethodConfig method : methods) {
@@ -285,74 +305,16 @@ public class DubboExporter {
 
                     // 从methodConfig中获取ArgumentConfig对象列表
                     List<ArgumentConfig> arguments = method.getArguments();
-                    if (arguments != null && !arguments.isEmpty()) {
-                        for (ArgumentConfig argument : arguments) {
-                            // 检测 type 属性是否为空，或者空串（分支1 ⭐️）
-                            if (argument.getType() != null && argument.getType().length() > 0) {
-                                Method[] methods = interfaceClass.getMethods();
-                                // visit all methods
-                                if (methods != null && methods.length > 0) {
-                                    for (int i = 0; i < methods.length; i++) {
-                                        String methodName = methods[i].getName();
-                                        // 比对方法名，查找目标方法
-                                        if (methodName.equals(method.getName())) {
-                                            Class<?>[] argtypes = methods[i].getParameterTypes();
-                                            // one callback in the method
-                                            if (argument.getIndex() != -1) {
-                                                // 检测 ArgumentConfig 中的 type 属性与方法参数列表中的参数名称是否一致，不一致则抛出异常(分支2 ⭐️)
-                                                if (argtypes[argument.getIndex()].getName()
-                                                        .equals(argument.getType())) {
-                                                    // 添加 ArgumentConfig 字段信息到 map
-                                                    // 中，注意，只有<dubbo:argument/>标签中，callback属性由用户配置之后（不管是true还是false）
-                                                    // 才会将argument字段的信息添加到map中，如果没有配置callback属性，则不会添加到map中。键前缀 =
-                                                    // 方法名.index.callback，比如
-                                                    // map = {"sayHello.3.callback": true}，下面的appendParameters同理
-                                                    appendParameters(map, argument,
-                                                            method.getName() + "." + argument.getIndex());
-                                                } else {
-                                                    // 分支3 ⭐️
-                                                    throw new IllegalArgumentException(
-                                                            "argument config error : the index attribute and type attribute not match :index :"
-                                                                    + argument.getIndex() + ", type:"
-                                                                    + argument.getType());
-                                                }
-                                            } else {
-                                                // multiple callbacks in the method
-                                                for (int j = 0; j < argtypes.length; j++) {
-                                                    Class<?> argclazz = argtypes[j];
-                                                    // 从参数类型列表中查找类型名称为argument.type的参数
-                                                    if (argclazz.getName().equals(argument.getType())) {
-                                                        appendParameters(map, argument, method.getName() + "." + j);
-                                                        if (argument.getIndex() != -1 && argument.getIndex() != j) {
-                                                            throw new IllegalArgumentException(
-                                                                    "argument config error : the index attribute and type attribute not match :index :"
-                                                                            + argument.getIndex() + ", type:"
-                                                                            + argument.getType());
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                // 用户未配置 type 属性，但配置了 index 属性，且 index != -1
-                            } else if (argument.getIndex() != -1) {
-                                // 添加 ArgumentConfig 字段信息到 map 中
-                                appendParameters(map, argument, method.getName() + "." + argument.getIndex());
-                            } else {
-                                throw new IllegalArgumentException(
-                                        "argument config must set index or type attribute.eg: <dubbo:argument index='0' .../> or <dubbo:argument type=xxx .../>");
-                            }
-
-                        }
-                    }
+                    
+                    // 省略代码
                 } // end of methods for
             }
 
             // 检测 generic 是否为 "true"，并根据检测结果向 map 中添加不同的信息
             if (ProtocolUtils.isGeneric(generic)) {
-                map.put(Constants.GENERIC_KEY, generic);
-                map.put(Constants.METHODS_KEY, Constants.ANY_VALUE);
+                map.put("generic", generic);
+                // Constants.ANY_VALUE 的值为 *
+                map.put("methods", Constants.ANY_VALUE);
             } else {
                 String revision = Version.getVersion(interfaceClass, version);
                 if (revision != null && revision.length() > 0) {
@@ -360,6 +322,8 @@ public class DubboExporter {
                 }
 
                 // 为接口生成包裹类 Wrapper，Wrapper 中包含了接口的详细信息，比如接口方法名数组，字段信息等。这里获取到了特定接口中方法名字数组
+                // 具体的说就是这里通过 javassist 为 interfaceClass 生成了一个动态代理类，在这个代理类中，有一个属性 mns，它是字符串数组，
+                // 保存了 interfaceClass 中所有的方法名。通过调用 getMethodNames 方法，直接返回这个属性
                 String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
                 // 添加方法名到 map 中，如果包含多个方法名，则用逗号隔开，比如 method = init,destroy
                 if (methods.length == 0) {
@@ -374,6 +338,11 @@ public class DubboExporter {
 
             // 代码省略
 
+            if ("injvm".equals(protocolConfig.getName())) {
+                protocolConfig.setRegister(false);
+                map.put("notify", "false");
+            }
+
             // 获取上下文路径
             String contextPath = protocolConfig.getContextpath();
             if ((contextPath == null || contextPath.length() == 0) && provider != null) {
@@ -384,15 +353,15 @@ public class DubboExporter {
             String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
             Integer port = this.findConfigedPorts(protocolConfig, name, map);
 
-            // 根据本机的ip地址和端口号，以及上面map中的各种信息，包括但不限于提供方的应用名称，即application，
+            // 根据本机的 ip 和 port，以及上面map中的各种信息，包括但不限于提供方的应用名称，即application，
             // dubbo的版本号，接口的全类名，接口中的所有方法名（如果不止一个的话，使用逗号分隔），进程id和时间戳。
-            URL url = new URL(name, host, port,
-                    (contextPath == null || contextPath.length() == 0 ? "" : contextPath + "/") + path, map);
-
+            URL url = new URL(name, host, port, (contextPath == null || contextPath.length() == 0 ? "" : contextPath + "/") + path, map);
             String scope = url.getParameter(Constants.SCOPE_KEY);
 
-            // 下面将要进行服务导出，先导出到本地，再导出到远程
-            // 如果配置scope为none，则不进行导出操作，注意这与scope为null不同，如果scope为null，还是会执行导出操作
+            // 下面将要进行服务导出，先导出到本地，再导出到远程。如果配置scope为none，则不进行导出操作，注意这与scope为null不同，
+            // 如果scope为null，还是会执行导出操作。scope为local，则只导出到本地；如果scope为remote，则只导出到远程
+            // 在下面进行服务导出的过程当中，会创建 Invoker。Invoker 是实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，
+            // 可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
             if (!Constants.SCOPE_NONE.toString().equalsIgnoreCase(scope)) {
 
                 // scope != remote，导出到本地
@@ -427,17 +396,15 @@ public class DubboExporter {
                             DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(
                                     invoker, this);
 
-                            // 导出服务，并生成
-                            // Exporter，由于这里的protocol也是使用自适应拓展模式生成的一个代理对象Protocol$Adaptive，而wrapperInvoker中持有一个Invoker对象，
-                            // 这个Invoker对象的url协议为registry，因此实际调用的是RegistryPortocol的export方法
+                            // 导出服务，并生成 Exporter，由于这里的 protocol 也是使用自适应拓展模式生成的一个代理对象 Protocol$Adaptive，
+                            // 而 wrapperInvoker 中持有一个 Invoker 对象，这个 Invoker 对象的 url 协议为 registry，因此实际调用的是 RegistryPortocol 的 export 方法
                             Exporter<?> exporter = protocol.export(wrapperInvoker);
                             exporters.add(exporter);
                         }
                     } else {
                         // 不存在注册中心，仅导出服务
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
-                        DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker,
-                                this);
+                        DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);
@@ -450,7 +417,7 @@ public class DubboExporter {
         }
 
         private void exportLocal(URL url) {
-            // 如果 URL 的协议头等于 injvm，说明已经导出到本地了，无需再次导出
+            // 如果 URL 的协议头等于 injvm，就不会再多此一举继续执行ServiceConfig#exportLocal方法，而是会在后面直接调用protocol.export生成一个Exporter
             if (!Constants.LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
                 // 设置协议头为 injvm，并且将原协议URL中的主机名和端口号设置为新的值，也就是localhost和0,
                 URL local = URL.valueOf(url.toFullString()).setProtocol(Constants.LOCAL_PROTOCOL).setHost(LOCALHOST)
@@ -458,12 +425,10 @@ public class DubboExporter {
                 ServiceClassHolder.getInstance().pushServiceClass(getServiceClass(ref));
 
                 // 创建 Invoker，并导出服务，这里的 protocol 会在运行时调用 InjvmProtocol 的 export 方法，将协议导出到本地。
-                // protocol =
-                // ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+                // protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
                 // 因为protocol采用自适应拓展的形式根据URL参数获取具体的实现类，或者说拓展。这里local中使用的协议被替换为injvm，因此
                 // 当调用export方法时，实际获取到的是InjvmProtocol的export方法。同理
-                // proxyFactory =
-                // ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+                // proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
                 // 由于local这个URL中没有proxy这个参数存在，因此获取到的proxyFactory默认为JavassistProxyFactory
                 Exporter<?> exporter = protocol.export(proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
                 exporters.add(exporter);
@@ -501,9 +466,10 @@ public class DubboExporter {
         @Override
         public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
             // 为目标类创建 Wrapper
-            final Wrapper wrapper = Wrapper
-                    .getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+            final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
             // 创建匿名 Invoker 类对象，并实现 doInvoke 方法。
+            // JavassistProxyFactory 创建了一个继承自 AbstractProxyInvoker 类的匿名对象，并覆写了抽象方法 doInvoke。覆写后的 doInvoke 逻辑比较简单，
+            // 仅是将调用请求转发给了 Wrapper 类的 invokeMethod 方法
             return new AbstractProxyInvoker<T>(proxy, type, url) {
                 @Override
                 protected Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments)
@@ -547,8 +513,15 @@ public class DubboExporter {
     public class AbstractInterfaceConfig extends AbstractMethodConfig {
 
         /**
-         * loadRegistries方法的逻辑如下： 1.检测是否存在注册中心配置类，不存在则抛出异常 2.构建参数映射集合，也就是 map
-         * 3.根据参数映射集合以及地址address，解析出URL列表 4.遍历URL列表，并根据条件决定是否将其添加到 registryList 中
+         * loadRegistries方法的逻辑如下： 
+         * 1.检测是否存在注册中心配置类，不存在则抛出异常 
+         * 2.构建参数映射集合，也就是 map
+         * 3.根据参数映射集合以及地址address，解析出URL列表 
+         * 4.遍历URL列表，并根据条件决定是否将其添加到 registryList 中
+         * 
+         * loadRegistries 这个方法被 ServiceConfig#doExportUrls 和 ReferenceConfig#createProxy 方法调用。ServiceConfig 调用
+         * 这个方法（provider 参数的值为 true），来获得注册中心的地址，从而可以将服务注册到这些注册中心上面；ReferenceConfig 调用这个方法，
+         * （provider 参数的值为 false），获得注册中心的地址，从而可以从这些注册中心上面订阅服务
          */
         protected List<URL> loadRegistries(boolean provider) {
             // 检测是否存在注册中心配置类，不存在则抛出异常
@@ -563,8 +536,7 @@ public class DubboExporter {
             //
             // 注意，也可以如下配置：
             //
-            // <dubbo:registry protocol="zookeeper"
-            // address="127.0.0.2:2181,127.0.0.1:2181"/>，这样会得到一个RegistryConfig对象，并且解析得到的urls
+            // <dubbo:registry protocol="zookeeper" address="127.0.0.2:2181,127.0.0.1:2181"/>，这样会得到一个RegistryConfig对象，并且解析得到的urls
             // 数组中只有一个url，这个url为：
             // zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=user-service-provider&backup=127.0.0.2:2181
             // &dubbo=2.6.2&pid=17376&timestamp=1591607738629
@@ -617,8 +589,7 @@ public class DubboExporter {
                             // 将 URL 协议头设置为 registry
                             url = url.setProtocol(Constants.REGISTRY_PROTOCOL);
                             // 通过判断条件，决定是否添加 url 到 registryList 中，条件如下：
-                            // (服务提供者 && register = true 或 null)
-                            // || (非服务提供者 && subscribe = true 或 null)
+                            // (服务提供者 && register = true 或 null) || (非服务提供者 && subscribe = true 或 null)
                             if ((provider && url.getParameter(Constants.REGISTER_KEY, true))
                                     || (!provider && url.getParameter(Constants.SUBSCRIBE_KEY, true))) {
                                 registryList.add(url);
@@ -644,7 +615,8 @@ public class DubboExporter {
             // export=dubbo%3A%2F%2F172.17.48.52%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider
             URL registryUrl = getRegistryUrl(originInvoker);
 
-            // 省略代码
+            final Registry registry = getRegistry(originInvoker);
+            final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
 
             // 获取 register 参数
             boolean register = registedProviderUrl.getParameter("register", true);
@@ -671,8 +643,30 @@ public class DubboExporter {
             // 向注册中心进行订阅 override 数据
             registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
-            // 创建并返回 DestroyableExporter
-            return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registedProviderUrl);
+            return new Exporter<T>() {
+                public Invoker<T> getInvoker() {
+                    return exporter.getInvoker();
+                }
+    
+                public void unexport() {
+                    try {
+                        exporter.unexport();
+                    } catch (Throwable t) {
+                        logger.warn(t.getMessage(), t);
+                    }
+                    try {
+                        registry.unregister(registedProviderUrl);
+                    } catch (Throwable t) {
+                        logger.warn(t.getMessage(), t);
+                    }
+                    try {
+                        overrideListeners.remove(overrideSubscribeUrl);
+                        registry.unsubscribe(overrideSubscribeUrl, overrideSubscribeListener);
+                    } catch (Throwable t) {
+                        logger.warn(t.getMessage(), t);
+                    }
+                }
+            };
         }
 
         private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker) {
@@ -685,8 +679,7 @@ public class DubboExporter {
                     if (exporter == null) {
                         // 将Invoker进行了一个封装，将invoker和invoker中的url的provider部分，也就是export=dubbo://....的封装在一起，
                         // 称为InvokerDelegete对象
-                        final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker,
-                                getProviderUrl(originInvoker));
+                        final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
                         // 调用 protocol 的 export 方法导出服务。这里的invokerDelegete中的url如上所述是以dubbo协议开头的，因此
                         // 这里实际调用的是DubboProtocol的export方法，返回的也是一个DubboExporter对象。并且在导出的过程中，还会启动
                         // 服务器监听（默认是Netty），监听的地址就是本机的ip地址，以及在<dubbo:protocol/>指定好的端口号
@@ -700,23 +693,27 @@ public class DubboExporter {
             return exporter;
         }
 
+        private URL getProviderUrl(final Invoker<?> origininvoker) {
+            String export = origininvoker.getUrl().getParameterAndDecoded(Constants.EXPORT_KEY);
+            if (export == null || export.length() == 0) {
+                throw new IllegalArgumentException("The registry export url is null! registry: " + origininvoker.getUrl());
+            }
+    
+            URL providerUrl = URL.valueOf(export);
+            return providerUrl;
+        }
+
         /**
          * 两个作用： 1.获取注册中心实例 2.向注册中心注册服务
          */
         public void register(URL registryUrl, URL registedProviderUrl) {
+            // 这里的 registryFactory 的类型为 RegistryFactory$Adaptive，会根据 registryUrl 中协议的名称来获取 RegistryFactory 类型的扩展，
+            // 比如如果 registryUrl 的协议为 zookeeper，那么会获取到 ZookeeperRegistryFactory 对象，然后调用其 getRegistry 方法。
             // 获取 Registry，这里获取的是ZookeeperRegistry，当然也有可能是RedisRegistry。
             Registry registry = registryFactory.getRegistry(registryUrl);
             // 调用Registry对象中的具体register方法
             registry.register(registedProviderUrl);
         }
-    }
-
-    // 根据url中参数protocol的值，也就是url所使用的协议来判断使用哪一个扩展，如果没有指明Protocol，则默认
-    // 使用DubboRegistryProtocol
-    @SPI("dubbo")
-    public interface RegistryFactory {
-        @Adaptive({ "protocol" })
-        Registry getRegistry(URL url);
     }
 
     public class DubboProtocol extends AbstractProtocol {
@@ -802,10 +799,8 @@ public class DubboExporter {
             str = url.getParameter(Constants.CLIENT_KEY);
             if (str != null && str.length() > 0) {
                 // 获取所有的 Transporter 实现类名称集合，比如 supportedTypes = [netty, mina]
-                Set<String> supportedTypes = ExtensionLoader.getExtensionLoader(Transporter.class)
-                        .getSupportedExtensions();
-                // 检测当前 Dubbo 所支持的 Transporter 实现类名称列表中，
-                // 是否包含 client 所表示的 Transporter，若不包含，则抛出异常
+                Set<String> supportedTypes = ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions();
+                // 检测当前 Dubbo 所支持的 Transporter 实现类名称列表中，是否包含 client 所表示的 Transporter，若不包含，则抛出异常
                 if (!supportedTypes.contains(str)) {
                     throw new RpcException("Unsupported client type...");
                 }
@@ -820,7 +815,12 @@ public class DubboExporter {
     public static class Exchangers {
 
         public static ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
-            // 检查传入参数代码省略......
+            if (url == null) {
+                throw new IllegalArgumentException("url == null");
+            }
+            if (handler == null) {
+                throw new IllegalArgumentException("handler == null");
+            }
             url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
             return getExchanger(url).bind(url, handler);
         }
@@ -850,14 +850,13 @@ public class DubboExporter {
 
         @Override
         public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
-            // 创建 HeaderExchangeServer 实例，该方法包含了多步操作，本别如下：
+            // 创建 HeaderExchangeServer 实例，该方法包含了多步操作，分别如下：
             // 1. new HeaderExchangeHandler(handler)
             // 2. new DecodeHandler(new HeaderExchangeHandler(handler))
-            // 3. Transporters.bind(url, new DecodeHandler(new
-            // HeaderExchangeHandler(handler)))
-            // 也就是说会让服务器开始监听特定端口
-            return new HeaderExchangeServer(
-                    Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
+            // 3. Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler)))
+            // 
+            // Transporters.bind 会让服务器开始监听特定端口，而 HeaderExchangeServer 则会添加心跳逻辑
+            return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
         }
 
     }
@@ -871,8 +870,8 @@ public class DubboExporter {
             } else {
                 handler = new ChannelHandlerDispatcher(handlers);
             }
-            // 由于Transporter接口上的@SPI注解为netty，因此在url中如果没有指定transporter参数的话，默认获取到的Transporter扩展
-            // 为NettyTransporter（Netty4类型）
+            // 由于Transporter接口上的@SPI注解为netty（Netty3），因此在url中如果没有指定transporter参数的话，默认获取到的Transporter扩展
+            // 为NettyTransporter（Netty3类型），不过这里以Netty4为例进行讲解
             return getTransporter().bind(url, handler);
         }
 
@@ -895,46 +894,6 @@ public class DubboExporter {
             return new NettyClient(url, listener);
         }
 
-    }
-
-    public class NettyServer extends AbstractServer implements Server {
-        public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
-            super(url, ChannelHandlers.wrap(handler, ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME)));
-        }
-
-        @Override
-        protected void doOpen() throws Throwable {
-            NettyHelper.setNettyLoggerFactory();
-
-            bootstrap = new ServerBootstrap();
-            // 创建boss和worker线程池
-            bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("NettyServerBoss", true));
-            workerGroup = new NioEventLoopGroup(
-                    getUrl().getPositiveParameter(Constants.IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
-                    new DefaultThreadFactory("NettyServerWorker", true));
-
-            final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
-            channels = nettyServerHandler.getChannels();
-
-            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-                    .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-                    .childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
-                    .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                    .childHandler(new ChannelInitializer<NioSocketChannel>() {
-                        @Override
-                        protected void initChannel(NioSocketChannel ch) throws Exception {
-                            NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
-                            ch.pipeline()// .addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
-                                    .addLast("decoder", adapter.getDecoder()).addLast("encoder", adapter.getEncoder())
-                                    .addLast("handler", nettyServerHandler);
-                        }
-                    });
-            // bind
-            ChannelFuture channelFuture = bootstrap.bind(getBindAddress());
-            channelFuture.syncUninterruptibly();
-            channel = channelFuture.channel();
-
-        }
     }
 
     public abstract class AbstractServer extends AbstractEndpoint implements Server {
@@ -975,32 +934,116 @@ public class DubboExporter {
 
     }
 
-    // class:AbstractRegistryFactory
-    public Registry getRegistry(URL url) {
-        url = url.setPath(RegistryService.class.getName())
-                .addParameter(Constants.INTERFACE_KEY, RegistryService.class.getName())
-                .removeParameters(Constants.EXPORT_KEY, Constants.REFER_KEY);
-        String key = url.toServiceString();
-        // Lock the registry access process to ensure a single instance of the registry
-        LOCK.lock();
-        try {
-            // 访问缓存
-            Registry registry = REGISTRIES.get(key);
-            if (registry != null) {
-                return registry;
-            }
-            // 缓存未命中，创建 Registry 实例
-            registry = createRegistry(url);
-            if (registry == null) {
-                throw new IllegalStateException("Can not create registry " + url);
-            }
-            // 写入缓存
-            REGISTRIES.put(key, registry);
-            return registry;
-        } finally {
-            // Release the lock
-            LOCK.unlock();
+    public class NettyServer extends AbstractServer implements Server {
+
+        private Map<String, Channel> channels; // <ip:port, channel>
+        
+        private ServerBootstrap bootstrap;
+        
+        private io.netty.channel.Channel channel;
+        
+        private EventLoopGroup bossGroup;
+        
+        private EventLoopGroup workerGroup;
+
+        public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
+            super(url, ChannelHandlers.wrap(handler, ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME)));
         }
+
+        @Override
+        protected void doOpen() throws Throwable {
+            NettyHelper.setNettyLoggerFactory();
+
+            bootstrap = new ServerBootstrap();
+            // 创建boss和worker线程池
+            bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("NettyServerBoss", true));
+            workerGroup = new NioEventLoopGroup(
+                    getUrl().getPositiveParameter(Constants.IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
+                    new DefaultThreadFactory("NettyServerWorker", true));
+
+            final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
+            channels = nettyServerHandler.getChannels();
+
+            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+                    .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
+                    .childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
+                    .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                    .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                        @Override
+                        protected void initChannel(NioSocketChannel ch) throws Exception {
+                            NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
+                            ch.pipeline()// .addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
+                                    .addLast("decoder", adapter.getDecoder()).addLast("encoder", adapter.getEncoder())
+                                    .addLast("handler", nettyServerHandler);
+                        }
+                    });
+            // bind
+            ChannelFuture channelFuture = bootstrap.bind(getBindAddress());
+            channelFuture.syncUninterruptibly();
+            channel = channelFuture.channel();
+
+        }
+    }
+
+    /********************************************************************** 服务注册 ***************************************************************************************** */
+
+    /**
+     * 两个作用： 1.获取注册中心实例 2.向注册中心注册服务
+     */
+    public void register(URL registryUrl, URL registedProviderUrl) {
+        // 这里的 registryFactory 的类型为 RegistryFactory$Adaptive，会根据 registryUrl 中协议的名称来获取
+        // RegistryFactory 类型的扩展，比如如果 registryUrl 的协议为 zookeeper，那么会获取到 ZookeeperRegistryFactory 对象，然后调用其
+        // getRegistry 方法。获取 Registry，这里获取的是ZookeeperRegistry，会在创建 ZookeeperRegistry 对象的过程中同时创建一个
+        // Zookeeper 的客户端 zkClient
+        Registry registry = registryFactory.getRegistry(registryUrl);
+        // 调用Registry对象中的具体register方法，将服务的 url 注册到注册中心上的特定目录上。
+        registry.register(registedProviderUrl);
+    }
+
+    // 根据url中参数protocol的值，也就是url所使用的协议来判断使用哪一个扩展，如果没有指明Protocol，则默认
+    // 使用DubboRegistryProtocol
+    @SPI("dubbo")
+    public interface RegistryFactory {
+        @Adaptive({ "protocol" })
+        Registry getRegistry(URL url);
+    }
+
+    public abstract class AbstractRegistryFactory implements RegistryFactory {
+
+        // class:AbstractRegistryFactory
+        public Registry getRegistry(URL url) {
+            url = url.setPath(RegistryService.class.getName())
+                    .addParameter(Constants.INTERFACE_KEY, RegistryService.class.getName())
+                    .removeParameters(Constants.EXPORT_KEY, Constants.REFER_KEY);
+            String key = url.toServiceString();
+            // Lock the registry access process to ensure a single instance of the registry
+            // 每一个服务都会通过 getRegistry 获取到注册中心，然后注册到上面去，所以为了避免注册中心的重复创建，
+            // 使用锁进行同步控制
+            LOCK.lock();
+            try {
+                // 访问缓存
+                Registry registry = REGISTRIES.get(key);
+                if (registry != null) {
+                    return registry;
+                }
+
+                // 缓存未命中，创建 Registry 实例
+                registry = createRegistry(url);
+                if (registry == null) {
+                    throw new IllegalStateException("Can not create registry " + url);
+                }
+
+                // 写入缓存
+                REGISTRIES.put(key, registry);
+                return registry;
+            } finally {
+                // Release the lock
+                LOCK.unlock();
+            }
+        }
+
+        protected abstract Registry createRegistry(URL url);
+
     }
 
     public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
@@ -1020,63 +1063,155 @@ public class DubboExporter {
 
     }
 
-    // class:ZookeeperRegistry
-    public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
-        super(url);
-        if (url.isAnyHost()) {
-            throw new IllegalStateException("registry address == null");
+    public abstract class FailbackRegistry extends AbstractRegistry {
+        // class:FailbackRegistry
+        public void register(URL url) {
+            super.register(url);
+            failedRegistered.remove(url);
+            failedUnregistered.remove(url);
+            try {
+                // 模板方法，由子类实现
+                doRegister(url);
+            } catch (Exception e) {
+                // 省略代码.....
+            }
         }
+    }
 
-        //获取组名，默认为 dubbo
-        String group = url.getParameter(Constants.GROUP_KEY, DEFAULT_ROOT);
-        if (!group.startsWith(Constants.PATH_SEPARATOR)) {
-            // group = "/" + group
-            group = Constants.PATH_SEPARATOR + group;
-        }
+    public class ZookeeperRegistry extends FailbackRegistry {
 
-        this.root = group;
-        //创建 Zookeeper 客户端，默认为 CuratorZookeeperTransporter
-        zkClient = zookeeperTransporter.connect(url);
-        //添加状态监听器
-        zkClient.addStateListener(new StateListener() {
-            @Override
-            public void stateChanged(int state) {
-                if (state == RECONNECTED) {
-                    try {
-                        recover();
-                    } catch (Exception e) {
-                        logger.error(e.getMessage(), e);
+        // class:ZookeeperRegistry
+        public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
+            super(url);
+            if (url.isAnyHost()) {
+                throw new IllegalStateException("registry address == null");
+            }
+
+            // 获取组名，默认为 dubbo
+            String group = url.getParameter(Constants.GROUP_KEY, DEFAULT_ROOT);
+            if (!group.startsWith(Constants.PATH_SEPARATOR)) {
+                // group = "/" + group
+                group = Constants.PATH_SEPARATOR + group;
+            }
+
+            this.root = group;
+            // 创建 Zookeeper 客户端，默认为 ZkclientZookeeperTransporter
+            zkClient = zookeeperTransporter.connect(url);
+            // 添加状态监听器
+            zkClient.addStateListener(new StateListener() {
+                @Override
+                public void stateChanged(int state) {
+                    if (state == RECONNECTED) {
+                        try {
+                            recover();
+                        } catch (Exception e) {
+                            logger.error(e.getMessage(), e);
+                        }
                     }
                 }
+            });
+        }
+
+        // class:ZookeeperRegistry
+        protected void doRegister(URL url) {
+            try {
+                // 通过 Zookeeper 客户端创建节点，节点路径由 toUrlPath 方法生成，路径格式如下:
+                // /${group}/${serviceInterface}/providers/${url}
+                //
+                // 比如：
+                // /dubbo/com.tianxiaobo.DemoService/providers/dubbo://ip地址:port/.....
+                zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
+            } catch (Throwable e) {
+                throw new RpcException(
+                        "Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
             }
-        });
+        }
+
     }
 
-    // class:FailbackRegistry
-    public void register(URL url) {
-        super.register(url);
-        failedRegistered.remove(url);
-        failedUnregistered.remove(url);
-        try {
-            // 模板方法，由子类实现
-            doRegister(url);
-        } catch (Exception e) {
-            // 省略代码.....
-        }
+/*
+ * Decompiled with CFR.
+ *
+ * Could not load the following classes:
+ *  com.dubbo.simple.common.DemoService
+ */
+
+public class Wrapper0 extends Wrapper implements ClassGenerator.DC {
+
+    public static String[] pns;
+    public static Map pts;
+    public static String[] mns;
+    public static String[] dmns;
+    public static Class[] mts0;
+    public static Class[] mts1;
+
+    public Class getPropertyType(String string) {
+        return (Class) pts.get(string);
     }
 
-    // class:ZookeeperRegistry
-    protected void doRegister(URL url) {
+    @Override
+    public Object getPropertyValue(Object object, String string) {
         try {
-            // 通过 Zookeeper 客户端创建节点，节点路径由 toUrlPath 方法生成，路径格式如下:
-            // /${group}/${serviceInterface}/providers/${url}
-            // 比如：
-            // /dubbo/com.tianxiaobo.DemoService/providers/dubbo://ip地址:port/.....
-            zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
-        } catch (Throwable e) {
-            throw new RpcException(
-                    "Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
+            DemoService demoService = (DemoService) object;
+        } catch (Throwable throwable) {
+            throw new IllegalArgumentException(throwable);
         }
+        throw new NoSuchPropertyException(new StringBuffer().append("Not found property \"").append(string)
+                .append("\" filed or setter method in class com.dubbo.simple.common.DemoService.").toString());
     }
+
+    @Override
+    public void setPropertyValue(Object object, String string, Object object2) {
+        try {
+            DemoService demoService = (DemoService) object;
+        } catch (Throwable throwable) {
+            throw new IllegalArgumentException(throwable);
+        }
+        throw new NoSuchPropertyException(new StringBuffer().append("Not found property \"").append(string)
+                .append("\" filed or setter method in class com.dubbo.simple.common.DemoService.").toString());
+    }
+
+    @Override
+    public String[] getPropertyNames() {
+        return pns;
+    }
+
+    public Object invokeMethod(Object object, String string, Class[] arrclass, Object[] arrobject)
+            throws InvocationTargetException {
+        DemoService demoService;
+        try {
+            demoService = (DemoService) object;
+        } catch (Throwable throwable) {
+            throw new IllegalArgumentException(throwable);
+        }
+        try {
+            if ("sayGoodBye".equals(string) && arrclass.length == 1) {
+                return demoService.sayGoodBye((String) arrobject[0]);
+            }
+            if ("sayHello".equals(string) && arrclass.length == 1) {
+                return demoService.sayHello((String) arrobject[0]);
+            }
+        } catch (Throwable throwable) {
+            throw new InvocationTargetException(throwable);
+        }
+        throw new NoSuchMethodException(new StringBuffer().append("Not found method \"").append(string)
+                .append("\" in class com.dubbo.simple.common.DemoService.").toString());
+    }
+
+    @Override
+    public String[] getMethodNames() {
+        return mns;
+    }
+
+    @Override
+    public String[] getDeclaredMethodNames() {
+        return dmns;
+    }
+
+    @Override
+    public boolean hasProperty(String string) {
+        return pts.containsKey(string);
+    }
+}
 
 }

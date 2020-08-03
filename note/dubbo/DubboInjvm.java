@@ -14,11 +14,13 @@ public class DubboInjvm{
      * 本地调用是无法使用的：
      * 第一，泛化调用的时候无法使用本地调用。
      * 第二，消费者明确指定 URL 发起直连调用。当然，如果消费者指定的是 injvm 的 URL，最终的调用也是走本地调用的，比如：
+     * 
      * <Dubbo:reference id="demoService" interface="org.apache.Dubbo.samples.local.api.DemoService" url="injvm://127.0.0.1/org.apache.Dubbo.samples.local.api.DemoService"/>
      * 
      * 本地调用是可以显式关闭的，通过这种方式，服务提供者可以做到对远端服务消费者和本地消费者一视同仁（即本地调用的流程与远端服务消费者一样）。
      * 具体做法是通过 scope="remote" 来关闭 injvm 协议的暴露，这样，即使是本地调用者，也需要从注册中心上获取服务地址列表，然后才能发起调用，
      * 而这个时候的调用过程，与远端的服务消费者的过程是一致的。
+     * 
      * <bean id="target" class="org.apache.Dubbo.samples.local.impl.DemoServiceImpl"/>
      * <!-- 服务提供者指定 scope="remote" -->
      * <Dubbo:service interface="org.apache.Dubbo.samples.local.api.DemoService" ref="target" scope="remote"/>
@@ -300,7 +302,7 @@ public class DubboInjvm{
     }
 
     /**
-     * 生成Exporter的过程和远程调用，只不过在为远程调用进行服务导出生成Exporter时，一般会默认也同时进行本地导出。但如果配置进行本地调用的话，
+     * 生成Exporter的过程和远程调用相同，只不过在为远程调用进行服务导出生成Exporter时，一般会默认也同时进行本地导出。但如果配置进行本地调用的话，
      * （也就是url为injvm://....），那么就不会再多此一举调用ServiceConfig#exportLocal方法，而是会直接调用protocol.export生成一个Exporter。
      * 这个Exporter中封装了一个ProxyFactory生成的Invoker对象（用于执行具体的调用逻辑）。
      */
@@ -326,7 +328,7 @@ public class DubboInjvm{
 
     /**
      * 在InjvmInvoker中，和其它的Invoker（比如DubboInvoker）不同，这个InjvmInvoker是直接从exporterMap中获取到url对应的exporter，
-     * 然后再获取到exporter中的invoker调用其invoke方法。这个invoker是ProxyFactory生成的一个对象，它会调用执行具体的方法。
+     * 然后再获取到exporter中封装的invoker调用其invoke方法。这个invoker是ProxyFactory生成的一个对象，它会调用执行具体的方法。
      */
     class InjvmInvoker<T> extends AbstractInvoker<T> {
 
@@ -358,6 +360,7 @@ public class DubboInjvm{
             RpcContext.getContext().setRemoteAddress(NetUtils.LOCALHOST, 0);
             return exporter.getInvoker().invoke(invocation);
         }
+
     }
 
 }

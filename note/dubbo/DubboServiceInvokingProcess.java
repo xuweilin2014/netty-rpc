@@ -355,6 +355,43 @@ public class DubboServiceInvokingProcess {
 
         private volatile ResponseCallback callback;
 
+        // 类加载的时候会启动一个超时扫描线程
+        static {
+            Thread th = new Thread(new RemotingInvocationTimeoutScan(), "DubboResponseTimeoutScanTimer");
+            th.setDaemon(true);
+            th.start();
+        }
+
+        private static class RemotingInvocationTimeoutScan implements Runnable {
+
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        // 扫描 FUTURES 集合
+                        for (DefaultFuture future : FUTURES.values()) {
+                            if (future == null || future.isDone()) {
+                                continue;
+                            }
+                            // 如果future未完成，且超时
+                            if (System.currentTimeMillis() - future.getStartTimestamp() > future.getTimeout()) {
+                                // 创建一个异常的Response
+                                Response timeoutResponse = new Response(future.getId());
+                                // set timeout status.
+                                timeoutResponse.setStatus(future.isSent() ? Response.SERVER_TIMEOUT : Response.CLIENT_TIMEOUT);
+                                timeoutResponse.setErrorMessage(future.getTimeoutMessage(true));
+                                // 处理异常
+                                DefaultFuture.received(future.getChannel(), timeoutResponse);
+                            }
+                        }
+                        Thread.sleep(30);
+                    } catch (Throwable e) {
+                        logger.error("Exception when scan the timeout invocation of remoting.", e);
+                    }
+                }
+            }
+        }
+
         public static void received(Channel channel, Response response) {
             try {
                 // 当接收到服务端的返回值时，从 FUTURES 这个 map 中移除掉此 response 对应的 DefaultFuture 对象
@@ -484,11 +521,13 @@ public class DubboServiceInvokingProcess {
             }
         }
 
+
+
     }
 
     /**
      * ReferenceCountExchangeClient 内部定义了一个引用计数变量 referenceCount，每当该对象被引用一次 referenceCount 都会进行自增。每当 close 方法被调用时，referenceCount 进行自减。
-     * ReferenceCountExchangeClient 内部仅实现了一个引用计数的功能，其他方法并无复杂逻辑，均是直接调用被装饰对象的相关方法。可以说，ReferenceCountExchangeClient 专注于引用技术的逻辑
+     * ReferenceCountExchangeClient 内部仅实现了一个引用计数的功能，其他方法并无复杂逻辑，均是直接调用被装饰对象的相关方法。可以说，ReferenceCountExchangeClient 专注于引用计数的逻辑
      */
     final class ReferenceCountExchangeClient implements ExchangeClient {
 
@@ -664,8 +703,7 @@ public class DubboServiceInvokingProcess {
         }
 
         public ResponseFuture request(Object request) throws RemotingException {
-            return request(request,
-                    channel.getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT));
+            return request(request, channel.getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT));
         }
 
         public ResponseFuture request(Object request, int timeout) throws RemotingException {

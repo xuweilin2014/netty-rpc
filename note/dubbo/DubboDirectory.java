@@ -222,6 +222,7 @@ public class DubboDirectory{
 
         // RegistryDirectory 是一个动态服务目录，会随注册中心配置的变化进行动态调整。因此 RegistryDirectory 实现了 NotifyListener 接口，
         // 通过这个接口获取注册中心变更通知。
+        // 
         // 如上，notify 方法首先是根据 url 的 category 参数对 url 进行分门别类存储，然后通过 toRouters 和 toConfigurators 将 url 列表转成 Router 和 Configurator 列表。
         // 最后调用 refreshInvoker 方法刷新 Invoker 列表。
         public synchronized void notify(List<URL> urls) {
@@ -399,6 +400,7 @@ public class DubboDirectory{
                     } catch (Throwable t) {
                         logger.error("Failed to refer invoker for interface:" + serviceType + ",url:(" + url + ")" + t.getMessage(), t);
                     }
+
                     if (invoker != null) { // Put new invoker in cache
                         newUrlInvokerMap.put(key, invoker);
                     }

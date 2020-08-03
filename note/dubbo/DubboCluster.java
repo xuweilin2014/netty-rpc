@@ -199,6 +199,8 @@ public class DubboCluster{
         public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
             List<Invoker<T>> copyinvokers = invokers;
             checkInvokers(copyinvokers, invocation);
+
+            // 获取方法中所配置的重试次数，也就是<dubbo:method/>标签中retries元素的值
             int len = getUrl().getMethodParameter(invocation.getMethodName(), Constants.RETRIES_KEY, Constants.DEFAULT_RETRIES) + 1;
             if (len <= 0) {
                 len = 1;
@@ -207,6 +209,7 @@ public class DubboCluster{
             RpcException le = null; // last exception.
             List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyinvokers.size()); // invoked invokers.
             Set<String> providers = new HashSet<String>(len);
+
             // 根据重试次数的大小进行循环调用
             for (int i = 0; i < len; i++) {
 
