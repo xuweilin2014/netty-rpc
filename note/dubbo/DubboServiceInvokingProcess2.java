@@ -17,7 +17,9 @@ public class DubboServiceInvokingProcess2{
      * 
      * 解码器将数据包解析成 Request 对象后，NettyServerHandler 的 channelRead 方法紧接着会收到这个对象，并将这个对象继续向下传递。这期间该对象会被依次传递给
      * AbstractPeer、MultiMessageHandler、HeartbeatHandler 以及 AllChannelHandler。最后由 AllChannelHandler 将该对象封装到 Runnable 实现类 ChannelEventRunnable 对象中， 
-     * 并将 Runnable 放入线程池中执行后续的调用逻辑。整个调用栈如下：
+     * 并将 Runnable 放入线程池中执行后续的调用逻辑。
+     * 
+     * 整个调用栈如下：
      * 
      * NettyServerHandler#channelRead(ChannelHandlerContext, Object) —>
      * AbstractPeer#received(Channel, Object) —>
@@ -27,6 +29,7 @@ public class DubboServiceInvokingProcess2{
      * ExecutorService#execute(Runnable) // 由线程池执行后续的调用逻辑
      * 
      * 服务器端对客户端发送过来的请求处理过程如下：
+     * 
      * ChannelEventRunnable#run()
      * —> DecodeHandler#received(Channel, Object)
      * —> HeaderExchangeHandler#received(Channel, Object)
@@ -41,21 +44,82 @@ public class DubboServiceInvokingProcess2{
      * 
      * 解码器将数据包解析成 Request, NettyClientHandler 的 channelRead 方法紧接着会收到这个对象, 并将这个对象继续向下传递. 这期间该对象会被依次传递给
      * AbstractPeer, MultiMessageHandler, HeartbeatHandler 以及 AllChannelHandler。最后由 AllChannelHandler 将该对象封装到 Runnable 实现类 ChannelEventRunnable 的对象中， 
-     * 并将 Runnable 放入线程池中执行后续的调用逻辑。整个调用栈如下：
+     * 并将 Runnable 放入线程池中执行后续的调用逻辑。
      * 
-     * NettyClientHandler#channelRead(ChannelHandlerContext, Object) —>
-     * AbstractPeer#received(Channel, Object) —>
-     * MultiMessageHandler#received(Channel, Object) —>
-     * HeartbeatHandler#received(Channel, Object) —>
-     * AllChannelHandler#received(Channel, Object) —>
-     * ExecutorService#execute(Runnable) // 由线程池执行后续的调用逻辑
+     * 整个调用栈如下：
+     * 
+     * NettyClientHandler#channelRead(ChannelHandlerContext, Object) 
+     * —> AbstractPeer#received(Channel, Object) 
+     * —> MultiMessageHandler#received(Channel, Object) 
+     * —> HeartbeatHandler#received(Channel, Object) 
+     * —> AllChannelHandler#received(Channel, Object) 
+     * —> ExecutorService#execute(Runnable) // 由线程池执行后续的调用逻辑
      * 
      * 客户端对服务器端发过来的响应处理过程的如下：
+     * 
      * ChannelEventRunnable#run()
      * —> DecodeHandler#received(Channel, Object)
      * —> HeaderExchangeHandler#received(Channel, Object)
      * —> HeaderExchangeHandler#handleResponse(ExchangeChannel, Response)
      * -> DefaultFuture#received(Channel, Response)
+     */
+
+    /**
+     * 对于客户端，它的底层 ChannelPipeline 结构为：
+     * 
+     * decoder -> encoder -> NettyClientHandler
+     * 
+     * 其中NettyClientHandler是Netty中ChannelDuplexHandler的子类，可以处理入站和出站数据。其中，有一个ChannelHandler类型的handler对象，它真正的类型是NettyClient。NettyClient
+     * 的父类实现了ChannelHandler接口。而NettyClient中的handler也经过了层层封装。具体的层次如下：
+     * 
+     * NettyClientHandler（ChannelHandler handler）
+     * -> NettyClient（ChannelHandler handler）
+     * -> MultiMessageHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）
+     * -> HeartbeatHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）
+     * -> AllChannelHandler（ChannelHandler handler，继承的WrappedChannelHandler实现了ChannelHandlerDelegate接口）
+     * -> DecodeHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）
+     * -> HeaderExchangeHandler（ExchangeHandler，实现了ChannelHandlerDelegate接口）
+     * -> DubboProtocol$1
+     */
+
+    /**
+     * 对于服务端，它的底层 ChannelPipeline 结构为：
+     * 
+     * decode -> encoder -> NettyServerHandler
+     * 
+     * 其中NettyServerHandler是Netty中ChannelDuplexHandler的子类，可以处理入站和出站数据。其中其中，有一个ChannelHandler类型的handler对象，它真正的类型是NettyServer。NettyServer
+     * 的父类实现了ChannelHandler接口。而NettyServer中的handler也经过了层层封装。具体的层次如下：
+     * 
+     * NettServerHandler（ChannelHandler handler）
+     * -> NettyServer（ChannelHandler handler）
+     * -> MultiMessageHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）
+     * -> HeartbeatHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）
+     * -> AllChannelHandler（ChannelHandler handler，继承的WrappedChannelHandler实现了ChannelHandlerDelegate接口）
+     * -> DecodeHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）
+     * -> HeaderExchangeHandler（ExchangeHandler，实现了ChannelHandlerDelegate接口）
+     * -> DubboProtocol$1
+     */
+
+    /**
+     * Server的创建在DubboProtocol的createServer中进行，具体的调用栈如下：
+     * 
+     * DubboProtocol#export
+     * -> DubboProtocol#openServer
+     * -> DubboProtocol#createServer
+     * -> Exchangers#bind
+     * -> HeaderExchanger#bind
+     * -> Transporters#connect
+     * -> NettyTransporter#bind
+     * 
+     * 最后返回一个HeaderExchangeServer对象，其中封装了NettyServer
+     */
+
+    /**
+     * Client的创建在DubboProtocol的getSharedClient和initClient中进行。
+     * 
+     * initClient返回一个HeaderExchangeClient对象，其中封装了NettyClient对象。
+     * getSharedClient在initClient的基础上又封装了一层，会返回一个ReferenceCountExchangeClient，其中包含了HeaderExchangeClient对象，而
+     * HeaderExchangeClient对象中自然也封装了NettyClient对象
      */
 
     public class HeaderExchanger implements Exchanger {
@@ -71,6 +135,8 @@ public class DubboServiceInvokingProcess2{
         }
     
     }
+
+    
 
     public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 

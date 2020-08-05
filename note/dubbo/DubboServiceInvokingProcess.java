@@ -322,11 +322,11 @@ public class DubboServiceInvokingProcess {
                     // 发送请求，得到一个 ResponseFuture 实例，并调用该实例的 get 方法进行等待。ResponseFuture 是一个接口，而DefaultFuture 则是它的默认实现类
                     return (Result) currentClient.request(inv, timeout).get();
                 }
+            
+            // 在抛出 TimeoutException 和 RemotingException 之后，都会将其封装成 RpcException 对象，这个 RpcException 可以被上级（比如 FailoverClusterInvoker）捕获
             } catch (TimeoutException e) {
-                throw new RpcException(
-                        RpcException.TIMEOUT_EXCEPTION, "Invoke remote method timeout. method: "
-                                + invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(),
-                        e);
+                throw new RpcException(RpcException.TIMEOUT_EXCEPTION, "Invoke remote method timeout. method: "
+                                + invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(), e);
             } catch (RemotingException e) {
                 throw new RpcException(RpcException.NETWORK_EXCEPTION, "Failed to invoke remote method: "
                         + invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(), e);
