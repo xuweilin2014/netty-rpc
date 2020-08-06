@@ -1,0 +1,15 @@
+1.Dubbo当服务提供者挂了，那消费者该怎么办？
+2.Dubbo的多个provider怎么实现切换的？
+3.dubbo服务暴露和引用过程，负载均衡策略，容错机制在哪里实现的源码
+4.dubbo调用端怎么在jvm中生成对应服务？dubbo服务端和调用端超时时间设置和区别、dubbo长连接。
+DUBBO几种负载均衡的模式（轮询、随机、一致性哈希、最小活跃数）
+在基于dubbo的分布式环境中，一般将超时timeout设置在provider还是consumer?
+谈谈基于dubbo的系统中consumer集群的解决方案？
+zk宕机，dubbo服务还能不能用？
+dubbo 怎么注册到zookeeper
+dubbo 协议，zookeeper协议
+dubbo 是如何限流？
+dubbo序列化都有哪些？以及实现原理？
+Dubbo超时重试；Dubbo超时时间设置
+dubbo调用其他服务如何做到不检查
+dubbo的序列化和反序列化的框架
