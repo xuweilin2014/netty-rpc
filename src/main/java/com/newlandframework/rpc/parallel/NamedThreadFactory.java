@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 自定义的线程工厂，用来创建线程池中的Worker线程
+ * 自定义的线程工厂，用来创建线程池中的线程
  */
 public class NamedThreadFactory implements ThreadFactory {
 

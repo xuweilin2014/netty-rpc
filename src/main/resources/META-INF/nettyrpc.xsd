@@ -12,7 +12,11 @@
 				<xsd:extension base="beans:identifiedType">
 					<xsd:attribute name="interfaceName" type="xsd:string" use="required"/>
 					<xsd:attribute name="ref" type="xsd:string" use="required"/>
+					<xsd:attribute name="registry" type="xsd:string" use="required"/>
+					<xsd:attribute name="protocol" type="xsd:string" use="required"/>
 					<xsd:attribute name="filter" type="xsd:string" use="optional"/>
+					<xsd:attribute name="url" type="xsd:string" use="optional"/>
+					<xsd:attribute name="scope" type="xsd:string" use="optional"/>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -21,9 +25,8 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
-					<xsd:attribute name="ipAddr" type="xsd:string" use="required"/>
-					<xsd:attribute name="echoApiPort" type="xsd:string" use="required"/>
-					<xsd:attribute name="protocol" type="xsd:string" use="required"/>
+					<xsd:attribute name="address" type="xsd:string" use="required"/>
+					<xsd:attribute name="name" type="xsd:string" use="required"/>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -33,8 +36,28 @@
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
 					<xsd:attribute name="interfaceName" type="xsd:string" use="required"/>
-					<xsd:attribute name="ipAddr" type="xsd:string" use="required"/>
-					<xsd:attribute name="protocol" type="xsd:string" use="required"/>
+					<xsd:attribute name="registry" type="xsd:string" use="required"/>
+					<xsd:attribute name="timeout" type="xsd:string" use="optional"/>
+					<xsd:attribute name="retries" type="xsd:string" use="optional"/>
+					<xsd:attribute name="loadbalance" type="xsd:string" use="optional"/>
+					<xsd:attribute name="async" type="xsd:string" use="optional"/>
+					<xsd:attribute name="cluster" type="xsd:string" use="optional"/>
+					<xsd:attribute name="heartbeat" type="xsd:string" use="optional"/>
+					<xsd:attribute name="heartbeat.timeout" type="xsd:string" use="optional"/>
+					<xsd:attribute name="stub" type="xsd:string" use="optional"/>
+					<xsd:attribute name="scope" type="xsd:string" use="optional"/>
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="protocol">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="beans:identifiedType">
+					<xsd:attribute name="name" type="xsd:string" use="required"/>
+					<xsd:attribute name="port" type="xsd:string" use="required"/>
+					<xsd:attribute name="serialize" type="xsd:string" use="required"/>
+					<xsd:attribute name="host" type="xsd:string" use="optional"/>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>

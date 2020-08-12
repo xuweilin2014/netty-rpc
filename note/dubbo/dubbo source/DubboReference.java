@@ -125,6 +125,23 @@ public class DubboReference{
      */
     
     /**
+     * RegistryProtocol#export方法主要将服务注册到注册中心上
+     * RegistryProtocol#refer方法主要将从注册中心上订阅服务
+     */
+
+    /**
+     * 在进行服务引用的时候，会创建一个 RegistryDirectory ，它即是一个监听器 Listener，同时也可以看作是 Invoker 的集合。在创建 RegistryDirectory 时，我们
+     * 会指定 type、url、registry，分别是要订阅的服务实现的接口、注册中心的地址和注册中心对象（比如ZookeeperRegistry）。也就是说，这个 RegistryDirectory 监听器
+     * 只会注册在一个特定注册中心上的如下3个目录：
+     * 
+     * /dubbo/com.xxx.service/providers
+     * /dubbo/com.xxx.service/routers
+     * /dubbo/com.xxx.service/configurators
+     * 
+     * 一个 RegistryDirectory 只会包含某个注册中心上，某个服务目录下的 Invoker 集合。并且当调用到 RegistryDirectory 的 doList 方法时，会根据要调用的方法选取 invoker
+     */
+
+    /**
      * Stub的实现原理：
      * 
      * 在调用ExtensionLoader的createExtension方法时，如果存在有一个或者多个wrapper包装对象的话，会将真正的拓展传入到wrapper的
@@ -432,9 +449,9 @@ public class DubboReference{
                  * 调用上面的cluster.join创建的Invoker的invoke方法时，会从StaticDirectory中保存的MockClusterInvoker里面选一个可用的，调用其invoke方法。接着的逻辑就和第一种情况一样。
                  */
 
-                //单个注册中心或者单个服务直连url
+                // 单个注册中心或者单个服务直连url
                 if (urls.size() == 1) {
-                    //调用 RegistryProtocol 的 refer 构建 Invoker 实例
+                    // 调用 RegistryProtocol 的 refer 构建 Invoker 实例
                     invoker = refprotocol.refer(interfaceClass, urls.get(0));
                 // 多个注册中心或者多个服务直连url
                 } else {
@@ -444,7 +461,9 @@ public class DubboReference{
                     // 获取所有的 Invoker
                     for (URL url : urls) {
                         // 通过 refprotocol 调用 refer 构建 Invoker，refprotocol 会在运行时根据 url 协议头加载指定的 Protocol 实例，并调用实例的 refer 方法。
-                        // 这里一般是调用RegistryProtocol的refer方法
+                        // 这里一般是调用RegistryProtocol的refer方法。
+                        // 注意，这里的 url 指代的是一个注册中心的地址，refprotocol.refer 返回一个 MockClusterInvoker 对象，包含了 url 对应注册中心里面所有的
+                        // invoker 集合。invokers 则为所有 MockClusterInvoker 对象的集合，一个 MockClusterInvoker 对应一个注册中心
                         invokers.add(refprotocol.refer(interfaceClass, url));
                         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
                             registryURL = url; // use last registry url

@@ -1,0 +1,2 @@
+echo=com.newlandframework.rpc.filter.support.EchoChainFilter
+classloader=com.newlandframework.rpc.filter.support.ClassLoaderChainFilter

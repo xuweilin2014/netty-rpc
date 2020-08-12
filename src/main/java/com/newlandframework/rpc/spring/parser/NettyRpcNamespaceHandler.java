@@ -1,5 +1,9 @@
-package com.newlandframework.rpc.spring;
+package com.newlandframework.rpc.spring.parser;
 
+import com.newlandframework.rpc.spring.bean.NettyRpcProtocol;
+import com.newlandframework.rpc.spring.bean.NettyRpcReference;
+import com.newlandframework.rpc.spring.bean.NettyRpcRegistry;
+import com.newlandframework.rpc.spring.bean.NettyRpcService;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -29,16 +33,17 @@ public class NettyRpcNamespaceHandler extends NamespaceHandlerSupport {
             System.out.println("| |\\ |||  \\    / \\   / \\   \\  / |  \\/||  \\/||  /  ");
             System.out.println("| | \\|||  /_   | |   | |   / /  |    /|  __/|  \\_ ");
             System.out.println("\\_/  \\|\\____\\  \\_/   \\_/  /_/   \\_/\\_\\\\_/   \\____/");
-            System.out.println("【NettyRPC 2.0,Build 2016/10/7】");
+            System.out.println("【NettyRPC 2.0,Build 20208/6】");
             System.out.println("");
         }
     }
 
     @Override
     public void init() {
-        registerBeanDefinitionParser("service", new NettyRpcServiceParser());
-        registerBeanDefinitionParser("registry", new NettyRpcRegisteryParser());
-        registerBeanDefinitionParser("reference", new NettyRpcReferenceParser());
+        registerBeanDefinitionParser("service", new NettyRpcBeanDefinitionParser(NettyRpcService.class));
+        registerBeanDefinitionParser("registry", new NettyRpcBeanDefinitionParser(NettyRpcRegistry.class));
+        registerBeanDefinitionParser("reference", new NettyRpcBeanDefinitionParser(NettyRpcReference.class));
+        registerBeanDefinitionParser("protocol", new NettyRpcBeanDefinitionParser(NettyRpcProtocol.class));
     }
 }
 

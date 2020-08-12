@@ -1,6 +1,7 @@
 package com.newlandframework.rpc.core;
 
 import com.newlandframework.rpc.netty.server.MessageRecvExecutor;
+import com.newlandframework.rpc.util.ReflectionUtil;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class AbilityDetailProvider implements AbilityDetail {
     public StringBuilder listAbilityDetail(boolean html) {
         Map<String, Object> map = MessageRecvExecutor.getInstance().getHandlerMap();
 
-        ReflectionUtils utils = new ReflectionUtils();
+        ReflectionUtil utils = new ReflectionUtil();
 
         if (html) {
             utils.getProvider().append(STYLE).append(HEADER);

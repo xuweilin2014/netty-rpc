@@ -1,5 +1,7 @@
 package com.newlandframework.rpc.core;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * RPC服务器一些参数配置
  */
@@ -24,5 +26,25 @@ public class RpcSystemConfig {
     public static final int SERIALIZE_POOL_MIN_IDLE = 10;
     public static final int SERIALIZE_POOL_MAX_WAIT_MILLIS = 5000;
     public static final int SERIALIZE_POOL_MIN_EVICTABLE_IDLE_TIME_MILLIS = 600000;
+
+    public static final String SCOPE_LOCAL = "local";
+
+    public static final String SCOPE_REMOTE = "remote";
+
+    public static final String INJVM = "injvm";
+
+    public static final String EXPORT_KEY = "export";
+
+    public static final String REGISTRY_FACTORY = "registry";
+
+    public static final int ZOOKEEPER_TIMEOUT = 3000;
+
+    public static final String INTERFACE_KEY = "interface";
+
+    public static final String ROOT_DIR = "/rpc";
+
+    public static final String DIR_SEPARATOR = "/";
+
+    public static final int RETRY_PERIOD = 5000;
 }
 

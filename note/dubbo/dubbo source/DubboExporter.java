@@ -1,6 +1,25 @@
 public class DubboExporter {
 
     /**
+     * 
+     * 服务导出的流程：
+     * 1.进行各种参数和配置的检查
+     * 
+     * 2.将前面的各种配置信息组装成为一个URL
+     * 
+     * 3.获取所有注册中心的URL地址
+     * 
+     * 4.获取用户所配置的协议种类（比如Dubbo，Http）。然后分别使用每一种协议，将每一个服务导出到本地（自动使用Injvm协议进行）。
+     * 同时，根据每一个注册中心的URL，将每一个服务进行导出（使用各自的协议进行，比如Dubbo，Http，并且导出的 exporters 保存在 AbstractProtocol 中）
+     * ，并且注册在所有的注册中心上面。注意，导出（export）和注册（register）操作都在 RegistryProtocol 中进行，在 RegistryProtocol 中
+     * 会调用各自协议的 XXXProtocol#export。另外，在使用各自协议进行导出的话，如果有需要的话，还会启动服务器
+     * 
+     * 另外，需要注意的是，服务的引用也是在 RegistryProtocol 的 refer 方法中完成的，其中会对注册中心进行订阅。订阅实际上是 RegistryDirectory 这个 Listener，
+     * 在注册中心上注册一个监听器，然后当节点数发生变化时，就返回。
+     * 
+     */
+
+    /**
      * [dubbo://169.254.207.250:20880/com.xu.gmall.service.UserService?anyhost=true&application=user-service-provider&dubbo=2.6.2&
      * generic=false&interface=com.xu.gmall.service.UserService&methods=getUserAddressList&pid=1308&side=provider&timestamp=1591591491230]
      */

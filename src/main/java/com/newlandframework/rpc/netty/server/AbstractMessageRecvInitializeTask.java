@@ -6,7 +6,8 @@ import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.filter.FilterChainBuilder;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
-import com.newlandframework.rpc.spring.BeanFactoryUtils;
+import com.newlandframework.rpc.protocol.rpc.RpcInvoker;
+import com.newlandframework.rpc.util.BeanFactoryUtil;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.support.NameMatchMethodPointcutAdvisor;
 
@@ -30,7 +31,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
 
     protected long invokeTimespan;
 
-    protected FilterChainBuilder chainBuilder = BeanFactoryUtils.getBean("filterChain");
+    protected FilterChainBuilder chainBuilder = BeanFactoryUtil.getBean("filterChain");
 
     public AbstractMessageRecvInitializeTask(MessageRequest request, MessageResponse response, Map<String, Object> handlerMap) {
         this.request = request;
@@ -87,7 +88,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
      * i.如果没有配置过滤器链的话，就直接通过反射调用客户端要求的方法，并且返回结果
      * ii.如果配置了过滤器链的话，就会先执行过滤器链中多个过滤器的intercept方法，对客户端的调用请求进行一些处理，然后再反射调用客户端要求的方法
      */
-    private Object invoke(MethodInvoker mi, MessageRequest request) throws Throwable {
+    private Object invoke(RpcInvoker mi, MessageRequest request) throws Throwable {
         if (chainBuilder != null) {
             ChainFilterInvokerProvider provider = chainBuilder.buildChain(new ChainFilterInvoker() {
 
@@ -126,7 +127,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
      */
     private Object reflect(MessageRequest request) throws Throwable {
         // 创建一个 ProxyFactory 对象，并且设置目标对象为 MethodInvoker
-        ProxyFactory weaver = new ProxyFactory(new MethodInvoker());
+        ProxyFactory weaver = new ProxyFactory(new RpcInvoker());
         // Spring AOP中有两个PointcutAdvisor：RegexpMethodPointcutAdvisor和 NameMatchMethodPointcutAdvisor，
         // 它们都在org.springframework.aop.support包中。它们都可以过滤要拦截的方法，即对目标方法进行增强，配置方法也大致相同，其中一个最主要的区别：
         // RegexpMethodPointcutAdvisor：需要加上完整的类名和方法名
@@ -144,7 +145,7 @@ public abstract class AbstractMessageRecvInitializeTask implements Callable<Bool
         weaver.addAdvisor(advisor);
 
         // 返回SpringAOP创建的代理对象，这里是CglibAopProxy（因为MethodInvoker没有实现接口）
-        MethodInvoker mi = (MethodInvoker) weaver.getProxy();
+        RpcInvoker mi = (RpcInvoker) weaver.getProxy();
         Object obj = invoke(mi, request);
         invokeTimespan = mi.getInvokeTimespan();
 

@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.async;
 
-import com.newlandframework.rpc.core.ReflectionUtils;
+import com.newlandframework.rpc.util.ReflectionUtil;
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.exception.AsyncCallException;
 import com.newlandframework.rpc.parallel.RpcThreadPool;
@@ -25,7 +25,7 @@ public class AsyncInvoker {
         Type type = callback.getClass().getGenericInterfaces()[0];
         if (type instanceof ParameterizedType) {
             // getGenericClass方法返回值returnClass为泛型中实际参数类型，比如AsyncCallback<CostTime>中的CostTime.class
-            Class<?> returnClass = ReflectionUtils.getGenericClass((ParameterizedType) type, 0);
+            Class<?> returnClass = ReflectionUtil.getGenericClass((ParameterizedType) type, 0);
             return intercept(callback, returnClass);
         } else {
             throw new AsyncCallException("NettyRPC AsyncCallback must be parameterized type!");

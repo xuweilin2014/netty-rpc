@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.netty.server;
 
-import com.newlandframework.rpc.core.ReflectionUtils;
+import com.newlandframework.rpc.util.ReflectionUtil;
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
 import com.newlandframework.rpc.filter.ServiceFilterBinder;
@@ -8,7 +8,6 @@ import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
 import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
-import com.newlandframework.rpc.netty.server.AbstractMessageRecvInitializeTask;
 import com.newlandframework.rpc.observer.*;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -37,11 +36,11 @@ public class MessageRecvInitializeTask extends AbstractMessageRecvInitializeTask
             cls = ((ServiceFilterBinder) handlerMap.get(request.getClassName())).getObject().getClass();
         }
 
-        ReflectionUtils utils = new ReflectionUtils();
+        ReflectionUtil utils = new ReflectionUtil();
 
         try {
             //通过反射获取客户端要调用的方法
-            Method method = ReflectionUtils.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
+            Method method = ReflectionUtil.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
             //通过反射获取方法的签名，保存到ReflectionUtils类的provider对象中
             utils.listMethod(method, false);
             //获取客户端要调用的方法的方法签名的字符串

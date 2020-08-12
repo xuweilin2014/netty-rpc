@@ -3,6 +3,7 @@ package com.newlandframework.rpc.netty.server;
 import com.newlandframework.rpc.filter.Filter;
 import com.newlandframework.rpc.filter.ServiceFilterBinder;
 import com.newlandframework.rpc.model.MessageRequest;
+import com.newlandframework.rpc.protocol.rpc.RpcInvoker;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.ArrayUtils;
@@ -50,7 +51,7 @@ public class MethodProxyAdvice implements MethodInterceptor {
         Object[] parameters = request.getParametersVal();
 
         ServiceFilterBinder binder = (ServiceFilterBinder) serviceBean;
-        ((MethodInvoker) invocation.getThis()).setServiceBean(binder.getObject());
+        ((RpcInvoker) invocation.getThis()).setServiceBean(binder.getObject());
 
         try{
             if (binder.getFilter() != null) {

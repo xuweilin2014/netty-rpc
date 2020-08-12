@@ -37,7 +37,7 @@ public class MessageSendExecutor {
         loader.unLoad();
     }
 
-    public Object execute(Class<?> rpcInterface) throws Exception {
+    public Object getProxy(Class<?> rpcInterface) throws Exception {
         return  Proxy.newProxyInstance(rpcInterface.getClassLoader(),
                 new Class<?>[]{rpcInterface}, new MessageSendProxy());
     }

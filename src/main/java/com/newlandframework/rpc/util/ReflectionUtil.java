@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.core;
+package com.newlandframework.rpc.util;
 
 import com.google.common.collect.ImmutableMap;
 import com.newlandframework.rpc.exception.CreateProxyException;
@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ReflectionUtils {
+public class ReflectionUtil {
     private static ImmutableMap.Builder<Class, Object> builder = ImmutableMap.builder();
     private StringBuilder provider = new StringBuilder();
 
@@ -128,21 +128,21 @@ public class ReflectionUtils {
                 && method.getParameterTypes().length == 1 && Object.class.equals(method.getParameterTypes()[0]);
     }
 
-    public static Object newInstance(Class type) {
-        Constructor constructor = null;
+    public static Object newInstance(Class<?> type) {
+        Constructor<?> constructor = null;
         Object[] args = new Object[0];
         try {
-            constructor = type.getConstructor(new Class[]{});
+            constructor = type.getConstructor();
         } catch (NoSuchMethodException e) {
         }
 
         if (constructor == null) {
-            Constructor[] constructors = type.getConstructors();
+            Constructor<?>[] constructors = type.getConstructors();
             if (constructors.length == 0) {
                 return null;
             }
             constructor = constructors[0];
-            Class[] params = constructor.getParameterTypes();
+            Class<?>[] params = constructor.getParameterTypes();
             args = new Object[params.length];
             for (int i = 0; i < params.length; i++) {
                 args[i] = getDefaultVal(params[i]);
@@ -151,11 +151,9 @@ public class ReflectionUtils {
 
         try {
             return constructor.newInstance(args);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (InstantiationException
+                | IllegalAccessException
+                | InvocationTargetException e) {
             e.printStackTrace();
         }
         return null;
@@ -169,6 +167,16 @@ public class ReflectionUtils {
         } else {
             return newInstance(cl);
         }
+    }
+
+    public static String[] getMethodNames(Class<?> cls){
+        Method[] methods = cls.getDeclaredMethods();
+        String[] methodNames = new String[methods.length];
+        for (int i = 0; i < methodNames.length; i++) {
+            methodNames[i] = methods[i].getName();
+        }
+
+        return methodNames;
     }
 
     public static Class<?> getGenericClass(ParameterizedType parameterizedType, int i) {

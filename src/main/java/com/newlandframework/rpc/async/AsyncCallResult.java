@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.async;
 
-import com.newlandframework.rpc.core.ReflectionUtils;
+import com.newlandframework.rpc.util.ReflectionUtil;
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.exception.AsyncCallException;
 import com.newlandframework.rpc.exception.InvokeTimeoutException;
@@ -102,7 +102,7 @@ public class AsyncCallResult {
 
         try {
             //根据proxyClass每次创建一个不同的代理对象返回
-            return ReflectionUtils.newInstance(proxyClass);
+            return ReflectionUtil.newInstance(proxyClass);
         } finally {
             Enhancer.registerStaticCallbacks(proxyClass, null);
         }

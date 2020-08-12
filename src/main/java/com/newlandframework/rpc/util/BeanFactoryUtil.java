@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.spring;
+package com.newlandframework.rpc.util;
 
 
 import org.springframework.beans.BeansException;
@@ -18,7 +18,7 @@ import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncl
 /**
  *
  */
-public class BeanFactoryUtils implements BeanFactoryAware {
+public class BeanFactoryUtil implements BeanFactoryAware {
     private static BeanFactory beanFactory;
 
     private static boolean isContains(String[] values, String value) {

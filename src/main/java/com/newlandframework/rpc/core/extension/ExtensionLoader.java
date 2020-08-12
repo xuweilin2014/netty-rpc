@@ -56,6 +56,7 @@ public final class ExtensionLoader<T> {
         return (ExtensionLoader<T>) loader;
     }
 
+    // 获取 name 对应的扩展，如果没有这个扩展，就返回 null
     @SuppressWarnings("unchecked")
     public T getExtension(String name){
         if (name == null || name.length() == 0)

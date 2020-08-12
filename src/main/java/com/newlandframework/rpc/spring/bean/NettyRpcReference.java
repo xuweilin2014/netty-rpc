@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.spring;
+package com.newlandframework.rpc.spring.bean;
 
 import com.google.common.eventbus.EventBus;
 import com.newlandframework.rpc.event.ClientStopEvent;
@@ -22,6 +22,12 @@ import org.springframework.beans.factory.InitializingBean;
  */
 @Data
 public class NettyRpcReference implements FactoryBean, InitializingBean, DisposableBean {
+
+    private String id;
+
+    private String registry;
+
+    private String timeout;
 
     private String interfaceName;
 
@@ -58,7 +64,7 @@ public class NettyRpcReference implements FactoryBean, InitializingBean, Disposa
     @Override
     public Object getObject() throws Exception {
         //返回一个实现了interfaceName所指定接口的代理对象，调用代理对象的方法时，真正调用的是实现了InvocationHandler的MessageSendProxy对象的invoke方法
-        return MessageSendExecutor.getInstance().execute(getObjectType());
+        return MessageSendExecutor.getInstance().getProxy(getObjectType());
     }
 
     @Override
