@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.core;
 
-import com.newlandframework.rpc.netty.server.MessageRecvExecutor;
+import com.newlandframework.rpc.remoting.server.NettyServer;
 import com.newlandframework.rpc.util.ReflectionUtil;
 
 import java.util.Iterator;
@@ -44,7 +44,7 @@ public class AbilityDetailProvider implements AbilityDetail {
 
     @Override
     public StringBuilder listAbilityDetail(boolean html) {
-        Map<String, Object> map = MessageRecvExecutor.getInstance().getHandlerMap();
+        Map<String, Object> map = NettyServer.getInstance().getHandlerMap();
 
         ReflectionUtil utils = new ReflectionUtil();
 

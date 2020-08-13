@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.jmx;
 
-import com.newlandframework.rpc.netty.server.MessageRecvExecutor;
+import com.newlandframework.rpc.remoting.server.NettyServer;
 import com.newlandframework.rpc.parallel.AbstractDaemonThread;
 import com.newlandframework.rpc.parallel.SemaphoreWrapper;
 import org.apache.commons.collections.Predicate;
@@ -86,6 +86,7 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
     }
 
     public void start() {
+        // TODO: 2020/8/13  
         //将JMX服务器的启动放入到其它的线程中去执行，使用的是AbstractDaemonThread的匿名内部类，
         //在run方法中启动JMX服务器，而在getDaemonThread方法中，返回这个线程的名字。
         //此匿名内部类会调用父类AbstractDaemonThread的无参构造方法，生成一个名为ModuleMetricsHandler的线程，来负责JMX服务器的启动
@@ -104,7 +105,7 @@ public class ModuleMetricsHandler extends AbstractModuleMetricsHandler {
                 try {
                     //这个步骤很重要，注册一个端口，绑定url后用于客户端通过rmi方式(也就是JConsole)连接JMXConnectorServer
                     LocateRegistry.createRegistry(MODULE_METRICS_JMX_PORT);
-                    MessageRecvExecutor ref = MessageRecvExecutor.getInstance();
+                    NettyServer ref = NettyServer.getInstance();
                     String ipAddr = StringUtils.isNotEmpty(ref.getServerAddress()) ? StringUtils.substringBeforeLast(
                             ref.getServerAddress(), DELIMITER) : "localhost";
 

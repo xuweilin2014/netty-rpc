@@ -1,8 +1,7 @@
 package com.newlandframework.rpc.core.proxy;
 
 import com.newlandframework.rpc.exception.RpcException;
-import com.newlandframework.rpc.model.MessageRequest;
-import com.newlandframework.rpc.netty.client.MessageSendProxy;
+import com.newlandframework.rpc.remoting.client.MessageSendProxy;
 import com.newlandframework.rpc.protocol.AbstractProxyInvoker;
 import com.newlandframework.rpc.protocol.Invoker;
 import com.newlandframework.rpc.util.URL;

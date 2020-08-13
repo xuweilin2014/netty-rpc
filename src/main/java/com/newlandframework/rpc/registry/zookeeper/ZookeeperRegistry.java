@@ -15,7 +15,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     // 使用 ZkClient 作为客户端
     private ZkClientWrapper zookeeperClient;
 
-    public ZookeeperRegistry(URL url) throws Exception {
+    public ZookeeperRegistry(URL url) {
         zookeeperClient = new ZkClientWrapper(url.getAddress(), RpcSystemConfig.ZOOKEEPER_TIMEOUT);
         zookeeperClient.addKeeperStateListener(new KeeperStateListener() {
             @Override

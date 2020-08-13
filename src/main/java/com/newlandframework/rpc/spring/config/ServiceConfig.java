@@ -96,6 +96,10 @@ public class ServiceConfig extends AbstractConfig{
             map.put("methods", StringUtils.join(methodNames, ','));
         }
 
+        // 获取协议所使用的序列化方式
+        String serialize = protocol.getSerialize();
+        map.put(RpcSystemConfig.SERIALIZE, serialize);
+
         String host = this.getHostAddress(protocol);
         int port = Integer.parseInt(protocol.getPort());
         URL url = new URL(name, host, port, path, map);

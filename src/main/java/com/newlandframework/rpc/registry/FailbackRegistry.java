@@ -5,11 +5,12 @@ import com.newlandframework.rpc.parallel.NamedThreadFactory;
 import com.newlandframework.rpc.util.URL;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// 处理失败重试
+// 失败重试
 public abstract class FailbackRegistry extends AbstractRegistry{
 
     private List<URL> failedRegisteredURLs = new CopyOnWriteArrayList<>();
@@ -57,6 +58,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
         if (destroyed.get()){
             return;
         }
+        // 调用父类的 unregister，移除掉这个 url
         super.unregister(url);
         failedRegisteredURLs.remove(url);
         failedUnregisteredURLs.remove(url);
@@ -79,15 +81,60 @@ public abstract class FailbackRegistry extends AbstractRegistry{
     }
 
     private void retry(){
+        if (destroyed.get()){
+            return;
+        }
 
+        // 处理注册失败的 url，进行重新注册
+        if (failedRegisteredURLs.size() > 0){
+            try{
+                for (URL url : failedRegisteredURLs) {
+                    try{
+                        doRegister(url);
+                        failedRegisteredURLs.remove(url);
+                    }catch (Throwable t){
+                        logger.warn("failed to register " + url.toFullString() + " again, waiting for another retry.");
+                    }
+                }
+            }catch (Throwable t){
+                logger.warn("failed to register " + failedRegisteredURLs + " again, waiting for another retry.");
+            }
+        }
+
+        // 处理取消注册失败的 url，进行重新取消注册
+        if (failedUnregisteredURLs.size() > 0){
+            try{
+                for (URL url : failedUnregisteredURLs) {
+                    try{
+                        doUnregister(url);
+                        failedUnregisteredURLs.remove(url);
+                    }catch (Throwable t){
+                        logger.warn("failed to unregister " + url.toFullString() + " again, waiting for another retry.");
+                    }
+                }
+            }catch (Throwable t){
+                logger.warn("failed to unregister " + failedUnregisteredURLs + " again, waiting for another retry.");
+            }
+        }
+
+        // TODO: 2020/8/12
     }
 
     public void recover(){
+        if (destroyed.get()){
+            return;
+        }
+        List<URL> registeredURL = new ArrayList<>(getRegisteredURL());
+        for (URL url : registeredURL) {
+            logger.info("re-register " + url.toFullString());
+            failedRegisteredURLs.add(url);
+        }
 
+        // TODO: 2020/8/12 对监听器进行重新注册
     }
 
     public void destroy(){
-
+        // TODO: 2020/8/12
     }
 
     public abstract void doRegister(URL url);

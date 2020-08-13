@@ -3,8 +3,8 @@ package com.newlandframework.rpc.spring.bean;
 import com.google.common.eventbus.EventBus;
 import com.newlandframework.rpc.event.ClientStopEvent;
 import com.newlandframework.rpc.event.ClientStopEventListener;
-import com.newlandframework.rpc.netty.client.MessageSendExecutor;
-import com.newlandframework.rpc.serialize.RpcSerializeProtocol;
+import com.newlandframework.rpc.remoting.client.MessageSendExecutor;
+import com.newlandframework.rpc.serialize.Serialization;
 import lombok.Data;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
@@ -56,7 +56,7 @@ public class NettyRpcReference implements FactoryBean, InitializingBean, Disposa
          *
          * 但是这个项目设计的只支持一个客户端与一个服务器端的通信。
          */
-        MessageSendExecutor.getInstance().setRpcServerLoader(ipAddr, RpcSerializeProtocol.valueOf(protocol));
+        MessageSendExecutor.getInstance().setRpcServerLoader(ipAddr, Serialization.valueOf(protocol));
         ClientStopEventListener listener = new ClientStopEventListener();
         eventBus.register(listener);
     }

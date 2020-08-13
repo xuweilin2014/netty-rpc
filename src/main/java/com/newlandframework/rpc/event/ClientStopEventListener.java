@@ -1,7 +1,7 @@
 package com.newlandframework.rpc.event;
 
 import com.google.common.eventbus.Subscribe;
-import com.newlandframework.rpc.netty.client.MessageSendExecutor;
+import com.newlandframework.rpc.remoting.client.MessageSendExecutor;
 
 
 public class ClientStopEventListener {

@@ -14,7 +14,6 @@
 					<xsd:attribute name="ref" type="xsd:string" use="required"/>
 					<xsd:attribute name="registry" type="xsd:string" use="required"/>
 					<xsd:attribute name="protocol" type="xsd:string" use="required"/>
-					<xsd:attribute name="filter" type="xsd:string" use="optional"/>
 					<xsd:attribute name="url" type="xsd:string" use="optional"/>
 					<xsd:attribute name="scope" type="xsd:string" use="optional"/>
 				</xsd:extension>

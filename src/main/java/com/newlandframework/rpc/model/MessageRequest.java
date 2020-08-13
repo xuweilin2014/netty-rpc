@@ -12,16 +12,18 @@ public class MessageRequest implements Serializable {
 
     private String messageId;
 
-    //客户端调用的方法所属于接口的名字
-    private String className;
-
     private String methodName;
 
     private Class<?>[] typeParameters;
 
     private Object[] parametersVal;
 
+    private String interfaceName;
+
     private boolean invokeMetrics = true;
+
+    // 此消息有没有被服务器配置的 filter 所拦截
+    private boolean rejected = false;
 
     public boolean isInvokeMetrics() {
         return invokeMetrics;
@@ -37,14 +39,6 @@ public class MessageRequest implements Serializable {
 
     public void setMessageId(String messageId) {
         this.messageId = messageId;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public void setClassName(String className) {
-        this.className = className;
     }
 
     public String getMethodName() {
@@ -71,9 +65,26 @@ public class MessageRequest implements Serializable {
         this.parametersVal = parametersVal;
     }
 
+    public String getInterfaceName() {
+        return interfaceName;
+    }
+
+    public void setInterfaceName(String interfaceName) {
+        this.interfaceName = interfaceName;
+    }
+
     @Override
     public String toString() {
         return ReflectionToStringBuilder.toStringExclude(this, new String[]{"typeParameters", "parametersVal"});
+    }
+
+
+    public boolean getRejected() {
+        return rejected;
+    }
+
+    public void setRejected(boolean rejected) {
+        this.rejected = rejected;
     }
 }
 

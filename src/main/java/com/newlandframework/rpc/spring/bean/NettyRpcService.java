@@ -2,12 +2,11 @@ package com.newlandframework.rpc.spring.bean;
 
 import com.newlandframework.rpc.filter.ServiceFilterBinder;
 import com.newlandframework.rpc.filter.Filter;
-import com.newlandframework.rpc.netty.server.MessageRecvExecutor;
+import com.newlandframework.rpc.remoting.server.NettyServer;
 import com.newlandframework.rpc.spring.config.ServiceConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -50,7 +49,7 @@ public class NettyRpcService extends ServiceConfig implements ApplicationContext
         //随后才是调用bean中的afterProperties方法，所以此时，所有的bean都存在于IoC容器中。而<nettyrpc:service/>标签中的
         //ref和filter值都是其它bean的id值，因此可以从IoC容器中获取，也就是applicationContext.getBean，然后设置到
         //ServiceFilterBinder中，最后保存进handlerMap里面
-        if (StringUtils.isBlank(filter) || !(applicationContext.getBean(filter) instanceof Filter)) {
+        /*if (StringUtils.isBlank(filter) || !(applicationContext.getBean(filter) instanceof Filter)) {
             binder.setObject(applicationContext.getBean(ref));
         } else {
             binder.setObject(applicationContext.getBean(ref));
@@ -58,7 +57,7 @@ public class NettyRpcService extends ServiceConfig implements ApplicationContext
         }
 
         //获取到的MessageRecvExecutor在整个Rpc服务器端是唯一的，因此这个类中的handlerMap也是唯一的
-        MessageRecvExecutor.getInstance().getHandlerMap().put(interfaceName, binder);
+        NettyServer.getInstance().getHandlerMap().put(interfaceName, binder);*/
     }
 
     @Override

@@ -14,7 +14,7 @@ public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
 
     public static final Logger logger = Logger.getLogger(NettyRpcBeanDefinitionParser.class);
 
-    private static final List<String> serviceAttributes = Arrays.asList("id", "interfaceName", "ref", "filter", "url", "scope", "registry", "protocol");
+    private static final List<String> serviceAttributes = Arrays.asList("id", "interfaceName", "ref", "url", "scope", "registry", "protocol");
 
     private static final List<String> registryAttributes = Arrays.asList("id", "address", "name");
 

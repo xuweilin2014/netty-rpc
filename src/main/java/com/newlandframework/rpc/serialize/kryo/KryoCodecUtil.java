@@ -25,13 +25,7 @@ import java.io.IOException;
 import com.newlandframework.rpc.serialize.MessageCodecUtil;
 import com.google.common.io.Closer;
 
-/**
- * @author tangjie<https://github.com/tang-jie>
- * @filename:KryoCodecUtil.java
- * @description:KryoCodecUtil功能模块
- * @blogs http://www.cnblogs.com/jietang/
- * @since 2016/10/7
- */
+
 public class KryoCodecUtil implements MessageCodecUtil {
 
     private KryoPool pool;

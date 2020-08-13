@@ -53,10 +53,6 @@ public class RegistryProtocol extends AbstractProtocol {
         // TODO: 2020/8/9
     }
 
-    public void register(){
-        // TODO: 2020/8/9
-    }
-
     public void subscribe(){
         // TODO: 2020/8/9
     }

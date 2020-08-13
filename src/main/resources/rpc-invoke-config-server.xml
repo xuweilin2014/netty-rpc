@@ -18,8 +18,8 @@
     <nettyrpc:service id="demoMultiService" registry="zk" interfaceName="com.newlandframework.rpc.services.MultiCalculate" ref="calcMultiService" protocol="rpc"/>
     <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.newlandframework.rpc.services.PersonManage" ref="personManageService" protocol="rpc"/>
     <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.newlandframework.rpc.services.CostTimeCalculate" ref="costTimeCalculateService" protocol="rpc"/>
-    <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.newlandframework.rpc.services.Cache" ref="cacheService" filter="simpleFilter" protocol="rpc"/>
-    <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.newlandframework.rpc.services.Store" ref="storeService" filter="simpleFilter" protocol="rpc"/>
+    <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.newlandframework.rpc.services.Cache" ref="cacheService"  protocol="rpc"/>
+    <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.newlandframework.rpc.services.Store" ref="storeService" protocol="rpc"/>
     <nettyrpc:service id="demoAbility" registry="zk" interfaceName="com.newlandframework.rpc.core.AbilityDetail" ref="abilityProvider" protocol="rpc"/>
 
     <!-- registry用来注册Rpc服务器，其中ipAddr为RPC服务器ip地址及端口(客户端连接这个地址），而echoApiPort为Rpc服务端服务能力展示开放端口

@@ -10,7 +10,6 @@ import com.newlandframework.rpc.exception.InvokeTimeoutException;
 import com.newlandframework.rpc.exception.RejectResponeException;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
-import com.newlandframework.rpc.netty.server.MethodInvokeStatus;
 
 
 public class MessageCallBack {

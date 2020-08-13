@@ -3,20 +3,15 @@ package com.newlandframework.rpc.protocol;
 import com.newlandframework.rpc.exception.RpcException;
 import com.newlandframework.rpc.util.URL;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AbstractProtocol implements Protocol {
+public abstract class AbstractProtocol implements Protocol {
 
-    protected ConcurrentHashMap<String, Exporter> exporters = new ConcurrentHashMap<>();
+    protected static final Map<String, Exporter> exporters = new ConcurrentHashMap<>();
 
-    @Override
-    public Exporter export(Invoker invoker) throws RpcException {
-        return null;
-    }
-
-    @Override
-    public Invoker refer(URL url) throws RpcException {
-        return null;
+    public String getServiceKey(String serviceName, int port){
+        return serviceName + ":" + port;
     }
 
     @Override

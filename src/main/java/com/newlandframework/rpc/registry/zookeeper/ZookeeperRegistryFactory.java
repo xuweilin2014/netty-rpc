@@ -7,6 +7,7 @@ import com.newlandframework.rpc.util.URL;
 public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
     @Override
     public Registry createRegistry(URL url) {
-        return null;
+        return new ZookeeperRegistry(url);
     }
+
 }

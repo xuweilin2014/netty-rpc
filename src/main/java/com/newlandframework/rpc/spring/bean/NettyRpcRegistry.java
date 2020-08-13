@@ -2,8 +2,7 @@ package com.newlandframework.rpc.spring.bean;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
-import com.newlandframework.rpc.serialize.RpcSerializeProtocol;
-import com.newlandframework.rpc.netty.server.MessageRecvExecutor;
+import com.newlandframework.rpc.remoting.server.NettyServer;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -22,13 +21,13 @@ import org.springframework.beans.factory.InitializingBean;
 public class NettyRpcRegistry implements InitializingBean, DisposableBean {
 
     private String id;
+
     private String address;
+
     private String name;
 
     @Override
     public void destroy() throws Exception {
-        MessageRecvExecutor.getInstance().stop();
-
         if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT) {
             ModuleMetricsHandler handler = ModuleMetricsHandler.getInstance();
             handler.stop();
