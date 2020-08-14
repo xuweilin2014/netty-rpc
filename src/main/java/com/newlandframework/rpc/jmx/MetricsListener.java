@@ -1,14 +1,12 @@
 package com.newlandframework.rpc.jmx;
 
-import com.newlandframework.rpc.event.AbstractInvokeEvent;
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
 import javax.management.AttributeChangeNotification;
-import javax.management.JMException;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 
-public class ModuleMetricsListener implements NotificationListener {
+public class MetricsListener implements NotificationListener {
     @Override
     public void handleNotification(Notification notification, Object handback) {
         if (!(notification instanceof AttributeChangeNotification)) {
@@ -19,7 +17,7 @@ public class ModuleMetricsListener implements NotificationListener {
         //acn.getAttributeType获取到的是事件类型的字符串，比如ModuleEvent.INVOKE_EVENT
         ModuleEvent event = Enum.valueOf(ModuleEvent.class, acn.getAttributeType());
         //acn.getOldValue获取到的是InvokeEventFacade类型的对象，然后根据事件的类型来取得对应的visitor
-        ModuleMetricsVisitor visitor = ((InvokeEventFacade) acn.getOldValue()).fetchEvent(event).getVisitor();
+        MetricsVisitor visitor = ((InvokeEventFacade) acn.getOldValue()).fetchEvent(event).getVisitor();
 
         switch (event) {
             case INVOKE_EVENT:

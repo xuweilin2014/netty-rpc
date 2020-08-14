@@ -1,12 +1,13 @@
 package com.newlandframework.rpc.protocol.rpc;
 
+import com.newlandframework.rpc.exception.RemotingException;
 import com.newlandframework.rpc.exception.RpcException;
+import com.newlandframework.rpc.jmx.MetricsServer;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.protocol.AbstractProtocol;
 import com.newlandframework.rpc.protocol.Exporter;
 import com.newlandframework.rpc.protocol.Invoker;
 import com.newlandframework.rpc.remoting.exchanger.Exchangers;
-import com.newlandframework.rpc.remoting.handler.ChannelHandler;
 import com.newlandframework.rpc.remoting.handler.ReplyHandler;
 import com.newlandframework.rpc.remoting.server.HeaderExchangeServer;
 import com.newlandframework.rpc.util.URL;
@@ -24,10 +25,26 @@ public class RpcProtocol extends AbstractProtocol {
 
     private static Lock lock = new ReentrantLock();
 
+    private static Map<Integer, MetricsServer> metricsServers = null;
+
     private ReplyHandler replyHandler = new ReplyHandler() {
+        @Override
+        public void sent(Channel channel, Object message) throws RemotingException {
+        }
+
         @Override
         public void received(Channel channel, Object message) {
             throw new UnsupportedOperationException("cannot execute received function in ReplyHandler.");
+        }
+
+        @Override
+        public void connected(Channel channel) throws RemotingException {
+
+        }
+
+        @Override
+        public void disconnected(Channel channel) throws RemotingException {
+
         }
 
         @Override
@@ -36,7 +53,12 @@ public class RpcProtocol extends AbstractProtocol {
             int port = socketAddress.getPort();
             String serviceKey = getServiceKey(request.getInterfaceName(), port);
             Exporter exporter = exporters.get(serviceKey);
-            return exporter.getInvoker().invoke(request);
+
+            try {
+                return  exporter.getInvoker().invoke(request);
+            } catch (Throwable throwable) {
+                throw new RpcException("errors occur when executing method : " + throwable.getMessage(), throwable);
+            }
         }
     };
 
@@ -52,12 +74,21 @@ public class RpcProtocol extends AbstractProtocol {
         exporters.put(serviceKey, rpcExporter);
         // 5.开启服务器
         openServer(url);
+        // 6.开启 JMX 服务器
+        openJmxServer(url);
 
         return rpcExporter;
     }
 
-    public String getServiceKey(URL url){
-        return super.getServiceKey(url.getServiceName(), url.getPort());
+    private void openJmxServer(URL url) {
+        // TODO: 2020/8/14
+        String address = url.getAddress();
+        HeaderExchangeServer server = servers.get(address);
+        if (server == null)
+            throw new IllegalStateException("server is null, cannot start jmx server.");
+
+
+        MetricsServer.getInstance().start(address);
     }
 
     private void openServer(URL url) {
@@ -88,5 +119,9 @@ public class RpcProtocol extends AbstractProtocol {
     @Override
     public void destroy() {
 
+    }
+
+    public String getServiceKey(URL url){
+        return super.getServiceKey(url.getServiceName(), url.getPort());
     }
 }

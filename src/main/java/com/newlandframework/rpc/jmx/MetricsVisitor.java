@@ -15,7 +15,7 @@ import java.util.function.LongBinaryOperator;
 /**
  * 作为ModuleMetricsHandler这个bean中的一个属性，必须要有getter方法来获取对象中的属性值
  */
-public class ModuleMetricsVisitor {
+public class MetricsVisitor {
     public static final long DEFAULT_INVOKE_MIN_TIMESPAN = 3600 * 1000L;
     private static final String[] THROWABLE_NAMES = {"message", "class", "stackTrace"};
     private static final String[] THROWABLE_DESCRIPTIONS = {"message", "class", "stackTrace"};
@@ -52,23 +52,23 @@ public class ModuleMetricsVisitor {
      * 1.AtomicLong对象的引用和值统统不需要，因而不会有大量的AtomicLong对象存在于堆上
      * 2.AtomicLongFieldUpdater是一个静态常量，它在类加载的时候就放在了堆空间的常量池中，对于N个对象，只需要一个AtomicLongFieldUpdater即可（类静态常量）
      */
-    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeCountUpdater =
-            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeCount");
-    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeSuccCountUpdater =
-            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeSuccCount");
-    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeFailCountUpdater =
-            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFailCount");
-    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeFilterCountUpdater =
-            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeFilterCount");
-    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> accumulateTimespanUpdater =
-            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "accumulateTimespan");
-    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeMaxTimespanUpdater =
-            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeMaxTimespan");
-    private static final AtomicLongFieldUpdater<ModuleMetricsVisitor> invokeMinTimespanUpdater =
-            AtomicLongFieldUpdater.newUpdater(ModuleMetricsVisitor.class, "invokeMinTimespan");
+    private static final AtomicLongFieldUpdater<MetricsVisitor> invokeCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(MetricsVisitor.class, "invokeCount");
+    private static final AtomicLongFieldUpdater<MetricsVisitor> invokeSuccCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(MetricsVisitor.class, "invokeSuccCount");
+    private static final AtomicLongFieldUpdater<MetricsVisitor> invokeFailCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(MetricsVisitor.class, "invokeFailCount");
+    private static final AtomicLongFieldUpdater<MetricsVisitor> invokeFilterCountUpdater =
+            AtomicLongFieldUpdater.newUpdater(MetricsVisitor.class, "invokeFilterCount");
+    private static final AtomicLongFieldUpdater<MetricsVisitor> accumulateTimespanUpdater =
+            AtomicLongFieldUpdater.newUpdater(MetricsVisitor.class, "accumulateTimespan");
+    private static final AtomicLongFieldUpdater<MetricsVisitor> invokeMaxTimespanUpdater =
+            AtomicLongFieldUpdater.newUpdater(MetricsVisitor.class, "invokeMaxTimespan");
+    private static final AtomicLongFieldUpdater<MetricsVisitor> invokeMinTimespanUpdater =
+            AtomicLongFieldUpdater.newUpdater(MetricsVisitor.class, "invokeMinTimespan");
 
     @ConstructorProperties({"className", "methodName"})
-    public ModuleMetricsVisitor(String className, String methodName) {
+    public MetricsVisitor(String className, String methodName) {
         this.className = className;
         this.methodName = methodName;
         clear();
@@ -301,8 +301,8 @@ public class ModuleMetricsVisitor {
 
     @Override
     public boolean equals(Object obj) {
-        return className.equals(((ModuleMetricsVisitor) obj).className)
-                && methodName.equals(((ModuleMetricsVisitor) obj).methodName);
+        return className.equals(((MetricsVisitor) obj).className)
+                && methodName.equals(((MetricsVisitor) obj).methodName);
     }
 
     @Override

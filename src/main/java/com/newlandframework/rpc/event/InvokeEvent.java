@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.event;
 
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
 
 import javax.management.AttributeChangeNotification;
 import javax.management.Notification;
@@ -17,7 +17,7 @@ public class InvokeEvent extends AbstractInvokeEvent {
         super();
     }
 
-    public InvokeEvent(ModuleMetricsVisitor visitor) {
+    public InvokeEvent(MetricsVisitor visitor) {
         super(visitor);
     }
 

@@ -1,8 +1,7 @@
 package com.newlandframework.rpc.spring.bean;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
-import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
-import com.newlandframework.rpc.remoting.server.NettyServer;
+import com.newlandframework.rpc.jmx.MetricsServer;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -29,7 +28,7 @@ public class NettyRpcRegistry implements InitializingBean, DisposableBean {
     @Override
     public void destroy() throws Exception {
         if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT) {
-            ModuleMetricsHandler handler = ModuleMetricsHandler.getInstance();
+            MetricsServer handler = MetricsServer.getInstance();
             handler.stop();
         }
     }

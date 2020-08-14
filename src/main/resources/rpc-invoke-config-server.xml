@@ -32,19 +32,6 @@
     <bean id="costTimeCalculateService" class="com.newlandframework.rpc.services.impl.CostTimeCalculateImpl"/>
     <bean id="cacheService" class="com.newlandframework.rpc.services.impl.CacheImpl"/>
     <bean id="storeService" class="com.newlandframework.rpc.services.impl.StoreImpl"/>
-    <bean id="simpleFilter" class="com.newlandframework.rpc.filter.support.SimpleFilter"/>
     <bean id="abilityProvider" class="com.newlandframework.rpc.core.AbilityDetailProvider"/>
 
-    <bean id="filterChain" class="com.newlandframework.rpc.filter.FilterChainBuilder">
-        <property name="filters">
-            <list>
-                <ref bean="classLoaderChainFilter"/>
-                <ref bean="echoChainFilter"/>
-            </list>
-        </property>
-    </bean>
-
-    <!--FilterChain-->
-    <bean id="classLoaderChainFilter" class="com.newlandframework.rpc.filter.support.ClassLoaderChainFilter"/>
-    <bean id="echoChainFilter" class="com.newlandframework.rpc.filter.support.EchoChainFilter"/>
 </beans>

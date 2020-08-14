@@ -2,8 +2,7 @@ package com.newlandframework.rpc.observer;
 
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
-import lombok.Data;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +17,7 @@ import java.util.Observable;
 public class InvokeFailObserver extends AbstractInvokeObserver {
     private Throwable error;
 
-    public InvokeFailObserver(InvokeEventFacade facade, ModuleMetricsVisitor visitor, Throwable error) {
+    public InvokeFailObserver(InvokeEventFacade facade, MetricsVisitor visitor, Throwable error) {
         super(facade, visitor);
         this.error = error;
     }

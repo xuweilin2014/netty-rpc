@@ -1,7 +1,7 @@
 package com.newlandframework.rpc.remoting.server;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
-import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
+import com.newlandframework.rpc.jmx.MetricsServer;
 import com.newlandframework.rpc.parallel.NamedThreadFactory;
 import com.newlandframework.rpc.remoting.handler.ChannelHandler;
 import com.newlandframework.rpc.remoting.handler.ChannelHandlers;
@@ -10,14 +10,13 @@ import com.newlandframework.rpc.remoting.resolver.ApiEchoResolver;
 import com.newlandframework.rpc.serialize.Serialization;
 import com.newlandframework.rpc.util.URL;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -60,6 +59,8 @@ public class NettyServer extends AbstractServer {
 
     EventLoopGroup worker = new NioEventLoopGroup(PARALLEL, threadRpcFactory);
 
+    private Map<String, Channel> channels = new ConcurrentHashMap<>();
+
     @SuppressWarnings("ConstantConditions")
     public NettyServer(URL url, ChannelHandler handler) {
         super(url, ChannelHandlers.wrapHandler(handler));
@@ -91,6 +92,7 @@ public class NettyServer extends AbstractServer {
 
             ChannelFuture future;
 
+            channels = serverHandler.getChannels();
             future = bootstrap.bind(host, port).sync();
             future.addListener(new ChannelFutureListener() {
                 /**
@@ -108,7 +110,7 @@ public class NettyServer extends AbstractServer {
                         //把指定RPC服务器监听指定ip地址的过程放到线程池中去执行
                         executor.submit(new ApiEchoResolver(host, echoApiPort));
                         logger.info("Netty RPC Server start success! ip: " + host + " port:" + port +
-                                " start-time: " + ModuleMetricsHandler.getStartTime() + " jmx-invoke-metrics: " + (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ?
+                                " start-time: " + MetricsServer.getStartTime() + " jmx-invoke-metrics: " + (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ?
                                 "open" : "close"));
                         channelFuture.channel().closeFuture().sync().addListener(new ChannelFutureListener() {
                             @Override

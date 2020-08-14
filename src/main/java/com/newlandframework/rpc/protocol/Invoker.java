@@ -6,7 +6,9 @@ import com.newlandframework.rpc.util.URL;
 
 public interface Invoker {
 
-    public Object invoke(MessageRequest request) throws RpcException;
+    public Object invoke(MessageRequest request) throws Throwable;
 
     public URL getURL();
+
+    public Class<?> getInterface();
 }

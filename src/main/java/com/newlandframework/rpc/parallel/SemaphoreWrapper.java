@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Data
 public class SemaphoreWrapper {
     protected final AtomicBoolean released = new AtomicBoolean(false);
+
     protected Semaphore semaphore;
 
     public SemaphoreWrapper() {

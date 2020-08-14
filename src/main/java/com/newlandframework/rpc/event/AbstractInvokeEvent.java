@@ -1,21 +1,21 @@
 package com.newlandframework.rpc.event;
 
-import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
-import lombok.Data;
+import com.newlandframework.rpc.jmx.MetricsServer;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
+
 import javax.management.Notification;
 
-@Data
+
 public abstract class AbstractInvokeEvent {
 
-    protected ModuleMetricsVisitor visitor;
-    protected ModuleMetricsHandler handler;
+    protected MetricsVisitor visitor;
+    protected MetricsServer handler;
     protected InvokeEventFacade facade;
 
     public AbstractInvokeEvent() {
     }
 
-    public AbstractInvokeEvent(ModuleMetricsVisitor visitor) {
+    public AbstractInvokeEvent(MetricsVisitor visitor) {
         this.visitor = visitor;
     }
 
@@ -26,6 +26,30 @@ public abstract class AbstractInvokeEvent {
         Notification notification = buildNotification(oldValue, newValue);
         //这个notification最终会被发送到ModuleMetricsListener中
         handler.sendNotification(notification);
+    }
+
+    public MetricsVisitor getVisitor() {
+        return visitor;
+    }
+
+    public void setVisitor(MetricsVisitor visitor) {
+        this.visitor = visitor;
+    }
+
+    public MetricsServer getHandler() {
+        return handler;
+    }
+
+    public void setHandler(MetricsServer handler) {
+        this.handler = handler;
+    }
+
+    public InvokeEventFacade getFacade() {
+        return facade;
+    }
+
+    public void setFacade(InvokeEventFacade facade) {
+        this.facade = facade;
     }
 }
 

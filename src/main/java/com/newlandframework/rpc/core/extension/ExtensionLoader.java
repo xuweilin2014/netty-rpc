@@ -1,13 +1,19 @@
 package com.newlandframework.rpc.core.extension;
 
 
+import com.newlandframework.rpc.core.RpcSystemConfig;
+import com.newlandframework.rpc.util.Assert;
+import com.newlandframework.rpc.util.URL;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
+import io.netty.util.internal.ConcurrentSet;
 import org.apache.log4j.Logger;
 
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class ExtensionLoader<T> {
 
@@ -19,20 +25,22 @@ public final class ExtensionLoader<T> {
 
     private static final Map<String, Object> extensions = new HashMap<>();
 
+    private Map<String, Activate> cachedActivates = new ConcurrentHashMap<>();
+
+    private Set<Class<?>> cachedWrapperClasses = new ConcurrentSet<>();
+
     private String defaultName;
 
-    private Class<?> type;
+    private Class<T> type;
 
-    private static final String SERVICES_DIRECTORY = "META-INF/services/";
-
-    public ExtensionLoader(Class<?> type) {
+    public ExtensionLoader(Class<T> type) {
         this.type = type;
     }
 
     @SuppressWarnings("unchecked")
     public static <T> ExtensionLoader<T> getExtensionLoader(Class<T> type){
         if (type == null) {
-            logger.warn("Extensionloader type cannot be null!");
+            logger.warn("ExtensionLoader type cannot be null!");
             throw new IllegalArgumentException("type cannot be null!");
         }
 
@@ -87,11 +95,25 @@ public final class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
         loadResource();
-        return (T) extensions.get(name);
+        Object instance = extensions.get(name);
+        if (cachedWrapperClasses.size() > 0){
+            for (Class<?> wrapper : cachedWrapperClasses) {
+                try {
+                    instance = wrapper.getConstructor(type).newInstance(instance);
+                } catch (InstantiationException
+                        | IllegalAccessException
+                        | InvocationTargetException | NoSuchMethodException e) {
+                    throw new IllegalStateException("cannot instantiate with wrapper class " + wrapper.getName());
+                }
+            }
+        }
+
+        return (T) instance;
     }
 
     public void loadResource(){
-        loadFile(SERVICES_DIRECTORY);
+        loadFile(RpcSystemConfig.SERVICES_DIRECTORY);
+        loadFile(RpcSystemConfig.RPC_INTERNAL_DIRECTORY);
     }
 
     public void loadFile(String dir){
@@ -117,9 +139,9 @@ public final class ExtensionLoader<T> {
                     throw new IllegalStateException("there should be '=' in your extension file");
                 }
                 String key = line.split("=")[0];
-                String value = line.split("=")[1];
-                copyValue = value;
-                Class<?> extClass = Class.forName(value);
+                String className = line.split("=")[1];
+                copyValue = className;
+                Class<?> extClass =  Class.forName(className);
 
                 if (!type.isAssignableFrom(extClass)){
                     throw new IllegalStateException("extension " + extClass.getName() + " is not a subtype of " + type.getName());
@@ -131,9 +153,20 @@ public final class ExtensionLoader<T> {
                     defaultName = extAnnotation.value();
                 }
 
-                Object ext = extClass.newInstance();
-                extensions.put(key, ext);
-                extensionClasses.put(key, extClass);
+                try {
+                    // 如果扩展类有 type 类型的构造函数的话，就看作是 wrapper 类，添加到缓存中
+                    extClass.getConstructor(type);
+                    cachedWrapperClasses.add(extClass);
+                } catch (NoSuchMethodException e) {
+                    // 判断 extClass 是否有 Activate 注解
+                    Activate activate = extClass.getAnnotation(Activate.class);
+                    if (activate != null){
+                        cachedActivates.put(key, activate);
+                    }
+                    Object ext = extClass.newInstance();
+                    extensions.put(key, ext);
+                    extensionClasses.put(key, extClass);
+                }
 
                 line = resource.readLine();
             }
@@ -145,6 +178,70 @@ public final class ExtensionLoader<T> {
             logger.warn("load extensions failed, cannot instantiate extension");
         }
 
+    }
+
+    public List<T> getActivateExtension(URL url, String key, String group){
+        String value = url.getParameter(key);
+        String[] values = null;
+        if (value != null && value.length() != 0){
+            values = value.split(",");
+        }
+        return getActivateExtension(url, values, group);
+    }
+
+    public List<T> getActivateExtension(URL url, String[] values, String group){
+        // 1.获取到 url 中参数的值，比如 url 中 filter 关键字的值
+        List<String> names = values == null ? new ArrayList<>(0) : Arrays.asList(values);
+        List<T> exts = new CopyOnWriteArrayList<>();
+
+        // 2.获取含有 Activate 注释的扩展类对象
+        if (!names.contains(RpcSystemConfig.REMOVE_PREFIX + RpcSystemConfig.RPC_DEFAULT)){
+            for (Map.Entry<String, Activate> entry : cachedActivates.entrySet()) {
+                String name = entry.getKey();
+                Activate activate = entry.getValue();
+                if (isGroupMatch(group, activate.group())){
+                    if (!names.contains(RpcSystemConfig.REMOVE_PREFIX + name)){
+                        T ext = getExtension(name);
+                        exts.add(ext);
+                    }
+                }
+            }
+        }
+
+        // 3.获取用户配置的自定义的扩展对象
+        List<T> users = new CopyOnWriteArrayList<>();
+        for (String name : names) {
+            if (!names.contains(RpcSystemConfig.REMOVE_PREFIX + name)
+                    && !name.contains(RpcSystemConfig.REMOVE_PREFIX)){
+                if (RpcSystemConfig.RPC_DEFAULT.equals(name)){
+                    if (users.size() > 0) {
+                        exts.addAll(0, users);
+                        users.clear();
+                    }
+                }else {
+                    T ext = getExtension(name);
+                    users.add(ext);
+                }
+            }
+        }
+
+        if (users.size() > 0)
+            exts.addAll(users);
+
+        return exts;
+    }
+
+    private boolean isGroupMatch(String group, String[] activateGroup) {
+        if (group == null || group.length() == 0)
+            return false;
+
+        for (String ag : activateGroup) {
+            if (ag.equals(group)){
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

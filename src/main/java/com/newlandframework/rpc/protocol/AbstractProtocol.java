@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractProtocol implements Protocol {
 
-    protected static final Map<String, Exporter> exporters = new ConcurrentHashMap<>();
+    protected final Map<String, Exporter> exporters = new ConcurrentHashMap<>();
 
     public String getServiceKey(String serviceName, int port){
         return serviceName + ":" + port;

@@ -10,15 +10,15 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 
 
-public abstract class AbstractModuleMetricsHandler extends NotificationBroadcasterSupport implements ModuleMetricsVisitorMXBean {
+public abstract class AbstractMetricsServer extends NotificationBroadcasterSupport implements ModuleMetricsVisitorMXBean {
 
-    protected List<ModuleMetricsVisitor> visitorList = new CopyOnWriteArrayList<>();
+    protected List<MetricsVisitor> visitorList = new CopyOnWriteArrayList<>();
 
     protected static String startTime;
 
     private final Queue<Thread> waiters = new ConcurrentLinkedQueue<>();
 
-    public AbstractModuleMetricsHandler() {
+    public AbstractMetricsServer() {
     }
 
     /**
@@ -27,7 +27,7 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
      * 一个特定方法的具体调用情况，也就是说每一个visitor和一个特定的method一一对应）。因此，必须要注意线程间的竞争情况，
      * 所以使用了enter和exit这两个方法，来保证一次只有一个线程进入到临界区去获取visitor
      */
-    public ModuleMetricsVisitor getVisitor(String className, String methodName) {
+    public MetricsVisitor getVisitor(String className, String methodName) {
         try {
             enter();
             return visitCriticalSection(className, methodName);
@@ -37,12 +37,12 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
     }
 
     @Override
-    public List<ModuleMetricsVisitor> getModuleMetricsVisitor() {
+    public List<MetricsVisitor> getModuleMetricsVisitor() {
         return visitorList;
     }
 
     @Override
-    public void addModuleMetricsVisitor(ModuleMetricsVisitor visitor) {
+    public void addModuleMetricsVisitor(MetricsVisitor visitor) {
         visitorList.add(visitor);
     }
 
@@ -75,7 +75,7 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
         waiters.add(current);
 
         while (waiters.peek() != current) {
-            LockSupport.park(ModuleMetricsVisitor.class);
+            LockSupport.park(MetricsVisitor.class);
         }
     }
 
@@ -87,6 +87,6 @@ public abstract class AbstractModuleMetricsHandler extends NotificationBroadcast
         LockSupport.unpark(waiters.peek());
     }
 
-    protected abstract ModuleMetricsVisitor visitCriticalSection(String className, String methodName);
+    protected abstract MetricsVisitor visitCriticalSection(String className, String methodName);
 }
 

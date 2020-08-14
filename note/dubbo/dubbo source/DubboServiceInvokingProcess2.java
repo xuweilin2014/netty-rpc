@@ -90,7 +90,7 @@ public class DubboServiceInvokingProcess2{
      * 其中NettyServerHandler是Netty中ChannelDuplexHandler的子类，可以处理入站和出站数据。其中其中，有一个ChannelHandler类型的handler对象，它真正的类型是NettyServer。NettyServer
      * 的父类实现了ChannelHandler接口。而NettyServer中的handler也经过了层层封装。具体的层次如下：
      * 
-     * NettServerHandler（ChannelHandler handler）
+     * NettServerHandler
      * -> NettyServer（ChannelHandler handler）
      * -> MultiMessageHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）
      * -> HeartbeatHandler（ChannelHandler handler，继承了AbstractChannelHandlerDelegate类）

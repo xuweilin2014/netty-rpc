@@ -16,9 +16,9 @@ public interface ModuleMetricsVisitorMXBean {
     //getAttribute(name, "ModuleMetricsVisitor")来从名为name的object中获取ModuleMetricsVisitor属性时，就会调用这个方法。
     //由于返回的ModuleMetricsVisitor类型是用户自定义的，因此实际获取到的类型为CompositeData[]。
     //通过返回的ModuleMetricsVisitor的List的集合值，就可以通过JConsole来查询方法的具体调用情况
-    List<ModuleMetricsVisitor> getModuleMetricsVisitor();
+    List<MetricsVisitor> getModuleMetricsVisitor();
 
     //此方法表明ModuleMetricsHandler有操作addModuleMetricsVisitor
-    void addModuleMetricsVisitor(ModuleMetricsVisitor visitor);
+    void addModuleMetricsVisitor(MetricsVisitor visitor);
 }
 

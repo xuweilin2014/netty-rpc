@@ -1,15 +1,12 @@
 package com.newlandframework.rpc.remoting.execution;
 
-import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.remoting.handler.ChannelHandler;
 import com.newlandframework.rpc.util.ReflectionUtil;
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
-import com.newlandframework.rpc.filter.ServiceFilterBinder;
-import com.newlandframework.rpc.jmx.ModuleMetricsHandler;
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsServer;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
 import com.newlandframework.rpc.model.MessageRequest;
-import com.newlandframework.rpc.model.MessageResponse;
 import com.newlandframework.rpc.observer.*;
 import io.netty.channel.Channel;
 
@@ -18,7 +15,7 @@ import java.lang.reflect.Method;
 
 public class MetricsRecvTask extends AbstractRecvTask {
 
-    private ModuleMetricsVisitor visitor;
+    private MetricsVisitor visitor;
 
     private InvokeEventFacade facade;
 
@@ -78,10 +75,10 @@ public class MetricsRecvTask extends AbstractRecvTask {
             // 获取客户端要调用的方法的方法签名的字符串
             String signatureMethod = utils.getProvider().toString();
             // 获取和此方法对应的ModuleMetricsVisitor对象，用来记录这个方法的调用情况，每一个特定的方法，都只和一个ModuleMetricsVisitor对象对应
-            visitor = ModuleMetricsHandler.getInstance().getVisitor(request.getInterfaceName(), signatureMethod);
+            visitor = MetricsServer.getInstance().getVisitor(request.getInterfaceName(), signatureMethod);
             // 创建了一个InvokeEventFacade类型的对象facade，它包含了所有INVOKE类型的Event对象，并且这些Event对象中都
             // 保存了handler、visitor这两个参数
-            facade = new InvokeEventFacade(ModuleMetricsHandler.getInstance(), visitor);
+            facade = new InvokeEventFacade(MetricsServer.getInstance(), visitor);
             // target是被观察的对象，通过addObserver方法可以添加观察者对象，这里是InvokeObserver
             target.addObserver(new InvokeObserver(facade, visitor));
             // 调用notify方法，回调所有观察者对象的update方法，并且将INVOKE_EVENT事件进行传递，但是只有InvokeObserver可以被接收到

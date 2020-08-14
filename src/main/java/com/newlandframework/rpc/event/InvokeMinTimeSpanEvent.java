@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.event;
 
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
 
 import javax.management.AttributeChangeNotification;
 import javax.management.Notification;
@@ -13,7 +13,7 @@ public class InvokeMinTimeSpanEvent extends AbstractInvokeEvent {
         super();
     }
 
-    public InvokeMinTimeSpanEvent(ModuleMetricsVisitor visitor) {
+    public InvokeMinTimeSpanEvent(MetricsVisitor visitor) {
         super(visitor);
     }
 

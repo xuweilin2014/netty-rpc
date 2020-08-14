@@ -73,5 +73,24 @@ public class RpcSystemConfig {
 
     public static final String PORT = "port";
 
+    public static final String SERVICES_DIRECTORY = "META-INF/services/";
+
+    public static final String RPC_INTERNAL_DIRECTORY = "META-INF/rpc/internal";
+
+    public static final String REMOVE_PREFIX = "-";
+
+    public static final String RPC_DEFAULT = "default";
+
+    public static final String REGISTRY_PROTOCOL = "registry";
+
+    public static final String FILTER = "filter";
+
+    public static final String PROVIDER = "provider";
+
+    public static final String CONSUMER = "consumer";
+
+    public static final String LOCALHOST = "localhost";
+
+    public static final String METRICS = "metrics";
 }
 

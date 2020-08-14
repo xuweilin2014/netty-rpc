@@ -1,6 +1,6 @@
 package com.newlandframework.rpc.event;
 
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
 
 import javax.management.AttributeChangeNotification;
 import javax.management.Notification;
@@ -13,7 +13,7 @@ public class InvokeTimeSpanEvent extends AbstractInvokeEvent {
         super();
     }
 
-    public InvokeTimeSpanEvent(ModuleMetricsVisitor visitor) {
+    public InvokeTimeSpanEvent(MetricsVisitor visitor) {
         super(visitor);
     }
 

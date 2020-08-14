@@ -1,13 +1,15 @@
 package com.newlandframework.rpc.filter.support;
 
-import com.newlandframework.rpc.core.ChainFilterInvoker;
+import com.newlandframework.rpc.filter.AbstractChainFilter;
 import com.newlandframework.rpc.filter.ChainFilter;
 import com.newlandframework.rpc.model.MessageRequest;
+import com.newlandframework.rpc.protocol.Invoker;
 
 
-public class ClassLoaderChainFilter implements ChainFilter {
+public class ClassLoaderChainFilter extends AbstractChainFilter {
+
     @Override
-    public Object intercept(ChainFilterInvoker<?> invoker, MessageRequest request) throws Throwable {
+    public Object doIntercept(Invoker invoker, MessageRequest request) throws Throwable {
         ClassLoader ocl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(invoker.getInterface().getClassLoader());
 
@@ -21,5 +23,6 @@ public class ClassLoaderChainFilter implements ChainFilter {
             Thread.currentThread().setContextClassLoader(ocl);
         }
     }
+
 }
 

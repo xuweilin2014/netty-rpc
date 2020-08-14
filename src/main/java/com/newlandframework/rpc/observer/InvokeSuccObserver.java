@@ -2,8 +2,7 @@ package com.newlandframework.rpc.observer;
 
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
-import lombok.Data;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +17,7 @@ public class InvokeSuccObserver extends AbstractInvokeObserver {
 
     private long invokeTimespan;
 
-    public InvokeSuccObserver(InvokeEventFacade facade, ModuleMetricsVisitor visitor, long invokeTimespan) {
+    public InvokeSuccObserver(InvokeEventFacade facade, MetricsVisitor visitor, long invokeTimespan) {
         super(facade, visitor);
         this.invokeTimespan = invokeTimespan;
     }

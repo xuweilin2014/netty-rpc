@@ -5,9 +5,8 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface Extension {
+public @interface Activate {
 
-    // 默认扩展的名称
-    String value() default "";
+    String[] group() default {};
 
 }

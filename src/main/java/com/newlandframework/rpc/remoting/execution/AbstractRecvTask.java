@@ -1,9 +1,5 @@
 package com.newlandframework.rpc.remoting.execution;
 
-import com.newlandframework.rpc.core.ChainFilterInvoker;
-import com.newlandframework.rpc.core.ChainFilterInvokerProvider;
-import com.newlandframework.rpc.core.RpcSystemConfig;
-import com.newlandframework.rpc.filter.FilterChainBuilder;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
 import com.newlandframework.rpc.protocol.rpc.RpcInvoker;
@@ -12,13 +8,9 @@ import com.newlandframework.rpc.remoting.handler.ReplyHandler;
 import com.newlandframework.rpc.util.BeanFactoryUtil;
 import io.netty.channel.Channel;
 import org.apache.log4j.Logger;
-import org.springframework.aop.framework.ProxyFactory;
-import org.springframework.aop.support.NameMatchMethodPointcutAdvisor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Map;
-import java.util.concurrent.Callable;
 
 
 public abstract class AbstractRecvTask implements Runnable {
@@ -39,8 +31,6 @@ public abstract class AbstractRecvTask implements Runnable {
 
     protected ReplyHandler handler;
 
-    protected FilterChainBuilder chainBuilder = BeanFactoryUtil.getBean("filterChain");
-
     public AbstractRecvTask(MessageRequest request, ChannelHandler handler, Channel channel) {
         this.request = request;
         this.handler = (ReplyHandler) handler;
@@ -53,6 +43,8 @@ public abstract class AbstractRecvTask implements Runnable {
         try {
             response.setMessageId(request.getMessageId());
 
+            Object result = handler.reply(request, channel);
+
             if (request.getRejected()){
                 logger.error("illegal request, netty rpc server refused to respond.");
 
@@ -60,7 +52,6 @@ public abstract class AbstractRecvTask implements Runnable {
                 response.setResult(null);
                 response.setError(new Throwable("illegal request, netty rpc server refused to respond."));
             }else{
-                Object result = handler.reply(request, channel);
                 logger.info("rpc request " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
 
                 // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
@@ -82,35 +73,6 @@ public abstract class AbstractRecvTask implements Runnable {
         }
     }
 
-    /**
-     * i.如果没有配置过滤器链的话，就直接通过反射调用客户端要求的方法，并且返回结果
-     * ii.如果配置了过滤器链的话，就会先执行过滤器链中多个过滤器的intercept方法，对客户端的调用请求进行一些处理，然后再反射调用客户端要求的方法
-     */
-    private Object invoke(RpcInvoker mi, MessageRequest request) throws Throwable {
-        if (chainBuilder != null) {
-            ChainFilterInvokerProvider provider = chainBuilder.buildChain(new ChainFilterInvoker() {
-
-                @Override
-                public Class<?> getInterface() {
-                    return mi.getClass().getInterfaces()[0];
-                }
-
-                // ChainFilterInvoker对象一般是ChanFilterInvoker链中的最后一个，用来真正执行客户端要求调用的方法
-                @Override
-                public Object invoke(MessageRequest request) throws Throwable {
-                    return mi.invoke(request);
-                }
-
-                @Override
-                public void destroy() {
-                }
-
-            }, request);
-            return provider.getInvoker().invoke(request);
-        } else {
-            return mi.invoke(request);
-        }
-    }
 
     public MethodInvokeStatus getInvokeStatus() {
         return invokeStatus;

@@ -2,7 +2,7 @@ package com.newlandframework.rpc.observer;
 
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
-import com.newlandframework.rpc.jmx.ModuleMetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsVisitor;
 
 import java.util.Observable;
 
@@ -11,7 +11,7 @@ import java.util.Observable;
  */
 public class InvokeFilterObserver extends AbstractInvokeObserver {
 
-    public InvokeFilterObserver(InvokeEventFacade facade, ModuleMetricsVisitor visitor) {
+    public InvokeFilterObserver(InvokeEventFacade facade, MetricsVisitor visitor) {
         super(facade, visitor);
     }
 
