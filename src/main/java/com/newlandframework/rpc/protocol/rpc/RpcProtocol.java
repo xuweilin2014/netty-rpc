@@ -9,6 +9,7 @@ import com.newlandframework.rpc.protocol.Exporter;
 import com.newlandframework.rpc.protocol.Invoker;
 import com.newlandframework.rpc.remoting.exchanger.Exchangers;
 import com.newlandframework.rpc.remoting.handler.ReplyHandler;
+import com.newlandframework.rpc.remoting.resolver.ApiEchoServer;
 import com.newlandframework.rpc.remoting.server.HeaderExchangeServer;
 import com.newlandframework.rpc.util.URL;
 import io.netty.channel.Channel;
@@ -26,6 +27,8 @@ public class RpcProtocol extends AbstractProtocol {
 
     // port -> jmx server
     private final Map<Integer, MetricsServer> metricsServers = new ConcurrentHashMap<>();
+
+    private static ApiEchoServer echoServer;
 
     private static final Lock lock = new ReentrantLock();
 
@@ -76,8 +79,16 @@ public class RpcProtocol extends AbstractProtocol {
         openServer(url);
         // 6.开启 JMX 服务器
         openJmxServer(url);
+        // 7.开启 echo 服务器，用于进行服务能力展示以及服务调用详情展示
+        openEchoServer(url);
 
         return rpcExporter;
+    }
+
+    private void openEchoServer(URL url) {
+
+
+
     }
 
     private void openJmxServer(URL url) {

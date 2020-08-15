@@ -6,7 +6,7 @@ import com.newlandframework.rpc.parallel.NamedThreadFactory;
 import com.newlandframework.rpc.remoting.handler.ChannelHandler;
 import com.newlandframework.rpc.remoting.handler.ChannelHandlers;
 import com.newlandframework.rpc.remoting.handler.NettyServerHandler;
-import com.newlandframework.rpc.remoting.resolver.ApiEchoResolver;
+import com.newlandframework.rpc.remoting.resolver.ApiEchoServer;
 import com.newlandframework.rpc.serialize.Serialization;
 import com.newlandframework.rpc.util.URL;
 import io.netty.bootstrap.ServerBootstrap;
@@ -49,8 +49,6 @@ public class NettyServer extends AbstractServer {
 
     //SYSTEM_PROPERTY_PARALLEL的值为处理器的数量
     private static final int PARALLEL = RpcSystemConfig.SYSTEM_PROPERTY_PARALLEL * 2;
-
-    private int numberOfEchoThreadsPool = 1;
 
     //在此类中用来创建Netty中的worker group中的线程，并且不是守护线程
     private ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyWorkerThreadPool");
@@ -106,18 +104,9 @@ public class NettyServer extends AbstractServer {
                 @Override
                 public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                     if (channelFuture.isSuccess()) {
-                        final ExecutorService executor = Executors.newFixedThreadPool(numberOfEchoThreadsPool);
-                        //把指定RPC服务器监听指定ip地址的过程放到线程池中去执行
-                        executor.submit(new ApiEchoResolver(host, echoApiPort));
                         logger.info("netty rpc Server start success! ip: " + host + " port:" + port +
                                 " start-time: " + MetricsServer.getStartTime() + " jmx-invoke-metrics: " + (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ?
                                 "open" : "close"));
-                        channelFuture.channel().closeFuture().sync().addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) {
-                                executor.shutdownNow();
-                            }
-                        });
                     }
                 }
             });

@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.Callable;
 
 
-public class ApiEchoResolver implements Callable<Boolean> {
+public class ApiEchoServer{
 
     public static final Logger logger = Logger.getLogger(ApiEchoHandler.class);
 
@@ -26,14 +26,15 @@ public class ApiEchoResolver implements Callable<Boolean> {
     private String host;
 
     private int port;
+    
+    private boolean started = false;
 
-    public ApiEchoResolver(String host, int port) {
+    public ApiEchoServer(String host, int port) {
         this.host = host;
         this.port = port;
     }
-
-    @Override
-    public Boolean call() {
+    
+    public void start() {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -65,14 +66,16 @@ public class ApiEchoResolver implements Callable<Boolean> {
             }
 
             ch.closeFuture().sync();
-            return Boolean.TRUE;
         } catch (Exception e) {
             e.printStackTrace();
-            return Boolean.FALSE;
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
+    
+    public void stop(){
+        // TODO: 2020/8/15  
     }
 }
 
