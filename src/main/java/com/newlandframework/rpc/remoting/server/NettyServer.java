@@ -109,7 +109,7 @@ public class NettyServer extends AbstractServer {
                         final ExecutorService executor = Executors.newFixedThreadPool(numberOfEchoThreadsPool);
                         //把指定RPC服务器监听指定ip地址的过程放到线程池中去执行
                         executor.submit(new ApiEchoResolver(host, echoApiPort));
-                        logger.info("Netty RPC Server start success! ip: " + host + " port:" + port +
+                        logger.info("netty rpc Server start success! ip: " + host + " port:" + port +
                                 " start-time: " + MetricsServer.getStartTime() + " jmx-invoke-metrics: " + (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ?
                                 "open" : "close"));
                         channelFuture.channel().closeFuture().sync().addListener(new ChannelFutureListener() {
@@ -123,19 +123,13 @@ public class NettyServer extends AbstractServer {
             });
 
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("failed to start netty rpc server. caused by " + e.getMessage());
         }
     }
 
     @Override
     public void doClose() {
         // TODO: 2020/8/13
-    }
-
-
-    public void stop() {
-        worker.shutdownGracefully();
-        boss.shutdownGracefully();
     }
 
 }

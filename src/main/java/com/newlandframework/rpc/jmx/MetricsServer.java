@@ -3,6 +3,7 @@ package com.newlandframework.rpc.jmx;
 import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.parallel.AbstractDaemonThread;
 import com.newlandframework.rpc.parallel.SemaphoreWrapper;
+import com.newlandframework.rpc.util.URL;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.lang3.StringUtils;
@@ -31,17 +32,17 @@ public class MetricsServer extends AbstractMetricsServer {
 
     private String moduleMetricsJmxUrl = "";
 
-    private Semaphore semaphore = new Semaphore(0);
+    private final Semaphore semaphore = new Semaphore(0);
 
-    private SemaphoreWrapper semaphoreWrapper = new SemaphoreWrapper(semaphore);
+    private final SemaphoreWrapper semaphoreWrapper = new SemaphoreWrapper(semaphore);
 
-    private CountDownLatch latch = new CountDownLatch(1);
+    private JMXConnectorServer jmxServer;
 
-    // 因为ModuleMetricsHandler采用单例模式，因此listener对象也是唯一的，在服务器中只有一个
-    private MetricsListener listener = new MetricsListener();
+    private final MetricsListener listener = new MetricsListener();
 
-    private MetricsServer() {
+    public MetricsServer(URL url) {
         super();
+        start(url.getHost(), url.getPort());
     }
 
     @Override
@@ -76,7 +77,7 @@ public class MetricsServer extends AbstractMetricsServer {
         }
     }
 
-    // 启动 jmx 服务器
+    // 创建并且启动 jmx 服务器
     public void start(String host, int port) {
         // 让客户端可以连接到JMXConnectorServer服务器，然后可以通过JConsole或者通过网页，对NettyRPC服务端的调用情况进行监控
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
@@ -90,7 +91,7 @@ public class MetricsServer extends AbstractMetricsServer {
             // 这里最后拼接成为：service:jmx:rmi:///jndi/rmi://host:1098/NettyRPCServer
             moduleMetricsJmxUrl = "service:jmx:rmi:///jndi/rmi://" + host + ":" + port + "/NettyRPCServer";
             JMXServiceURL url = new JMXServiceURL(moduleMetricsJmxUrl);
-            JMXConnectorServer cs = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbs);
+            jmxServer = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbs);
 
             ObjectName name = new ObjectName(MBEAN_NAME);
 
@@ -100,26 +101,28 @@ public class MetricsServer extends AbstractMetricsServer {
             // 在此ModuleMetricsHandler上注册一个NotificationListener，用来处理发生的事件。
             mbs.addNotificationListener(name, listener, null, null);
 
-            cs.start();
+            jmxServer.start();
             semaphoreWrapper.release();
 
             logger.info("jmx support NettyRPC JMX server starts successfully! jmx-url : %s" + moduleMetricsJmxUrl);
         } catch (IOException | MalformedObjectNameException | InstanceNotFoundException
                 | InstanceAlreadyExistsException | NotCompliantMBeanException
                 | MBeanRegistrationException e) {
-            e.printStackTrace();
+            logger.error("cannot start jmx server, error occurs: " + e.getMessage());
         }
     }
 
     public void stop() {
-        // TODO: 2020/8/14 关闭掉 metricsServers 中的所有 server
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         try {
             ObjectName name = new ObjectName(MBEAN_NAME);
+            // 取消注册 mbean
             mbs.unregisterMBean(name);
-        } catch (MalformedObjectNameException | InstanceNotFoundException
-                | MBeanRegistrationException e) {
-            e.printStackTrace();
+            // 关闭 jmx server
+            jmxServer.stop();
+        } catch (MalformedObjectNameException
+                | InstanceNotFoundException | MBeanRegistrationException | IOException e) {
+            logger.error("error occurs when unregistering mbean and stopping jmx server.");
         }
     }
 
@@ -144,12 +147,5 @@ public class MetricsServer extends AbstractMetricsServer {
     }
 
 
-    public CountDownLatch getLatch() {
-        return latch;
-    }
-
-    public void setLatch(CountDownLatch latch) {
-        this.latch = latch;
-    }
 }
 

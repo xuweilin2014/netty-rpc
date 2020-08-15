@@ -28,9 +28,13 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
     public static final Logger logger = Logger.getLogger(ApiEchoHandler.class);
 
     private static final String CONTENT_TYPE = "Content-Type";
+
     private static final String CONTENT_LENGTH = "Content-Length";
+
     private static final String CONNECTION = "Connection";
+
     private static final String KEEP_ALIVE = "keep-alive";
+
     private static final String METRICS_ERR_MSG = "NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!";
 
     public ApiEchoHandler() {

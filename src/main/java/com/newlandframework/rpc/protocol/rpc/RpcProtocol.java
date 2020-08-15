@@ -21,11 +21,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class RpcProtocol extends AbstractProtocol {
 
-    private static final Map<String, HeaderExchangeServer> servers = new ConcurrentHashMap<>();
+    // ip:port -> server
+    private final Map<String, HeaderExchangeServer> servers = new ConcurrentHashMap<>();
 
-    private static Lock lock = new ReentrantLock();
+    // port -> jmx server
+    private final Map<Integer, MetricsServer> metricsServers = new ConcurrentHashMap<>();
 
-    private static Map<Integer, MetricsServer> metricsServers = null;
+    private static final Lock lock = new ReentrantLock();
 
     private ReplyHandler replyHandler = new ReplyHandler() {
         @Override
@@ -39,12 +41,10 @@ public class RpcProtocol extends AbstractProtocol {
 
         @Override
         public void connected(Channel channel) throws RemotingException {
-
         }
 
         @Override
         public void disconnected(Channel channel) throws RemotingException {
-
         }
 
         @Override
@@ -81,34 +81,26 @@ public class RpcProtocol extends AbstractProtocol {
     }
 
     private void openJmxServer(URL url) {
-        // TODO: 2020/8/14
-        String address = url.getAddress();
-        HeaderExchangeServer server = servers.get(address);
-        if (server == null)
-            throw new IllegalStateException("server is null, cannot start jmx server.");
+        int port = url.getPort();
+        MetricsServer server = metricsServers.get(port);
 
-
-        MetricsServer.getInstance().start(address);
+        if (server == null){
+            metricsServers.put(port, new MetricsServer(url));
+        }
     }
 
     private void openServer(URL url) {
         // address 为 IP地址:PORT，一个特定的 ip 地址 + 端口号只能启动一个服务器
         String address = url.getAddress();
-        lock.lock();
-        try{
-            HeaderExchangeServer server = servers.get(address);
-            if (server == null) {
-                try {
-                    server = Exchangers.bind(url, replyHandler);
-                } catch (Exception e) {
-                    throw new IllegalStateException("failed to start the netty server.");
-                }
-                servers.put(address, server);
+        HeaderExchangeServer server = servers.get(address);
+        if (server == null) {
+            try {
+                server = Exchangers.bind(url, replyHandler);
+            } catch (Exception e) {
+                throw new IllegalStateException("failed to start the netty server.");
             }
-        }finally {
-            lock.unlock();
+            servers.put(address, server);
         }
-
     }
 
     @Override
