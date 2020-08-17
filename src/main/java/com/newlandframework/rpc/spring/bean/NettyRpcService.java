@@ -23,9 +23,27 @@ import java.util.Date;
  * 接着，如果一个bean实现了InitializingBean接口，就会回调afterProperties方法，此方法就是获取到handlerMap，然后
  * 把interfaceName对应的binder（保存了可以提供服务的类以及拦截器）保存到handlerMap中。
  */
-public class NettyRpcService extends ServiceConfig implements ApplicationContextAware, InitializingBean, ApplicationListener<ContextRefreshedEvent>, DisposableBean {
+public class NettyRpcService extends ServiceConfig implements InitializingBean, ApplicationListener<ContextRefreshedEvent>, DisposableBean {
 
     private static final Logger logger = Logger.getLogger(NettyRpcService.class);
+
+    private String id;
+
+    private String registry;
+
+    private String interfaceName;
+
+    private String ref;
+
+    private String filter;
+
+    private String url;
+
+    private String scope;
+
+    private String protocol;
+
+    private String monitor;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
@@ -39,7 +57,7 @@ public class NettyRpcService extends ServiceConfig implements ApplicationContext
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        ServiceFilterBinder binder = new ServiceFilterBinder();
+//        ServiceFilterBinder binder = new ServiceFilterBinder();
 
         //在Spring IoC容器刚刚启动的时候，就会对scope为singleton且非懒加载的bean进行实例化，然后根据Bean的配置注入属性。
         //随后才是调用bean中的afterProperties方法，所以此时，所有的bean都存在于IoC容器中。而<nettyrpc:service/>标签中的
@@ -57,12 +75,6 @@ public class NettyRpcService extends ServiceConfig implements ApplicationContext
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext)
-            throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-
-    @Override
     public String toString() {
         return "NettyRpcService{" +
                 "id='" + id + '\'' +
@@ -77,6 +89,83 @@ public class NettyRpcService extends ServiceConfig implements ApplicationContext
 
     @Override
     public void destroy() throws Exception {
+        // TODO: 2020/8/16
         unexport();
+    }
+
+    public static Logger getLogger() {
+        return logger;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getRegistry() {
+        return registry;
+    }
+
+    public void setRegistry(String registry) {
+        this.registry = registry;
+    }
+
+    public String getInterfaceName() {
+        return interfaceName;
+    }
+
+    public void setInterfaceName(String interfaceName) {
+        this.interfaceName = interfaceName;
+    }
+
+    public String getRef() {
+        return ref;
+    }
+
+    public void setRef(String ref) {
+        this.ref = ref;
+    }
+
+    public String getFilter() {
+        return filter;
+    }
+
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+
+    public String getMonitor() {
+        return monitor;
+    }
+
+    public void setMonitor(String monitor) {
+        this.monitor = monitor;
     }
 }

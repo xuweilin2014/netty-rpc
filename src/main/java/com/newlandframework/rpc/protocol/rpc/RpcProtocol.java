@@ -1,7 +1,9 @@
 package com.newlandframework.rpc.protocol.rpc;
 
+import com.newlandframework.rpc.core.RpcSystemConfig;
 import com.newlandframework.rpc.exception.RemotingException;
 import com.newlandframework.rpc.exception.RpcException;
+import com.newlandframework.rpc.jmx.MetricsHtmlBuilder;
 import com.newlandframework.rpc.jmx.MetricsServer;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.protocol.AbstractProtocol;
@@ -9,14 +11,17 @@ import com.newlandframework.rpc.protocol.Exporter;
 import com.newlandframework.rpc.protocol.Invoker;
 import com.newlandframework.rpc.remoting.exchanger.Exchangers;
 import com.newlandframework.rpc.remoting.handler.ReplyHandler;
-import com.newlandframework.rpc.remoting.resolver.ApiEchoServer;
+import com.newlandframework.rpc.remoting.echo.ApiEchoServer;
 import com.newlandframework.rpc.remoting.server.HeaderExchangeServer;
+import com.newlandframework.rpc.remoting.server.Server;
 import com.newlandframework.rpc.util.URL;
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,16 +30,17 @@ public class RpcProtocol extends AbstractProtocol {
     // ip:port -> server
     private final Map<String, HeaderExchangeServer> servers = new ConcurrentHashMap<>();
 
-    // port -> jmx server
-    private final Map<Integer, MetricsServer> metricsServers = new ConcurrentHashMap<>();
+    private static MetricsServer metricsServer;
+
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
     private static ApiEchoServer echoServer;
 
-    private static final Lock lock = new ReentrantLock();
+    private static Lock lock = new ReentrantLock();
 
     private ReplyHandler replyHandler = new ReplyHandler() {
         @Override
-        public void sent(Channel channel, Object message) throws RemotingException {
+        public void sent(Channel channel, Object message) {
         }
 
         @Override
@@ -43,11 +49,11 @@ public class RpcProtocol extends AbstractProtocol {
         }
 
         @Override
-        public void connected(Channel channel) throws RemotingException {
+        public void connected(Channel channel) {
         }
 
         @Override
-        public void disconnected(Channel channel) throws RemotingException {
+        public void disconnected(Channel channel) {
         }
 
         @Override
@@ -86,17 +92,33 @@ public class RpcProtocol extends AbstractProtocol {
     }
 
     private void openEchoServer(URL url) {
+        if (started.get())
+            return;
 
-
-
+        if (started.compareAndSet(false, true)) {
+            // echo server 监听默认的端口 18882
+            echoServer = new ApiEchoServer(url);
+            echoServer.start();
+        }
     }
 
     private void openJmxServer(URL url) {
-        int port = url.getPort();
-        MetricsServer server = metricsServers.get(port);
+        if (metricsServer != null){
+            return;
+        }
 
-        if (server == null){
-            metricsServers.put(port, new MetricsServer(url));
+        boolean metrics = url.getParameter(RpcSystemConfig.METRICS, true);
+        // 如果用户在 <nettyrpc:monitor/> 中配置了 metrics 为 false，就不开启 jmx 服务器，关闭掉监控功能
+        if (!metrics)
+            return;
+
+        try{
+            lock.lock();
+            metricsServer = new MetricsServer(url);
+            metricsServer.start();
+            MetricsHtmlBuilder.getInstance().setMetricsServer(metricsServer);
+        }finally {
+            lock.unlock();
         }
     }
 
@@ -104,24 +126,31 @@ public class RpcProtocol extends AbstractProtocol {
         // address 为 IP地址:PORT，一个特定的 ip 地址 + 端口号只能启动一个服务器
         String address = url.getAddress();
         HeaderExchangeServer server = servers.get(address);
-        if (server == null) {
-            try {
-                server = Exchangers.bind(url, replyHandler);
-            } catch (Exception e) {
-                throw new IllegalStateException("failed to start the netty server.");
+
+        try{
+            lock.lock();
+            if (server == null) {
+                try {
+                    server = Exchangers.bind(url, replyHandler);
+                } catch (Exception e) {
+                    throw new IllegalStateException("failed to start the netty server.");
+                }
+                servers.put(address, server);
             }
-            servers.put(address, server);
+        }finally {
+            lock.unlock();;
         }
     }
 
     @Override
     public Invoker refer(URL url) throws RpcException {
+        // TODO: 2020/8/16
         return null;
     }
 
     @Override
     public void destroy() {
-
+        // TODO: 2020/8/16
     }
 
     public String getServiceKey(URL url){

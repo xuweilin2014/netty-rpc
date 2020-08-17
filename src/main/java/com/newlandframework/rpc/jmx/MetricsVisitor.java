@@ -16,13 +16,19 @@ import java.util.function.LongBinaryOperator;
  * 作为ModuleMetricsHandler这个bean中的一个属性，必须要有getter方法来获取对象中的属性值
  */
 public class MetricsVisitor {
+
     public static final long DEFAULT_INVOKE_MIN_TIMESPAN = 3600 * 1000L;
+
     private static final String[] THROWABLE_NAMES = {"message", "class", "stackTrace"};
+
     private static final String[] THROWABLE_DESCRIPTIONS = {"message", "class", "stackTrace"};
+
     private static final OpenType<?>[] THROWABLE_TYPES = new OpenType<?>[]{SimpleType.STRING, SimpleType.STRING, SimpleType.STRING};
+
     private static CompositeType THROWABLE_COMPOSITE_TYPE = null;
 
     private String className;
+
     private String methodName;
 
     //方法调用次数
@@ -39,6 +45,7 @@ public class MetricsVisitor {
     private volatile long invokeMinTimespan = DEFAULT_INVOKE_MIN_TIMESPAN;
     //方法调用的最大耗时，初始值为0s
     private volatile long invokeMaxTimespan = 0L;
+
     private Exception lastStackTrace;
     //方法最后一次调用失败堆栈明细
     private String lastStackTraceDetail;

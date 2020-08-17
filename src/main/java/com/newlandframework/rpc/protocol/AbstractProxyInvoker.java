@@ -1,14 +1,22 @@
 package com.newlandframework.rpc.protocol;
 
+import com.newlandframework.rpc.core.RpcResult;
 import com.newlandframework.rpc.exception.RpcException;
 import com.newlandframework.rpc.model.MessageRequest;
+import com.newlandframework.rpc.remoting.execution.MethodInvokeStatus;
 import com.newlandframework.rpc.util.URL;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.log4j.Logger;
+
+import java.lang.reflect.InvocationTargetException;
 
 // 真正执行本地方法的 Invoker
 public abstract class AbstractProxyInvoker implements Invoker{
 
     private Object serviceBean;
+
+    private static final Logger logger = Logger.getLogger(AbstractProxyInvoker.class);
+
     private URL url;
 
     public URL getUrl() {
@@ -24,8 +32,6 @@ public abstract class AbstractProxyInvoker implements Invoker{
         return url;
     }
 
-    private StopWatch sw = new StopWatch();
-
     public AbstractProxyInvoker(Object serviceBean, URL url) {
         this.serviceBean = serviceBean;
         this.url = url;
@@ -39,22 +45,14 @@ public abstract class AbstractProxyInvoker implements Invoker{
         this.serviceBean = serviceBean;
     }
 
-    // 获取方法执行消耗的时间
-    public long getInvokeTimespan() {
-        return sw.getTime();
-    }
-
     @Override
-    public Object invoke(MessageRequest request) throws RpcException {
-        sw.reset();
-        sw.start();
+    public Object invoke(MessageRequest request) {
         try{
-            return doInvoke(serviceBean, request.getMethodName(), request.getParametersVal());
+             return new RpcResult(doInvoke(serviceBean, request.getMethodName(), request.getParametersVal()));
         } catch (Throwable e) {
-            throw new RpcException("failed to invoke remote method " + request.getMethodName() + " to url " +
-                    url.toFullString() + " " + e.getMessage(), e);
-        }finally {
-            sw.stop();
+            logger.error("failed to invoke remote method " + request.getMethodName() + " to url " +
+                    url.toFullString() + " " + e.getMessage());
+            return new RpcResult(e);
         }
     }
 

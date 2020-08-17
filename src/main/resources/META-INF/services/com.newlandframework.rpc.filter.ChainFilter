@@ -1,2 +1,2 @@
-echo=com.newlandframework.rpc.filter.support.EchoChainFilter
-classloader=com.newlandframework.rpc.filter.support.ClassLoaderChainFilter
+timeout=com.newlandframework.rpc.filter.support.TimeoutChainFilter
+monitor=com.newlandframework.rpc.filter.support.MonitorChainFilter

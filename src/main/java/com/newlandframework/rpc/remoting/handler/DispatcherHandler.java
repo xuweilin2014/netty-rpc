@@ -4,11 +4,9 @@ import com.newlandframework.rpc.exception.RemotingException;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
 import com.newlandframework.rpc.parallel.NamedThreadFactory;
-import com.newlandframework.rpc.remoting.execution.RecvInitializeTaskFacade;
-import com.newlandframework.rpc.remoting.server.NettyServer;
+import com.newlandframework.rpc.remoting.execution.RecvExecutionTask;
 import io.netty.channel.Channel;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -19,7 +17,7 @@ public class DispatcherHandler implements ChannelHandler {
     private ChannelHandler handler;
 
     public DispatcherHandler(ChannelHandler handler) {
-        handler = handler;
+        this.handler = handler;
     }
 
     @Override
@@ -39,8 +37,7 @@ public class DispatcherHandler implements ChannelHandler {
     public void received(Channel channel, Object message){
         if (message instanceof MessageRequest){
             // 服务端接收到请求，进行处理
-            RecvInitializeTaskFacade facade = new RecvInitializeTaskFacade((MessageRequest) message, handler, channel);
-            Runnable recvTask = facade.getTask();
+            RecvExecutionTask recvTask = new RecvExecutionTask((MessageRequest) message, handler, channel);
             // 将任务 recvTask 放入到 MessageRecvExecutor 中的线程池中去执行。调用 recvTask 中的 call 方法，
             // 即调用 RpcServer 本地的方法，如果方法调用成功，就将结果封装成 MessageResponse 并且通过 Netty 发送至客户端
             executor.submit(recvTask);

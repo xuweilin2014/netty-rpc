@@ -19,7 +19,7 @@ public class MetricsHtmlBuilder {
 
     private static final Logger logger = Logger.getLogger(MetricsHtmlBuilder.class);
 
-    private Map<Integer, MetricsServer> metricsServers = new ConcurrentHashMap<>();
+    private static MetricsServer metricsServer;
 
     private static final String JMX_METRICS_ATTR = "ModuleMetricsVisitor";
 
@@ -46,21 +46,19 @@ public class MetricsHtmlBuilder {
     }
 
     // 获取到与已经启动的 JMXConnectorServer 的连接connection
-    private MBeanServerConnection connect(int port) {
-        MetricsServer server = metricsServers.get(port);
-
-        if (server == null){
-            throw new IllegalStateException("jmx server with port " + port + " does not exist.");
+    private MBeanServerConnection connect() {
+        if (metricsServer == null){
+            throw new IllegalStateException("jmx server does not exist.");
         }
 
-        MBeanServerConnection connection = server.connect();
+        MBeanServerConnection connection = metricsServer.connect();
         while (true) {
             if (connection != null) {
                 break;
             } else {
                 try {
                     TimeUnit.SECONDS.sleep(1L);
-                    connection = server.connect();
+                    connection = metricsServer.connect();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -70,23 +68,14 @@ public class MetricsHtmlBuilder {
         return connection;
     }
 
-    public String buildMetrics(String port) {
+    public String buildMetrics() {
         StringBuilder metrics = new StringBuilder();
         metrics.append(TABLE_BEGIN);
 
-        // port 为 * 表明要获取所有端口号导出的服务中，方法调用的信息
-        if ("*".equals(port)){
-            for (Map.Entry<Integer, MetricsServer> entry : metricsServers.entrySet()) {
-                MBeanServerConnection connection = entry.getValue().connect();
-                metrics.append(getMetrics(connection));
-            }
-        }else{
-            MBeanServerConnection connection = connect(Integer.parseInt(port));
-            metrics.append(getMetrics(connection));
-        }
+        MBeanServerConnection connection = connect();
+        metrics.append(getMetrics(connection));
 
         metrics.append(TABLE_END);
-
         return metrics.toString();
     }
 
@@ -151,8 +140,8 @@ public class MetricsHtmlBuilder {
         return metrics.toString();
     }
 
-    public Map<Integer, MetricsServer> getMetricsServers() {
-        return metricsServers;
+    public void setMetricsServer(MetricsServer metricsServer) {
+        MetricsHtmlBuilder.metricsServer = metricsServer;
     }
 }
 

@@ -23,17 +23,9 @@ public class RpcSystemConfig {
 
     public static final int SYSTEM_PROPERTY_PARALLEL = Math.max(2, Runtime.getRuntime().availableProcessors());
 
-    public static final int SYSTEM_PROPERTY_JMX_INVOKE_METRICS = Integer.getInteger("nettyrpc.jmx.invoke.metrics", 1);
-
-    public static final boolean SYSTEM_PROPERTY_JMX_METRICS_SUPPORT = RpcSystemConfig.SYSTEM_PROPERTY_JMX_INVOKE_METRICS != 0;
-
     public static final String DELIMITER = ":";
 
     public static final int IP_PORT_ARRAY_LENGTH = 2;
-
-    public static final String RPC_COMPILER_SPI_ATTR = "com.newlandframework.rpc.compiler.AccessAdaptive";
-
-    public static final String RPC_ABILITY_DETAIL_SPI_ATTR = "com.newlandframework.rpc.core.AbilityDetail";
 
     public static final String TIMEOUT_RESPONSE_MSG = "Timeout request,NettyRPC server request timeout!";
 
@@ -92,5 +84,13 @@ public class RpcSystemConfig {
     public static final String LOCALHOST = "localhost";
 
     public static final String METRICS = "metrics";
+
+    public static final int ECHO_PORT = 18882;
+
+    public static final int METRICS_PORT = 9999;
+
+    public static final String METRICS_PORT_KEY = "metrics.port";
+
+    public static final String MONITOR = "monitor";
 }
 

@@ -9,4 +9,6 @@ public @interface Activate {
 
     String[] group() default {};
 
+    int order() default 0;
+
 }

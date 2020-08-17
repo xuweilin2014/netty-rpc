@@ -1,6 +1,7 @@
-package com.newlandframework.rpc.remoting.resolver;
+package com.newlandframework.rpc.remoting.echo;
 
 import com.newlandframework.rpc.core.RpcSystemConfig;
+import com.newlandframework.rpc.util.URL;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
@@ -14,8 +15,6 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import org.apache.log4j.Logger;
 
-import java.util.concurrent.Callable;
-
 
 public class ApiEchoServer{
 
@@ -25,13 +24,11 @@ public class ApiEchoServer{
 
     private String host;
 
-    private int port;
-    
-    private boolean started = false;
+    private URL url;
 
-    public ApiEchoServer(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public ApiEchoServer(URL url) {
+        this.url = url;
+        this.host = url.getHost();
     }
     
     public void start() {
@@ -57,20 +54,16 @@ public class ApiEchoServer{
                      */
                     .childHandler(new ApiEchoInitializer(sslCtx));
 
-            Channel ch = b.bind(host, port).sync().channel();
+            Channel ch = b.bind(host, RpcSystemConfig.ECHO_PORT).sync().channel();
 
-            logger.info("NettyRPC server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + port + "/NettyRPC.html");
-            if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT){
-                logger.info("NettyRPC server metrics:" +
-                        (SSL ? "https" : "http") + "://" + host + ":" + port + "/NettyRPC.html/metrics");
+            logger.info("netty-rpc server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcSystemConfig.ECHO_PORT + "/netty-rpc.html");
+            if (url.getParameter(RpcSystemConfig.METRICS, true)){
+                logger.info("netty-rpc server metrics:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcSystemConfig.ECHO_PORT + "/netty-rpc.html/metrics");
             }
 
             ch.closeFuture().sync();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
+        } catch (Throwable e) {
+            logger.error("failed to start echo server, caused by: " + e.getMessage());
         }
     }
     

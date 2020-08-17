@@ -20,19 +20,6 @@ public class MessageRequest implements Serializable {
 
     private String interfaceName;
 
-    private boolean invokeMetrics = true;
-
-    // 此消息有没有被服务器配置的 filter 所拦截
-    private boolean rejected = false;
-
-    public boolean isInvokeMetrics() {
-        return invokeMetrics;
-    }
-
-    public void setInvokeMetrics(boolean invokeMetrics) {
-        this.invokeMetrics = invokeMetrics;
-    }
-
     public String getMessageId() {
         return messageId;
     }
@@ -76,15 +63,6 @@ public class MessageRequest implements Serializable {
     @Override
     public String toString() {
         return ReflectionToStringBuilder.toStringExclude(this, new String[]{"typeParameters", "parametersVal"});
-    }
-
-
-    public boolean getRejected() {
-        return rejected;
-    }
-
-    public void setRejected(boolean rejected) {
-        this.rejected = rejected;
     }
 }
 

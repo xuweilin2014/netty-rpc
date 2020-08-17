@@ -11,6 +11,8 @@
     <context:property-placeholder location="classpath:rpc-server.properties"/>
     <bean id="beanFactory" class="com.newlandframework.rpc.util.BeanFactoryUtil"/>
 
+    <nettyrpc:application name="application-provider" metrics="true"/>
+
     <nettyrpc:protocol id="rpc" name="nettyrpc" port="10886" serialize="JDKSERIALIZE"/>
     <nettyrpc:protocol id="injvm" name="injvm" port="10887" serialize="JDKSERIALIZE"/>
 

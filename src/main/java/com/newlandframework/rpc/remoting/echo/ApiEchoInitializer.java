@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.remoting.resolver;
+package com.newlandframework.rpc.remoting.echo;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

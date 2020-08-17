@@ -1,4 +1,4 @@
-package com.newlandframework.rpc.remoting.resolver;
+package com.newlandframework.rpc.remoting.echo;
 
 import com.newlandframework.rpc.core.AbilityDetailProvider;
 import com.newlandframework.rpc.core.RpcSystemConfig;
@@ -10,7 +10,6 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import org.apache.log4j.Logger;
-import org.springframework.context.ApplicationListener;
 
 import java.io.UnsupportedEncodingException;
 
@@ -78,16 +77,8 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
 
         if (SYSTEM_PROPERTY_JMX_METRICS_SUPPORT && metrics) {
             try {
-                // 获取请求 uri 中的端口号，如果存在端口号，则显示在特定端口好暴露服务的方法的调用情况；
-                // 如果不存在端口号，则显示所有端口中暴露的服务中方法调用的情况; 如果端口号非法，则返回404，打印错误日志
-                String port = req.getUri();
-                if (port == null){
-                    content = "404 \n port is illegal, cannot display metrics".getBytes("GBK");
-                    logger.error("port is illegal, cannot display metrics. uri is " + req.getUri());
-                }else {
-                    // 返回构造的content，用来在网页上显示RPC服务器中每个方法的调用具体信息，比如：调用次数、调用成功次数、调用失败次数等等
-                    content = MetricsHtmlBuilder.getInstance().buildMetrics(port).getBytes("GBK");
-                }
+                // 返回构造的content，用来在网页上显示RPC服务器中每个方法的调用具体信息，比如：调用次数、调用成功次数、调用失败次数等等
+                content = MetricsHtmlBuilder.getInstance().buildMetrics().getBytes("GBK");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -100,11 +91,6 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
             content = provider.listAbilityDetail(true).toString().getBytes();
         }
         return content;
-    }
-
-    // TODO: 2020/8/14  返回端口号字符串；如果没有端口号，返回 *；如果端口号不合法，返回 null
-    private String getPort(){
-        return null;
     }
 
 }

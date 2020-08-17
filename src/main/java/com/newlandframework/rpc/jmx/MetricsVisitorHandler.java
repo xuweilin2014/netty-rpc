@@ -1,16 +1,20 @@
 package com.newlandframework.rpc.jmx;
 
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.iterators.FilterIterator;
+
 import javax.management.*;
 import java.lang.management.ManagementFactory;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 
 
-public abstract class AbstractMetricsServer extends NotificationBroadcasterSupport implements ModuleMetricsVisitorMXBean {
+public class MetricsVisitorHandler extends NotificationBroadcasterSupport implements ModuleMetricsVisitorMXBean {
 
     protected List<MetricsVisitor> visitorList = new CopyOnWriteArrayList<>();
 
@@ -18,7 +22,9 @@ public abstract class AbstractMetricsServer extends NotificationBroadcasterSuppo
 
     private final Queue<Thread> waiters = new ConcurrentLinkedQueue<>();
 
-    public AbstractMetricsServer() {
+    public static final MetricsVisitorHandler INSTANCE = new MetricsVisitorHandler();
+
+    public MetricsVisitorHandler() {
     }
 
     /**
@@ -33,6 +39,37 @@ public abstract class AbstractMetricsServer extends NotificationBroadcasterSuppo
             return visitCriticalSection(className, methodName);
         } finally {
             exit();
+        }
+    }
+
+    protected MetricsVisitor visitCriticalSection(String className, String methodName) {
+        final String method = methodName.trim();
+        final String cls = className.trim();
+
+        // JMX度量临界区要注意线程间的并发竞争,否则会统计数据失真
+        // iterator.next返回的元素都必须符合Predicate中的条件，也就是说使得其中的evaluate方法返回true
+        // evaluate使得返回的visitor与前面的cls#method对应，如果不存在的话，就直接创建一个visitor，并且
+        // 将其加入到队列visitorList中。
+        Iterator iterator = new FilterIterator(visitorList.iterator(), new Predicate() {
+            @Override
+            public boolean evaluate(Object object) {
+                String statClassName = ((MetricsVisitor) object).getClassName();
+                String statMethodName = ((MetricsVisitor) object).getMethodName();
+                return statClassName.compareTo(cls) == 0 && statMethodName.compareTo(method) == 0;
+            }
+        });
+
+        MetricsVisitor visitor = null;
+        if (iterator.hasNext()) {
+            visitor = (MetricsVisitor) iterator.next();
+        }
+
+        if (visitor != null) {
+            return visitor;
+        } else {
+            visitor = new MetricsVisitor(cls, method);
+            addModuleMetricsVisitor(visitor);
+            return visitor;
         }
     }
 
@@ -87,6 +124,8 @@ public abstract class AbstractMetricsServer extends NotificationBroadcasterSuppo
         LockSupport.unpark(waiters.peek());
     }
 
-    protected abstract MetricsVisitor visitCriticalSection(String className, String methodName);
+    public static MetricsVisitorHandler getINSTANCE() {
+        return INSTANCE;
+    }
 }
 

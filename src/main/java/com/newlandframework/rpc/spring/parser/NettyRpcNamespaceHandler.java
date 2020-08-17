@@ -1,9 +1,6 @@
 package com.newlandframework.rpc.spring.parser;
 
-import com.newlandframework.rpc.spring.bean.NettyRpcProtocol;
-import com.newlandframework.rpc.spring.bean.NettyRpcReference;
-import com.newlandframework.rpc.spring.bean.NettyRpcRegistry;
-import com.newlandframework.rpc.spring.bean.NettyRpcService;
+import com.newlandframework.rpc.spring.bean.*;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -44,6 +41,7 @@ public class NettyRpcNamespaceHandler extends NamespaceHandlerSupport {
         registerBeanDefinitionParser("registry", new NettyRpcBeanDefinitionParser(NettyRpcRegistry.class));
         registerBeanDefinitionParser("reference", new NettyRpcBeanDefinitionParser(NettyRpcReference.class));
         registerBeanDefinitionParser("protocol", new NettyRpcBeanDefinitionParser(NettyRpcProtocol.class));
+        registerBeanDefinitionParser("application", new NettyRpcBeanDefinitionParser(NettyRpcApplication.class));
     }
 }
 

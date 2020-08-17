@@ -2,6 +2,7 @@ package com.newlandframework.rpc.event;
 
 import com.newlandframework.rpc.jmx.MetricsServer;
 import com.newlandframework.rpc.jmx.MetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsVisitorHandler;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -21,7 +22,7 @@ public class InvokeEventFacade {
         enumMap.put(ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT, new InvokeFailStackTraceEvent());
     }
 
-    public InvokeEventFacade(MetricsServer handler, MetricsVisitor visitor) {
+    public InvokeEventFacade(MetricsVisitorHandler handler, MetricsVisitor visitor) {
         for (AbstractInvokeEvent event : enumMap.values()) {
             event.setHandler(handler);
             event.setVisitor(visitor);
@@ -29,6 +30,7 @@ public class InvokeEventFacade {
         }
     }
 
+    @SuppressWarnings("Java8MapApi")
     public AbstractInvokeEvent fetchEvent(ModuleEvent event) {
         if (enumMap.containsKey(event)) {
             return enumMap.get(event);

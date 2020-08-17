@@ -1,11 +1,10 @@
 package com.newlandframework.rpc.remoting.execution;
 
+import com.newlandframework.rpc.core.RpcResult;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.model.MessageResponse;
-import com.newlandframework.rpc.protocol.rpc.RpcInvoker;
 import com.newlandframework.rpc.remoting.handler.ChannelHandler;
 import com.newlandframework.rpc.remoting.handler.ReplyHandler;
-import com.newlandframework.rpc.util.BeanFactoryUtil;
 import io.netty.channel.Channel;
 import org.apache.log4j.Logger;
 
@@ -13,9 +12,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 
-public abstract class AbstractRecvTask implements Runnable {
+public class RecvExecutionTask implements Runnable {
 
-    private static final Logger logger = Logger.getLogger(AbstractRecvTask.class);
+    private static final Logger logger = Logger.getLogger(RecvExecutionTask.class);
 
     protected MessageRequest request;
 
@@ -23,15 +22,13 @@ public abstract class AbstractRecvTask implements Runnable {
 
     protected Channel channel;
 
-    protected static final String METHOD_MAPPED_NAME = "invoke";
-
     protected MethodInvokeStatus invokeStatus = MethodInvokeStatus.INIT;
 
     protected long invokeTimespan;
 
     protected ReplyHandler handler;
 
-    public AbstractRecvTask(MessageRequest request, ChannelHandler handler, Channel channel) {
+    public RecvExecutionTask(MessageRequest request, ChannelHandler handler, Channel channel) {
         this.request = request;
         this.handler = (ReplyHandler) handler;
         this.channel = channel;
@@ -40,37 +37,30 @@ public abstract class AbstractRecvTask implements Runnable {
     @Override
     public void run() {
         response = new MessageResponse();
-        try {
-            response.setMessageId(request.getMessageId());
+        response.setMessageId(request.getMessageId());
 
-            Object result = handler.reply(request, channel);
+        RpcResult result = (RpcResult) handler.reply(request, channel);
 
-            if (request.getRejected()){
-                logger.error("illegal request, netty rpc server refused to respond.");
-
-                invokeStatus = MethodInvokeStatus.REJECTED;
-                response.setResult(null);
-                response.setError(new Throwable("illegal request, netty rpc server refused to respond."));
-            }else{
-                logger.info("rpc request " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
-
-                // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
-                invokeStatus = MethodInvokeStatus.DONE;
-                response.setResult(result);
-                response.setError(null);
-            }
-        } catch (Throwable t) {
-            logger.error("rpc server invoke error!\n" + t.getMessage());
-
+        if (result.getResult() != null) {
+            logger.info("rpc request " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
+            // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
+            invokeStatus = MethodInvokeStatus.DONE;
+            response.setResult(result.getResult());
+            response.setError(null);
+        }else if (result.getException() != null){
+            logger.error("rpc server invoke error!\n" + result.getException().getMessage());
             // 如果通过反射调用方法的过程中发生了异常，并且这个异常没有被捕获的话，就会在此被捕获，并且设置到MessageResponse的error属性中，并且打印出来。
             invokeStatus = MethodInvokeStatus.EXCEPTIONAL;
             response.setResult(null);
-            response.setError(t);
-        } finally {
-
-            // 设置方法调用的结果，以供客户端进行对应判断与处理
-            response.setInvokeStatus(invokeStatus);
+            response.setError(result.getException());
+        }else{
+            //noinspection GrazieInspection
+            throw new IllegalStateException("invoke result error, result and exception is not configured.");
         }
+
+        // 设置方法调用的结果，以供客户端进行对应判断与处理
+        response.setInvokeStatus(invokeStatus);
+        channel.writeAndFlush(response);
     }
 
 

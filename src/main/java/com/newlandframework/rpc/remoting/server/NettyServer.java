@@ -6,7 +6,6 @@ import com.newlandframework.rpc.parallel.NamedThreadFactory;
 import com.newlandframework.rpc.remoting.handler.ChannelHandler;
 import com.newlandframework.rpc.remoting.handler.ChannelHandlers;
 import com.newlandframework.rpc.remoting.handler.NettyServerHandler;
-import com.newlandframework.rpc.remoting.resolver.ApiEchoServer;
 import com.newlandframework.rpc.serialize.Serialization;
 import com.newlandframework.rpc.util.URL;
 import io.netty.bootstrap.ServerBootstrap;
@@ -15,10 +14,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 /**
@@ -40,9 +38,6 @@ public class NettyServer extends AbstractServer {
 
     // Rpc服务器的端口号
     private Integer port;
-
-    //服务能力开放的端口
-    private int echoApiPort = 18886;
 
     //传输数据所使用的序列化协议
     private Serialization serialization;
@@ -105,7 +100,7 @@ public class NettyServer extends AbstractServer {
                 public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                     if (channelFuture.isSuccess()) {
                         logger.info("netty rpc Server start success! ip: " + host + " port:" + port +
-                                " start-time: " + MetricsServer.getStartTime() + " jmx-invoke-metrics: " + (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT ?
+                                " start-time: " + new Date() + " jmx-invoke-metrics: " + (url.getParameter(RpcSystemConfig.METRICS, true) ?
                                 "open" : "close"));
                     }
                 }

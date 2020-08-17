@@ -2,6 +2,7 @@ package com.newlandframework.rpc.event;
 
 import com.newlandframework.rpc.jmx.MetricsServer;
 import com.newlandframework.rpc.jmx.MetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsVisitorHandler;
 
 import javax.management.Notification;
 
@@ -9,7 +10,7 @@ import javax.management.Notification;
 public abstract class AbstractInvokeEvent {
 
     protected MetricsVisitor visitor;
-    protected MetricsServer handler;
+    protected MetricsVisitorHandler handler;
     protected InvokeEventFacade facade;
 
     public AbstractInvokeEvent() {
@@ -36,11 +37,11 @@ public abstract class AbstractInvokeEvent {
         this.visitor = visitor;
     }
 
-    public MetricsServer getHandler() {
+    public MetricsVisitorHandler getHandler() {
         return handler;
     }
 
-    public void setHandler(MetricsServer handler) {
+    public void setHandler(MetricsVisitorHandler handler) {
         this.handler = handler;
     }
 

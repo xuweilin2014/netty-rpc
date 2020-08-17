@@ -6,6 +6,8 @@ import com.newlandframework.rpc.protocol.AbstractProxyInvoker;
 import com.newlandframework.rpc.protocol.Invoker;
 import com.newlandframework.rpc.util.URL;
 import org.apache.commons.lang3.reflect.MethodUtils;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 
 public class JDKProxyFactory{
@@ -18,7 +20,13 @@ public class JDKProxyFactory{
     public static Invoker getInvoker(Object proxy, URL url) {
         return new AbstractProxyInvoker(proxy, url) {
             @Override
-            public Object doInvoke(Object serviceBean, String methodName, Object[] parameters) throws Throwable {
+            public Class<?> getInterface() {
+                return proxy.getClass();
+            }
+
+            @Override
+            public Object doInvoke(Object serviceBean, String methodName, Object[] parameters)
+                    throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
                 return MethodUtils.invokeMethod(serviceBean, methodName, parameters);
             }
         };

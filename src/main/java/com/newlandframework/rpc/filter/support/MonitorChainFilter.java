@@ -1,29 +1,30 @@
-package com.newlandframework.rpc.remoting.execution;
+package com.newlandframework.rpc.filter.support;
 
-import com.newlandframework.rpc.remoting.handler.ChannelHandler;
-import com.newlandframework.rpc.util.ReflectionUtil;
+import com.newlandframework.rpc.core.RpcResult;
+import com.newlandframework.rpc.core.RpcSystemConfig;
+import com.newlandframework.rpc.core.extension.Activate;
 import com.newlandframework.rpc.event.InvokeEventFacade;
 import com.newlandframework.rpc.event.ModuleEvent;
-import com.newlandframework.rpc.jmx.MetricsServer;
+import com.newlandframework.rpc.filter.AbstractChainFilter;
 import com.newlandframework.rpc.jmx.MetricsVisitor;
+import com.newlandframework.rpc.jmx.MetricsVisitorHandler;
 import com.newlandframework.rpc.model.MessageRequest;
 import com.newlandframework.rpc.observer.*;
-import io.netty.channel.Channel;
+import com.newlandframework.rpc.protocol.Invoker;
+import com.newlandframework.rpc.util.ReflectionUtil;
 
 import java.lang.reflect.Method;
 
+@Activate(group = {RpcSystemConfig.PROVIDER}, order = 4)
+public class MonitorChainFilter extends AbstractChainFilter {
 
-public class MetricsRecvTask extends AbstractRecvTask {
-
-    private MetricsVisitor visitor;
+    private MessageRequest request;
 
     private InvokeEventFacade facade;
 
     private InvokeEventTarget target = new InvokeEventTarget();
 
-    public MetricsRecvTask(MessageRequest request, ChannelHandler handler, Channel channel) {
-        super(request, handler, channel);
-    }
+    private MetricsVisitor visitor;
 
     /**
      * 每一个客户端发起的一次Rpc请求，都会在服务器端将其包装成一个Task，然后放到线程池中去执行。这些Task的类型是MessageRecvInitializeTask
@@ -35,26 +36,25 @@ public class MetricsRecvTask extends AbstractRecvTask {
      * 5.如果方法调用时抛出异常，就会修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
      */
     @Override
-    public void run() {
-        //增加方法的调用次数
-        injectInvoke();
+    public Object doIntercept(Invoker invoker, MessageRequest request) {
+        this.request = request;
+        RpcResult result = (RpcResult) invoker.invoke(request);
 
-        super.run();
-
-        if (invokeStatus.isDone()) {
-            // 增加方法调用成功的次数
-            injectSuccInvoke(invokeTimespan);
-        } else if (invokeStatus.isRejected()){
-            //修改方法被拦截的次数
-            injectFilterInvoke();
-        } else if (invokeStatus.isExceptional()){
-            //修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
-            injectFailInvoke(response.getError());
+        if (invoker.getURL().getParameter(RpcSystemConfig.METRICS, true)
+                && invoker.getURL().getParameter(RpcSystemConfig.MONITOR, true)){
+            // 增加方法的调用次数
+            injectInvoke();
+            if (result.getException() != null){
+                // 修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
+                injectFailInvoke(result.getException());
+            }else{
+                // 增加方法调用成功的次数
+                injectSuccInvoke(result.getInvokeTimespan());
+            }
         }
 
-        channel.writeAndFlush(response);
+        return result;
     }
-
 
     protected void injectInvoke() {
         Class<?> cls;
@@ -75,10 +75,10 @@ public class MetricsRecvTask extends AbstractRecvTask {
             // 获取客户端要调用的方法的方法签名的字符串
             String signatureMethod = utils.getProvider().toString();
             // 获取和此方法对应的ModuleMetricsVisitor对象，用来记录这个方法的调用情况，每一个特定的方法，都只和一个ModuleMetricsVisitor对象对应
-            visitor = MetricsServer.getInstance().getVisitor(request.getInterfaceName(), signatureMethod);
+            visitor = MetricsVisitorHandler.getINSTANCE().getVisitor(request.getInterfaceName(), signatureMethod);
             // 创建了一个InvokeEventFacade类型的对象facade，它包含了所有INVOKE类型的Event对象，并且这些Event对象中都
             // 保存了handler、visitor这两个参数
-            facade = new InvokeEventFacade(MetricsServer.getInstance(), visitor);
+            facade = new InvokeEventFacade(MetricsVisitorHandler.getINSTANCE(), visitor);
             // target是被观察的对象，通过addObserver方法可以添加观察者对象，这里是InvokeObserver
             target.addObserver(new InvokeObserver(facade, visitor));
             // 调用notify方法，回调所有观察者对象的update方法，并且将INVOKE_EVENT事件进行传递，但是只有InvokeObserver可以被接收到
@@ -87,7 +87,6 @@ public class MetricsRecvTask extends AbstractRecvTask {
             utils.clearProvider();
         }
     }
-
 
     protected void injectSuccInvoke(long invokeTimespan) {
         target.addObserver(new InvokeSuccObserver(facade, visitor, invokeTimespan));
@@ -99,10 +98,5 @@ public class MetricsRecvTask extends AbstractRecvTask {
     protected void injectFailInvoke(Throwable error) {
         target.addObserver(new InvokeFailObserver(facade, visitor, error));
         target.notify(ModuleEvent.INVOKE_FAIL_EVENT);
-    }
-
-    protected void injectFilterInvoke() {
-        target.addObserver(new InvokeFilterObserver(facade, visitor));
-        target.notify(ModuleEvent.INVOKE_FILTER_EVENT);
     }
 }

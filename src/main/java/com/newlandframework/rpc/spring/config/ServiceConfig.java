@@ -69,7 +69,7 @@ public class ServiceConfig extends AbstractConfig{
     }
 
     // 将服务按照每一个协议注册到所有的注册中心上去
-    private synchronized void doExportUrls() {
+    private void doExportUrls() {
         // 获取注册中心的地址
         List<URL> registries = getRegistries(registry);
         String[] protocolIds = protocol.split(",");

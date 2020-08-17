@@ -77,6 +77,16 @@ public final class URL {
         return "";
     }
 
+    public int getParameter(String key, int defaultValue){
+        // TODO: 2020/8/16
+        return 0;
+    }
+
+    public boolean getParameter(String key, boolean defaultValue){
+        // TODO: 2020/8/16
+        return false;
+    }
+
     public String toFullString(){
         return "";
     }

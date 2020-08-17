@@ -208,6 +208,9 @@ public final class ExtensionLoader<T> {
             }
         }
 
+        // 3.对 exts 集合中的对象进行排序，比如 MonitorChainFilter 一定要在 TimeoutChainFilter 后面调用
+        Collections.sort(exts, ActivateComparator.COMPARATOR);
+
         // 3.获取用户配置的自定义的扩展对象
         List<T> users = new CopyOnWriteArrayList<>();
         for (String name : names) {

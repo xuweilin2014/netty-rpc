@@ -27,7 +27,7 @@ public class ProtocolFilterWrapper implements Protocol {
             Invoker next = invoker;
             invoker = new Invoker() {
                 @Override
-                public Object invoke(MessageRequest request) throws Throwable {
+                public Object invoke(MessageRequest request){
                     return filter.intercept(next, request);
                 }
 

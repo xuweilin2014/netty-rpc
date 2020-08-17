@@ -14,14 +14,16 @@ public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
 
     public static final Logger logger = Logger.getLogger(NettyRpcBeanDefinitionParser.class);
 
-    private static final List<String> serviceAttributes = Arrays.asList("id", "interfaceName", "ref", "url", "scope", "registry", "protocol");
+    private static final List<String> serviceAttributes = Arrays.asList("id", "interfaceName", "ref", "url", "scope", "registry", "protocol", "filter", "monitor");
 
     private static final List<String> registryAttributes = Arrays.asList("id", "address", "name");
 
-    private static final List<String> referenceAttributes = Arrays.asList("id", "registry", "interface", "timeout", "retries", "loadbalance", "async", "cluster",
-            "heartbeat", "heartbeat.timeout", "stub", "scope");
+    private static final List<String> referenceAttributes = Arrays.asList("id", "registry", "interfaceName", "timeout", "retries", "loadbalance", "async", "cluster",
+            "heartbeat", "heartbeat.timeout", "stub", "scope", "filter");
 
     private static final List<String> protocolAttributes = Arrays.asList("id", "name", "port", "serialize", "host");
+
+    public static final List<String> applicationAttributes = Arrays.asList("name", "metrics");
 
     private static final Map<String, List<String>> attrs = new HashMap<>();
 
@@ -30,6 +32,7 @@ public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
         attrs.put("registry", registryAttributes);
         attrs.put("reference", referenceAttributes);
         attrs.put("protocol", protocolAttributes);
+        attrs.put("application", applicationAttributes);
     }
 
     private Class<?> beanClass;
