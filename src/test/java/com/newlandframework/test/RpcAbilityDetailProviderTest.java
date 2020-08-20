@@ -1,6 +1,6 @@
 package com.newlandframework.test;
 
-import com.newlandframework.rpc.core.AbilityDetail;
+import com.xu.rpc.core.AbilityDetail;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class RpcAbilityDetailProviderTest {

@@ -1,2 +1,0 @@
-timeout=com.newlandframework.rpc.filter.support.TimeoutChainFilter
-monitor=com.newlandframework.rpc.filter.support.MonitorChainFilter

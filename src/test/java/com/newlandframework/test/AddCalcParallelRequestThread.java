@@ -1,7 +1,7 @@
 package com.newlandframework.test;
 
-import com.newlandframework.rpc.exception.InvokeTimeoutException;
-import com.newlandframework.rpc.services.AddCalculate;
+import com.xu.rpc.exception.InvokeTimeoutException;
+import com.xu.rpc.services.AddCalculate;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;

@@ -6,36 +6,36 @@
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
     http://www.newlandframework.com/nettyrpc http://www.newlandframework.com/nettyrpc/nettyrpc.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
     <context:property-placeholder location="classpath:rpc-server.properties"/>
-    <bean id="beanFactory" class="com.newlandframework.rpc.util.BeanFactoryUtil"/>
-    <nettyrpc:service id="demoAddService" interfaceName="com.newlandframework.rpc.services.AddCalculate"
+    <bean id="beanFactory" class="com.xu.rpc.util.BeanFactoryUtil"/>
+    <nettyrpc:service id="demoAddService" interfaceName="com.xu.rpc.services.AddCalculate"
                       ref="calcAddService"></nettyrpc:service>
-    <nettyrpc:service id="demoMultiService" interfaceName="com.newlandframework.rpc.services.MultiCalculate"
+    <nettyrpc:service id="demoMultiService" interfaceName="com.xu.rpc.services.MultiCalculate"
                       ref="calcMultiService"></nettyrpc:service>
-    <nettyrpc:service id="demoPersonManage" interfaceName="com.newlandframework.rpc.services.PersonManage"
+    <nettyrpc:service id="demoPersonManage" interfaceName="com.xu.rpc.services.PersonManage"
                       ref="personManageService"></nettyrpc:service>
-    <nettyrpc:service id="demoPersonManageJdbc" interfaceName="com.newlandframework.rpc.services.JdbcPersonManage"
+    <nettyrpc:service id="demoPersonManageJdbc" interfaceName="com.xu.rpc.services.JdbcPersonManage"
                       ref="personManageServiceJdbc"></nettyrpc:service>
-    <nettyrpc:service id="demoCostTime" interfaceName="com.newlandframework.rpc.services.CostTimeCalculate"
+    <nettyrpc:service id="demoCostTime" interfaceName="com.xu.rpc.services.CostTimeCalculate"
                       ref="costTimeCalculateService"></nettyrpc:service>
 
-    <nettyrpc:service id="demoCache" interfaceName="com.newlandframework.rpc.services.Cache"
+    <nettyrpc:service id="demoCache" interfaceName="com.xu.rpc.services.Cache"
                       ref="cacheService" filter="simpleFilter"></nettyrpc:service>
 
-    <nettyrpc:service id="demoStore" interfaceName="com.newlandframework.rpc.services.Store"
+    <nettyrpc:service id="demoStore" interfaceName="com.xu.rpc.services.Store"
                       ref="storeService" filter="simpleFilter"></nettyrpc:service>
 
     <nettyrpc:registry id="rpcRegistry" ipAddr="${rpc.server.addr}" echoApiPort="${rpc.server.echo.api.port}"
                        protocol="PROTOSTUFFSERIALIZE"></nettyrpc:registry>
 
-    <bean id="calcAddService" class="com.newlandframework.rpc.services.impl.AddCalculateImpl"></bean>
-    <bean id="calcMultiService" class="com.newlandframework.rpc.services.impl.MultiCalculateImpl"></bean>
-    <bean id="personManageService" class="com.newlandframework.rpc.services.impl.PersonManageImpl"></bean>
-    <bean id="personManageServiceJdbc" class="com.newlandframework.rpc.services.impl.JdbcPersonManageImpl">
+    <bean id="calcAddService" class="com.xu.rpc.services.impl.AddCalculateImpl"></bean>
+    <bean id="calcMultiService" class="com.xu.rpc.services.impl.MultiCalculateImpl"></bean>
+    <bean id="personManageService" class="com.xu.rpc.services.impl.PersonManageImpl"></bean>
+    <bean id="personManageServiceJdbc" class="com.xu.rpc.services.impl.JdbcPersonManageImpl">
         <property name="dataSource" ref="dataSource"></property>
     </bean>
-    <bean id="costTimeCalculateService" class="com.newlandframework.rpc.services.impl.CostTimeCalculateImpl"></bean>
-    <bean id="cacheService" class="com.newlandframework.rpc.services.impl.CacheImpl"></bean>
-    <bean id="storeService" class="com.newlandframework.rpc.services.impl.StoreImpl"></bean>
+    <bean id="costTimeCalculateService" class="com.xu.rpc.services.impl.CostTimeCalculateImpl"></bean>
+    <bean id="cacheService" class="com.xu.rpc.services.impl.CacheImpl"></bean>
+    <bean id="storeService" class="com.xu.rpc.services.impl.StoreImpl"></bean>
     <bean id="simpleFilter" class="com.newlandframework.rpc.filter.support.SimpleFilter"></bean>
 
 

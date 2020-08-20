@@ -1,1 +1,1 @@
-http\://www.newlandframework.com/nettyrpc=com.newlandframework.rpc.spring.parser.NettyRpcNamespaceHandler
+http\://www.newlandframework.com/nettyrpc=com.xu.rpc.spring.parser.NettyRpcNamespaceHandler

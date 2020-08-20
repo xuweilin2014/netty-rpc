@@ -1,8 +1,8 @@
 package com.newlandframework.test;
 
-import com.newlandframework.rpc.exception.RejectResponeException;
-import com.newlandframework.rpc.services.Cache;
-import com.newlandframework.rpc.services.Store;
+import com.xu.rpc.exception.RejectResponeException;
+import com.xu.rpc.services.Cache;
+import com.xu.rpc.services.Store;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**

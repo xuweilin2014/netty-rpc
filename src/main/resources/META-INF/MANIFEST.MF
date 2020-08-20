@@ -17,5 +17,5 @@ Class-Path: lib/slf4j-api-1.7.12.jar lib/log4j-api-2.4.1.jar lib/log4j
  .0.8.jar lib/objenesis-2.1.jar
 Created-By: Apache Maven 3.3.3
 Build-Jdk: 1.8.0_45
-Main-Class: com.newlandframework.rpc.boot.RpcServerStarter
+Main-Class: com.xu.rpc.boot.RpcServerStarter
 

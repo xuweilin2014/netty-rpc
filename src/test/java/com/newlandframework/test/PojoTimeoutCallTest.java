@@ -1,7 +1,7 @@
 package com.newlandframework.test;
 
-import com.newlandframework.rpc.exception.InvokeTimeoutException;
-import com.newlandframework.rpc.services.PersonManage;
+import com.xu.rpc.exception.InvokeTimeoutException;
+import com.xu.rpc.services.PersonManage;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 

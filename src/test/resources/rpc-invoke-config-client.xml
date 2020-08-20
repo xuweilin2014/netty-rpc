@@ -6,20 +6,20 @@
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
     http://www.newlandframework.com/nettyrpc http://www.newlandframework.com/nettyrpc/nettyrpc.xsd">
     <context:property-placeholder location="classpath:rpc-server.properties"/>
-    <nettyrpc:reference id="addCalc" interfaceName="com.newlandframework.rpc.services.AddCalculate"
+    <nettyrpc:reference id="addCalc" interfaceName="com.xu.rpc.services.AddCalculate"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
-    <nettyrpc:reference id="multiCalc" interfaceName="com.newlandframework.rpc.services.MultiCalculate"
+    <nettyrpc:reference id="multiCalc" interfaceName="com.xu.rpc.services.MultiCalculate"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
-    <nettyrpc:reference id="personManage" interfaceName="com.newlandframework.rpc.services.PersonManage"
+    <nettyrpc:reference id="personManage" interfaceName="com.xu.rpc.services.PersonManage"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
-    <nettyrpc:reference id="costTime" interfaceName="com.newlandframework.rpc.services.CostTimeCalculate"
+    <nettyrpc:reference id="costTime" interfaceName="com.xu.rpc.services.CostTimeCalculate"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
     <nettyrpc:reference id="access" interfaceName="com.newlandframework.rpc.compiler.AccessAdaptive"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
-    <nettyrpc:reference id="ability" interfaceName="com.newlandframework.rpc.core.AbilityDetail"
+    <nettyrpc:reference id="ability" interfaceName="com.xu.rpc.core.AbilityDetail"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
-    <nettyrpc:reference id="cache" interfaceName="com.newlandframework.rpc.services.Cache"
+    <nettyrpc:reference id="cache" interfaceName="com.xu.rpc.services.Cache"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
-    <nettyrpc:reference id="store" interfaceName="com.newlandframework.rpc.services.Store"
+    <nettyrpc:reference id="store" interfaceName="com.xu.rpc.services.Store"
                         protocol="JDKSERIALIZE" ipAddr="${rpc.server.addr}"/>
 </beans>

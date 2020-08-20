@@ -1,7 +1,7 @@
 package com.newlandframework.test;
 
-import com.newlandframework.rpc.core.extension.ExtensionLoader;
-import com.newlandframework.rpc.filter.ChainFilter;
+import com.xu.rpc.core.extension.ExtensionLoader;
+import com.xu.rpc.filter.ChainFilter;
 import java.io.IOException;
 
 

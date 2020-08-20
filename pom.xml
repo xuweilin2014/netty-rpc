@@ -163,7 +163,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.newlandframework.rpc.boot.RpcServerStarter</mainClass>
+                            <mainClass>com.xu.rpc.boot.RpcServerStarter</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

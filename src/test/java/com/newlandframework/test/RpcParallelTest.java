@@ -3,8 +3,8 @@ package com.newlandframework.test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.newlandframework.rpc.services.AddCalculate;
-import com.newlandframework.rpc.services.MultiCalculate;
+import com.xu.rpc.services.AddCalculate;
+import com.xu.rpc.services.MultiCalculate;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 

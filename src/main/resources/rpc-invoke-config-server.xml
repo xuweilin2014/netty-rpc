@@ -9,31 +9,31 @@
     http://www.newlandframework.com/nettyrpc http://www.newlandframework.com/nettyrpc/nettyrpc.xsd">
 
     <context:property-placeholder location="classpath:rpc-server.properties"/>
-    <bean id="beanFactory" class="com.newlandframework.rpc.util.BeanFactoryUtil"/>
+    <bean id="beanFactory" class="com.xu.rpc.util.BeanFactoryUtil"/>
 
     <nettyrpc:application name="application-provider" metrics="true"/>
 
     <nettyrpc:protocol id="rpc" name="nettyrpc" port="10886" serialize="JDKSERIALIZE"/>
     <nettyrpc:protocol id="injvm" name="injvm" port="10887" serialize="JDKSERIALIZE"/>
 
-    <nettyrpc:service id="demoAddService" registry="zk" interfaceName="com.newlandframework.rpc.services.AddCalculate" ref="calcAddService" protocol="rpc,injvm"/>
-    <nettyrpc:service id="demoMultiService" registry="zk" interfaceName="com.newlandframework.rpc.services.MultiCalculate" ref="calcMultiService" protocol="rpc"/>
-    <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.newlandframework.rpc.services.PersonManage" ref="personManageService" protocol="rpc"/>
-    <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.newlandframework.rpc.services.CostTimeCalculate" ref="costTimeCalculateService" protocol="rpc"/>
-    <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.newlandframework.rpc.services.Cache" ref="cacheService"  protocol="rpc"/>
-    <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.newlandframework.rpc.services.Store" ref="storeService" protocol="rpc"/>
-    <nettyrpc:service id="demoAbility" registry="zk" interfaceName="com.newlandframework.rpc.core.AbilityDetail" ref="abilityProvider" protocol="rpc"/>
+    <nettyrpc:service id="demoAddService" registry="zk" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService" protocol="rpc,injvm"/>
+    <nettyrpc:service id="demoMultiService" registry="zk" interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService" protocol="rpc"/>
+    <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.xu.rpc.services.PersonManage" ref="personManageService" protocol="rpc"/>
+    <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.xu.rpc.services.CostTimeCalculate" ref="costTimeCalculateService" protocol="rpc"/>
+    <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.xu.rpc.services.Cache" ref="cacheService" protocol="rpc"/>
+    <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.xu.rpc.services.Store" ref="storeService" protocol="rpc"/>
+    <nettyrpc:service id="demoAbility" registry="zk" interfaceName="com.xu.rpc.core.AbilityDetail" ref="abilityProvider" protocol="rpc"/>
 
     <!-- registry用来注册Rpc服务器，其中ipAddr为RPC服务器ip地址及端口(客户端连接这个地址），而echoApiPort为Rpc服务端服务能力展示开放端口
     (可以通过浏览器访问这个端口，获取服务端的信息) -->
     <nettyrpc:registry id="zk" name="zookeeper"  address="127.0.0.1:2181"/>
 
-    <bean id="calcAddService" class="com.newlandframework.rpc.services.impl.AddCalculateImpl"/>
-    <bean id="calcMultiService" class="com.newlandframework.rpc.services.impl.MultiCalculateImpl"/>
-    <bean id="personManageService" class="com.newlandframework.rpc.services.impl.PersonManageImpl"/>
-    <bean id="costTimeCalculateService" class="com.newlandframework.rpc.services.impl.CostTimeCalculateImpl"/>
-    <bean id="cacheService" class="com.newlandframework.rpc.services.impl.CacheImpl"/>
-    <bean id="storeService" class="com.newlandframework.rpc.services.impl.StoreImpl"/>
-    <bean id="abilityProvider" class="com.newlandframework.rpc.core.AbilityDetailProvider"/>
+    <bean id="calcAddService" class="com.xu.rpc.services.impl.AddCalculateImpl"/>
+    <bean id="calcMultiService" class="com.xu.rpc.services.impl.MultiCalculateImpl"/>
+    <bean id="personManageService" class="com.xu.rpc.services.impl.PersonManageImpl"/>
+    <bean id="costTimeCalculateService" class="com.xu.rpc.services.impl.CostTimeCalculateImpl"/>
+    <bean id="cacheService" class="com.xu.rpc.services.impl.CacheImpl"/>
+    <bean id="storeService" class="com.xu.rpc.services.impl.StoreImpl"/>
+    <bean id="abilityProvider" class="com.xu.rpc.core.AbilityDetailProvider"/>
 
 </beans>

@@ -417,7 +417,7 @@ public class DubboReference{
                             if (monitorUrl != null) {
                                 map.put(Constants.MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
                             }
-                            //添加 refer 参数到 url 中，并将 url 添加到 urls 中
+                            // 添加 refer 参数到 url 中，并将 url 添加到 urls 中
                             urls.add(u.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));
                         }
                     }
