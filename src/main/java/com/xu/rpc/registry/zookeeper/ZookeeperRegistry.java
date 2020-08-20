@@ -1,5 +1,6 @@
 package com.xu.rpc.registry.zookeeper;
 
+import com.sun.org.apache.bcel.internal.generic.FADD;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.registry.FailbackRegistry;
@@ -7,16 +8,25 @@ import com.xu.rpc.registry.KeeperStateListener;
 import com.xu.rpc.registry.NotifyListener;
 import com.xu.rpc.util.URL;
 import org.I0Itec.zkclient.IZkChildListener;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ZookeeperRegistry extends FailbackRegistry {
 
     // 使用 ZkClient 作为客户端
     private ZkClientWrapper zookeeperClient;
 
+    private AtomicBoolean closed = new AtomicBoolean(false);
+
+    private Map<NotifyListener, IZkChildListener> listeners = new ConcurrentHashMap<>();
+
     public ZookeeperRegistry(URL url) {
+        super(url);
         zookeeperClient = new ZkClientWrapper(url.getAddress(), RpcConfig.ZOOKEEPER_TIMEOUT);
         zookeeperClient.addKeeperStateListener(new KeeperStateListener() {
             @Override
@@ -34,6 +44,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     @Override
     public void doRegister(URL url) {
+        if (closed.get())
+            return;
         try {
             // 创建的节点目录结构为 /rpc/com.xxx.ServiceName/url
             // 其中，/rpc 和 /rpc/com.xxx.ServiceName 都是永久节点，而 /rpc/com.xxx.ServiceName/url 则是临时节点
@@ -47,6 +59,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     @Override
     public void doUnregister(URL url) {
+        if (closed.get())
+            return;
         try{
             zookeeperClient.delete(toRegistryPath(url));
         }catch (Throwable t){
@@ -54,28 +68,58 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    @SuppressWarnings("Java8MapApi")
     @Override
     public void doSubscribe(URL url, NotifyListener listener) {
-        // 在服务目录下注册一个子节点状态监听器，当添加或者删除节点之后，都会回调这个监听器，并且随后调用 notify 方法
-        // 需要注意的是，每当目录下的子节点状态发生变化时，就会把目录下的所有子节点返回
-        // 目录的结构类似于 /rpc/com.xxx.ServiceName/url1...
-        // 由于项目只在注册中心上注册提供者信息，因此在 service name 之下没有 providers、routers 等目录划分
-        List<String> childs = zookeeperClient.subscribeChildChanges(toRegistryDir(url), new IZkChildListener() {
-            @Override
-            public void handleChildChange(String parentPath, List<String> currentChilds) throws Exception {
-                ZookeeperRegistry.this.notify(url, listener, toURLs(currentChilds));
-            }
-        });
+        if (closed.get())
+            return;
+
+        IZkChildListener zkChildListener = listeners.get(listener);
+        if (zkChildListener == null){
+            // 在服务目录下注册一个子节点状态监听器，当添加或者删除节点之后，都会回调这个监听器，并且随后调用 notify 方法
+            // 需要注意的是，每当目录下的子节点状态发生变化时，就会把目录下的所有子节点返回
+            // 目录的结构类似于 /rpc/com.xxx.ServiceName/url1...
+            // 由于项目只在注册中心上注册提供者信息，因此在 service name 之下没有 providers、routers 等目录划分
+            zkChildListener = new IZkChildListener() {
+                @Override
+                public void handleChildChange(String parentPath, List<String> currentChilds) throws Exception {
+                    ZookeeperRegistry.this.notify(url, listener, toURLs(currentChilds));
+                }
+            };
+            listeners.put(listener, zkChildListener);
+        }
+
+        List<String> childs = zookeeperClient.subscribeChildChanges(toRegistryDir(url), zkChildListener);
         notify(url, listener, toURLs(childs));
     }
 
     @Override
     public void doUnsubscribe(URL url, NotifyListener listener) {
-        // TODO: 2020/8/12
+        if (closed.get())
+            return;
+
+        IZkChildListener zkChildListener = listeners.get(listener);
+        if (zkChildListener == null){
+            throw new IllegalStateException("listener haven't been registered on the zookeeper, cannot unsubscribe it.");
+        }
+        zookeeperClient.unsubscribeChildChanges(toRegistryDir(url), zkChildListener);
     }
 
-    private void create(String url, boolean ephemeral){
-        // TODO: 2020/8/19
+    // rpc/com.xxx.ServiceName/url 中前面两个都是永久节点，而后面的 url 则是临时节点
+    private void create(String path, boolean ephemeral){
+        int index = path.lastIndexOf('/');
+        if (index > 0){
+            String parent = path.substring(0, index);
+            if (!zookeeperClient.isPathExist(parent)){
+                create(parent, false);
+            }
+        }
+
+        if (ephemeral){
+            zookeeperClient.createEphemeral(path);
+        }else{
+            zookeeperClient.createPersistent(path);
+        }
     }
 
     private String toRegistryDir(URL url){
@@ -95,7 +139,14 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     public void destroy(){
-        // TODO: 2020/8/19  
+        if (closed.compareAndSet(false, true)) {
+            super.destroy();
+            try {
+                zookeeperClient.close();
+            } catch (Exception e) {
+                logger.error("failed to close zookeeper client, caused by " + e.getMessage());
+            }
+        }
     }
 
 }

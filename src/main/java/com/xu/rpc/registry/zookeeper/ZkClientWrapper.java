@@ -5,6 +5,7 @@ import com.xu.rpc.util.Assert;
 import org.I0Itec.zkclient.IZkChildListener;
 import org.I0Itec.zkclient.IZkStateListener;
 import org.I0Itec.zkclient.ZkClient;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 
@@ -71,8 +72,12 @@ public class ZkClientWrapper {
 
     public void createEphemeral(String path) {
         Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
-        // 默认进行递归创建，创建子节点的同时会创建父节点
         zkClient.createEphemeral(path);
+    }
+
+    public void createPersistent(String path) {
+        Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
+        zkClient.createPersistent(path);
     }
 
     public void delete(String path){
@@ -81,8 +86,24 @@ public class ZkClientWrapper {
     }
 
     public List<String> subscribeChildChanges(String path, IZkChildListener listener){
+        Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
         Assert.notNull(listener, new IllegalStateException("listener is null."));
         return zkClient.subscribeChildChanges(path, listener);
     }
 
+    public void unsubscribeChildChanges(String path, IZkChildListener listener){
+        Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
+        Assert.notNull(listener, new IllegalStateException("listener is null."));
+        zkClient.unsubscribeChildChanges(path, listener);
+    }
+
+    public void close(){
+        Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
+        zkClient.close();
+    }
+
+    public boolean isPathExist(String path) {
+        Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
+        return zkClient.exists(path);
+    }
 }

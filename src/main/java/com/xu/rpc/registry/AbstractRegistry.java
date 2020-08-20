@@ -6,37 +6,54 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractRegistry implements Registry {
 
     protected static Logger logger = Logger.getLogger(AbstractRegistry.class);
 
-    private List<URL> registeredURL = new CopyOnWriteArrayList<>();
+    private List<URL> registered = new CopyOnWriteArrayList<>();
 
     private Map<URL,NotifyListener> subscribed = new ConcurrentHashMap<>();
 
     private Map<URL, List<URL>> notified = new ConcurrentHashMap<>();
 
+    private AtomicBoolean destroyed = new AtomicBoolean(false);
+
+    private URL registryURL;
+
+    public AbstractRegistry(URL url){
+        this.registryURL = url;
+
+    }
+
     @Override
     public void register(URL url) {
+        if (destroyed.get())
+            return;
         Assert.notNull(url, "url cannot be null when register an url.");
         logger.info("registered " + url.toFullString());
-        registeredURL.add(url);
+        registered.add(url);
     }
 
     @Override
     public void unregister(URL url) {
+        if (destroyed.get())
+            return;
         Assert.notNull(url, "url cannot be null when unregister an url.");
         logger.info("unregistered " + url.toFullString());
-        registeredURL.remove(url);
+        registered.remove(url);
     }
 
     @Override
     public void subscribe(URL url, NotifyListener listener) {
+        if (destroyed.get())
+            return;
         if (listener == null)
             throw new IllegalArgumentException("listener == null.");
         if (url == null)
@@ -46,6 +63,8 @@ public abstract class AbstractRegistry implements Registry {
 
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
+        if (destroyed.get())
+            return;
         if (listener == null)
             throw new IllegalArgumentException("listener == null.");
         if (url == null)
@@ -54,6 +73,8 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void notify(URL url, NotifyListener listener, List<URL> urls){
+        if (destroyed.get())
+            return;
         if (listener == null)
             throw new IllegalArgumentException("listener == null.");
         if (url == null)
@@ -74,8 +95,8 @@ public abstract class AbstractRegistry implements Registry {
         listener.notify(result);
     }
 
-    public List<URL> getRegisteredURL() {
-        return registeredURL;
+    public List<URL> getRegistered() {
+        return registered;
     }
 
     public Map<URL, NotifyListener> getSubscribed() {
@@ -83,6 +104,34 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void destroy(){
-        // TODO: 2020/8/12  
+        if (!destroyed.compareAndSet(false, true)){
+            return;
+        }
+
+        logger.info("destroy the registry for url " + registryURL);
+
+        ArrayList<URL> registered = new ArrayList<>(getRegistered());
+        if (registered.size() > 0){
+            for (URL url : registered) {
+                try {
+                    unregister(url);
+                    logger.info("destroy url " + url);
+                } catch (Exception e) {
+                    logger.error("failed to destroy url " + url + " , caused by " + e.getMessage());
+                }
+            }
+        }
+
+        HashMap<URL, NotifyListener> subscribed = new HashMap<>(getSubscribed());
+        for (Map.Entry<URL, NotifyListener> entry : subscribed.entrySet()) {
+            URL url = entry.getKey();
+            NotifyListener listener = entry.getValue();
+            try {
+                unsubscribe(url, listener);
+                logger.info("destroy the listener for url " + url);
+            } catch (Exception e) {
+                logger.error("failed to destroy the listener for url " + url + " , caused  by " + e.getMessage());
+            }
+        }
     }
 }

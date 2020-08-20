@@ -27,7 +27,8 @@ public abstract class FailbackRegistry extends AbstractRegistry{
 
     private ScheduledFuture<?> retryFuture;
 
-    public FailbackRegistry(){
+    public FailbackRegistry(URL url){
+        super(url);
         int retryTime = RpcConfig.RETRY_PERIOD;
         retryFuture = retryExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
@@ -204,7 +205,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
             return;
         }
 
-        List<URL> registered = new ArrayList<>(getRegisteredURL());
+        List<URL> registered = new ArrayList<>(getRegistered());
         for (URL url : registered) {
             logger.info("re-register " + url.toFullString());
             failedRegisteredURLs.add(url);
@@ -222,7 +223,11 @@ public abstract class FailbackRegistry extends AbstractRegistry{
     public void destroy(){
         if (destroyed.compareAndSet(false, true)){
             super.destroy();
-            retryFuture.cancel(true);
+            try {
+                retryFuture.cancel(true);
+            } catch (Exception e) {
+                logger.error("failed to cancel retryFuture, caused by " + e.getMessage());
+            }
         }
     }
 
