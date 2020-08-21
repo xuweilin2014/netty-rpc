@@ -102,5 +102,9 @@ public class RpcConfig {
     public static final String REGISTRY_KEY = "registry";
 
     public static final String CONSUMER_HOST = "consumer.host";
+
+    public static final String PROTOCOL_KEY = "protocol";
+
+    public static final String METHODS_KEY = "methods";
 }
 

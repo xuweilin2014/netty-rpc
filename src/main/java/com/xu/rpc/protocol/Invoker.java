@@ -7,6 +7,8 @@ import com.xu.rpc.util.URL;
 
 public interface Invoker extends Node {
 
+    public Class<?> getInterface();
+
     public Object invoke(MessageRequest request) throws RpcException;
 
 }

@@ -149,4 +149,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    @Override
+    public boolean isAvailable() {
+        return zookeeperClient.isConnected();
+    }
 }

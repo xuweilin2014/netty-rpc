@@ -29,7 +29,11 @@ public abstract class AbstractRegistry implements Registry {
 
     public AbstractRegistry(URL url){
         this.registryURL = url;
+    }
 
+    @Override
+    public URL getURL() {
+        return registryURL;
     }
 
     @Override

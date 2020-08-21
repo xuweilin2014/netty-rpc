@@ -1,8 +1,9 @@
 package com.xu.rpc.registry;
 
+import com.xu.rpc.cluster.Node;
 import com.xu.rpc.util.URL;
 
-public interface Registry {
+public interface Registry extends Node {
 
     public void register(URL url);
 

@@ -106,4 +106,8 @@ public class ZkClientWrapper {
         Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
         return zkClient.exists(path);
     }
+
+    public boolean isConnected() {
+        return state == KeeperState.SyncConnected;
+    }
 }

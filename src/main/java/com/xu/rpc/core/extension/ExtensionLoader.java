@@ -1,6 +1,7 @@
 package com.xu.rpc.core.extension;
 
 
+import com.sun.codemodel.internal.JTryBlock;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.util.URL;
 import io.netty.util.internal.ConcurrentSet;
@@ -176,6 +177,17 @@ public final class ExtensionLoader<T> {
             logger.warn("load extensions failed, cannot instantiate extension");
         }
 
+    }
+
+    public boolean hasExtension(String name){
+        if (name == null || name.length() == 0)
+            throw new IllegalStateException("name == null.");
+
+        try{
+            return getExtension(name) != null;
+        }catch (Throwable t){
+            return false;
+        }
     }
 
     public List<T> getActivateExtension(URL url, String key, String group){

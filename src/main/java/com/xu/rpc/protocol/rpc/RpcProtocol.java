@@ -140,7 +140,7 @@ public class RpcProtocol extends AbstractProtocol {
     }
 
     @Override
-    public Invoker refer(URL url) throws RpcException {
+    public Invoker refer(URL url, Class<?> type) throws RpcException {
         // TODO: 2020/8/16
         return null;
     }

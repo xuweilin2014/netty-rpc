@@ -6,8 +6,6 @@ public interface Node {
 
     public URL getURL();
 
-    public Class<?> getInterface();
-
     public boolean isAvailable();
 
     public void destroy();
