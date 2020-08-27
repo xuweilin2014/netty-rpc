@@ -1,6 +1,7 @@
 package com.xu.rpc.util;
 
 import com.xu.rpc.cluster.Cluster;
+import com.xu.rpc.cluster.LoadBalance;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.protocol.Protocol;
@@ -38,11 +39,23 @@ public class AdaptiveExtensionUtil {
         if (url == null)
             throw new IllegalArgumentException("url cannot be null.");
 
-        String cluster = url.getParameter(RpcConfig.CLUSTER);
+        String cluster = url.getParameter(RpcConfig.CLUSTER_KEY);
         ExtensionLoader<Cluster> loader = ExtensionLoader.getExtensionLoader(Cluster.class);
         if (cluster == null || cluster.length() == 0)
             return loader.getDefaultExtension();
         else
             return loader.getExtension(cluster);
+    }
+
+    public static LoadBalance getLoadBalance(URL url){
+        if (url == null)
+            throw new IllegalArgumentException("url cannot be null.");
+
+        String loadbalance = url.getParameter(RpcConfig.LOADBALANCE_KEY);
+        ExtensionLoader<LoadBalance> loader = ExtensionLoader.getExtensionLoader(LoadBalance.class);
+        if (loadbalance == null || loadbalance.length() == 0)
+            return loader.getExtension(loadbalance);
+        else
+            return loader.getDefaultExtension();
     }
 }

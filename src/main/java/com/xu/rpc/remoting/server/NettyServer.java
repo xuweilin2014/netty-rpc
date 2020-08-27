@@ -5,6 +5,7 @@ import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyServerHandler;
+import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
 import com.xu.rpc.util.URL;
 import io.netty.bootstrap.ServerBootstrap;
@@ -28,7 +29,7 @@ import java.util.concurrent.ThreadFactory;
  * Spring容器会检测容器中的所有Bean，如果发现某个Bean实现了ApplicationContextAware接口，Spring容器会在创建该Bean之后，
  * 自动调用该Bean的setApplicationContextAware()方法，调用该方法时，会将容器本身作为参数传给该方法。
  */
-public class NettyServer extends AbstractServer {
+public class NettyServer implements Server{
 
     public static final Logger logger = Logger.getLogger(NettyServer.class);
 
@@ -51,11 +52,16 @@ public class NettyServer extends AbstractServer {
 
     EventLoopGroup worker = new NioEventLoopGroup(PARALLEL, threadRpcFactory);
 
+    protected ChannelHandler handler;
+
+    protected URL url;
+
     private Map<String, Channel> channels = new ConcurrentHashMap<>();
 
     @SuppressWarnings("ConstantConditions")
     public NettyServer(URL url, ChannelHandler handler) {
-        super(url, ChannelHandlers.wrapHandler(handler));
+        this.url = url;
+        this.handler = ChannelHandlers.wrapHandler(handler);
 
         String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE);
         this.serialization = Enum.valueOf(Serialization.class, serialize);
@@ -71,15 +77,15 @@ public class NettyServer extends AbstractServer {
         }
     }
 
-    @Override
     public void doOpen() {
         try {
             NettyServerHandler serverHandler = new NettyServerHandler(handler);
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
                     // 根据用户所选择的序列化协议不同，往NioSocketChannel对应的pipeline中添加不同的handler的类型也不同
-                    .childHandler(new ServerChannelInitializer(serialization, serverHandler))
+                    .childHandler(new RpcChannelInitializer(serialization, serverHandler))
                     .option(ChannelOption.SO_BACKLOG, 128)
+                    .childOption(ChannelOption.TCP_NODELAY, true)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture future;
@@ -110,7 +116,6 @@ public class NettyServer extends AbstractServer {
         }
     }
 
-    @Override
     public void doClose() {
         // TODO: 2020/8/13
     }

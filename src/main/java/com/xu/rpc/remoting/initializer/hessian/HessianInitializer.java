@@ -5,13 +5,14 @@ import com.xu.rpc.remoting.handler.NettyServerHandler;
 import com.xu.rpc.serialize.hessian.HessianCodecUtil;
 import com.xu.rpc.serialize.hessian.HessianDecoder;
 import com.xu.rpc.serialize.hessian.HessianEncoder;
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelPipeline;
 
 
-public class HessianRecvInitializer implements NettyRpcInitializer {
+public class HessianInitializer implements NettyRpcInitializer {
 
     @Override
-    public void handle(ChannelPipeline pipeline, NettyServerHandler handler) {
+    public void handle(ChannelPipeline pipeline, ChannelDuplexHandler handler) {
         HessianCodecUtil util = new HessianCodecUtil();
         pipeline.addLast(new HessianEncoder(util));
         pipeline.addLast(new HessianDecoder(util));

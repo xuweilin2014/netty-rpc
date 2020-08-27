@@ -34,7 +34,7 @@ public class MessageSendInitializeTask implements Callable<Boolean> {
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .remoteAddress(remoteAddr);
-        b.handler(new MessageSendChannelInitializer().buildRpcSerializeProtocol(protocol));
+        b.handler(new ClientChannelInitializer().buildRpcSerializeProtocol(protocol));
 
         ChannelFuture channelFuture = b.connect();
         channelFuture.addListener(new ChannelFutureListener() {

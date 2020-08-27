@@ -95,7 +95,7 @@ public class RpcConfig {
 
     public static final String REFER = "refer";
 
-    public static final String CLUSTER = "cluster";
+    public static final String CLUSTER_KEY = "cluster";
 
     public static final String DEFAULT_REGISTRY = "zookeeper";
 
@@ -106,5 +106,21 @@ public class RpcConfig {
     public static final String PROTOCOL_KEY = "protocol";
 
     public static final String METHODS_KEY = "methods";
+
+    public static final String TIMEOUT_KEY = "timeout";
+
+    public static final int DEFAULT_TIMEOUT = 3000;
+
+    public static final int RECONNECT_INTERVAL = 2000;
+
+    public static final int RECONNECT_TIMEOUT = 900000;
+
+    public static final String LOADBALANCE_KEY = "loadbalance";
+
+    public static final String STICKY_KEY = "sticky";
+
+    public static final String RETRIES_KEY = "retries";
+
+    public static final int DEFAULT_RETRIES = 2;
 }
 

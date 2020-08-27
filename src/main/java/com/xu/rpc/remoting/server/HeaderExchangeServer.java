@@ -2,9 +2,9 @@ package com.xu.rpc.remoting.server;
 
 public class HeaderExchangeServer implements Server{
 
-    private AbstractServer server;
+    private Server server;
 
-    public HeaderExchangeServer(AbstractServer server) {
+    public HeaderExchangeServer(Server server) {
         this.server = server;
     }
 

@@ -1,10 +1,7 @@
 package com.xu.rpc.remoting.handler;
 
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
 
 import java.net.SocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,11 +11,15 @@ import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.model.MessageResponse;
 
 
-public class NettyClientHandler extends ChannelInboundHandlerAdapter implements ChannelHandler{
+public class NettyClientHandler extends ChannelDuplexHandler{
     // 用来存储正在进行中，还没有返回的RPC调用
     private ConcurrentHashMap<String, MessageCallBack> mapCallBack = new ConcurrentHashMap<String, MessageCallBack>();
     private volatile Channel channel;
     private SocketAddress remoteAddr;
+
+    public NettyClientHandler(ChannelHandler handler){
+
+    }
 
     public Channel getChannel() {
         return channel;

@@ -8,6 +8,8 @@ public class RpcInvocation {
 
     private Class<?>[] parameterTypes;
 
+    private Class<?> serviceType;
+
     public String getMethodName() {
         return methodName;
     }
@@ -30,5 +32,13 @@ public class RpcInvocation {
 
     public void setParameterTypes(Class<?>[] parameterTypes) {
         this.parameterTypes = parameterTypes;
+    }
+
+    public Class<?> getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(Class<?> serviceType) {
+        this.serviceType = serviceType;
     }
 }

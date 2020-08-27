@@ -1,6 +1,8 @@
-package com.xu.rpc.remoting.server;
+package com.xu.rpc.remoting.initializer;
 
 import com.xu.rpc.remoting.handler.NettyServerHandler;
+import com.xu.rpc.remoting.initializer.RpcSerializeFrame;
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -8,15 +10,15 @@ import io.netty.channel.socket.SocketChannel;
 import com.xu.rpc.serialize.Serialization;
 
 
-public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
+public class RpcChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private Serialization serialization;
 
-    private NettyServerHandler handler;
+    private ChannelDuplexHandler handler;
 
-    private static RpcRecvSerializeFrame frame = new RpcRecvSerializeFrame();
+    private static RpcSerializeFrame frame = new RpcSerializeFrame();
 
-    ServerChannelInitializer(Serialization serialization, NettyServerHandler handler) {
+    public RpcChannelInitializer(Serialization serialization, ChannelDuplexHandler handler) {
         this.serialization = serialization;
         this.handler = handler;
     }
@@ -27,7 +29,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
      * handler。
      */
     @Override
-    protected void initChannel(SocketChannel socketChannel) throws Exception {
+    protected void initChannel(SocketChannel socketChannel) {
         ChannelPipeline pipeline = socketChannel.pipeline();
         frame.select(serialization, pipeline, handler);
     }

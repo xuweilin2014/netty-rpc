@@ -2,13 +2,14 @@
 package com.xu.rpc.remoting.initializer;
 
 import com.xu.rpc.remoting.handler.NettyServerHandler;
+import com.xu.rpc.serialize.Serialization;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelPipeline;
 
 
-public interface NettyRpcInitializer {
+public interface SerializeFrame {
 
-    void handle(ChannelPipeline pipeline, ChannelDuplexHandler handler);
+    void select(Serialization protocol, ChannelPipeline pipeline, ChannelDuplexHandler handler);
 
 }
 

@@ -1,11 +1,16 @@
 package com.xu.rpc.protocol;
 
+import io.netty.util.internal.ConcurrentSet;
+
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractProtocol implements Protocol {
 
     protected final Map<String, Exporter> exporters = new ConcurrentHashMap<>();
+
+    protected final Set<Invoker> invokers = new ConcurrentSet<>();
 
     public String getServiceKey(String serviceName, int port){
         return serviceName + ":" + port;

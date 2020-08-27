@@ -1,6 +1,8 @@
 package com.xu.rpc.protocol.rpc;
 
 import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.jmx.MetricsHtmlBuilder;
 import com.xu.rpc.jmx.MetricsServer;
@@ -8,6 +10,8 @@ import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.protocol.AbstractProtocol;
 import com.xu.rpc.protocol.Exporter;
 import com.xu.rpc.protocol.Invoker;
+import com.xu.rpc.remoting.client.ExchangeClient;
+import com.xu.rpc.remoting.client.ReferenceCountClient;
 import com.xu.rpc.remoting.exchanger.Exchangers;
 import com.xu.rpc.remoting.handler.ReplyHandler;
 import com.xu.rpc.remoting.echo.ApiEchoServer;
@@ -27,13 +31,15 @@ public class RpcProtocol extends AbstractProtocol {
     // ip:port -> server
     private final Map<String, HeaderExchangeServer> servers = new ConcurrentHashMap<>();
 
-    private static MetricsServer metricsServer;
+    private MetricsServer metricsServer;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
-    private static ApiEchoServer echoServer;
+    private final Map<String, ReferenceCountClient> referenceCountClients = new ConcurrentHashMap<>();
 
-    private static Lock lock = new ReentrantLock();
+    private ApiEchoServer echoServer;
+
+    private Lock lock = new ReentrantLock();
 
     private ReplyHandler replyHandler = new ReplyHandler() {
         @Override
@@ -54,17 +60,25 @@ public class RpcProtocol extends AbstractProtocol {
         }
 
         @Override
-        public Object reply(MessageRequest request, Channel channel) {
-            InetSocketAddress socketAddress = (InetSocketAddress) channel.localAddress();
-            int port = socketAddress.getPort();
-            String serviceKey = getServiceKey(request.getInterfaceName(), port);
-            Exporter exporter = exporters.get(serviceKey);
+        public Object reply(Object message, Channel channel) throws RemotingException {
+            if (message instanceof RpcInvocation){
+                RpcInvocation invocation = (RpcInvocation) message;
 
-            try {
-                return  exporter.getInvoker().invoke(request);
-            } catch (Throwable throwable) {
-                throw new RpcException("errors occur when executing method : " + throwable.getMessage(), throwable);
+                InetSocketAddress socketAddress = (InetSocketAddress) channel.localAddress();
+                int port = socketAddress.getPort();
+
+                // service key 为 ServiceName:Port
+                String serviceKey = getServiceKey(invocation.getServiceType().getName(), port);
+                Exporter exporter = exporters.get(serviceKey);
+
+                try {
+                    return  exporter.getInvoker().invoke(invocation);
+                } catch (Throwable throwable) {
+                    throw new RpcException("errors occur when executing method : " + throwable.getMessage(), throwable);
+                }
             }
+            throw new RemotingException("unsupported message type :" + message.getClass().getName() + " , consumer address :"
+                    + channel.remoteAddress());
         }
     };
 
@@ -139,11 +153,43 @@ public class RpcProtocol extends AbstractProtocol {
         }
     }
 
+    // 这里的 url 为注册在注册中心上的 url，也就是 RpcInvoker 中的 url，而不是客户端自己的 url
     @Override
     public Invoker refer(URL url, Class<?> type) throws RpcException {
-        // TODO: 2020/8/16
-        return null;
+        RpcInvoker invoker = new RpcInvoker(type, url, invokers, getClient(url));
+        invokers.add(invoker);
+        return invoker;
     }
+
+    private ExchangeClient getClient(URL url) {
+        String address = url.getAddress();
+        ReferenceCountClient client = referenceCountClients.get(address);
+        if (client != null){
+            if (client.isClosed()){
+                referenceCountClients.remove(address);
+            }else {
+                client.incrementAndGet();
+                return client;
+            }
+        }
+
+        // str1 = new String("abc");
+        // str2 = new String("abc");
+        // 调用 str1.intern()，编译器会将 "abc" 字符串添加到常量池中，并且返回指向该常量的引用。
+        // 再调用 str2.intern() 时，因为常量池中已经存在 "abc" 字符串，所以直接返回 "abc" 的引用。
+        // address.intern() 添加 synchronized 关键字，所以当创建连接相同地址的客户端时，进行并发控制。
+        synchronized (address.intern()){
+            ExchangeClient exchangeClient = null;
+            try {
+                exchangeClient = Exchangers.connect(url, replyHandler);
+                client = new ReferenceCountClient(url, exchangeClient);
+                return client;
+            } catch (RemotingException e) {
+                throw new RpcException("failed to connect to server " + address, e);
+            }
+        }
+    }
+
 
     @Override
     public void destroy() {
