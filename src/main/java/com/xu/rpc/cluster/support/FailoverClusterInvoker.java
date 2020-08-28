@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+// 失败自动切换：一个 invoker 调用失败之后，调用 invoker 集合中的下一个 invoker 进行调用
 public class FailoverClusterInvoker extends AbstractClusterInvoker {
 
     private static final Logger logger = Logger.getLogger(FailoverClusterInvoker.class);

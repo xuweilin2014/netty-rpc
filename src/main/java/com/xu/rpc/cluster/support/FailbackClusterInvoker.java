@@ -16,15 +16,27 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+// 失败自动恢复：invoker 调用失败之后，会定时重新再发送
 public class FailbackClusterInvoker extends AbstractClusterInvoker {
 
     private static final Logger logger = Logger.getLogger(FailbackClusterInvoker.class);
 
-    private volatile ScheduledFuture<?> retryFuture = null;
-
-    private static ScheduledThreadPoolExecutor failRetryExecutor = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("RpcFailbackRetryThread"));
+    private static ScheduledThreadPoolExecutor failRetryExecutor = new ScheduledThreadPoolExecutor(2, new NamedThreadFactory("RpcFailbackRetryThread", true));
 
     private static Map<RpcInvocation, Invoker> failed = new ConcurrentHashMap<>();
+
+    static {
+        failRetryExecutor.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    retry();
+                } catch (Exception e) {
+                    logger.warn("error occurs when trying to retry the failed invoker.");
+                }
+            }
+        }, RpcConfig.RETRY_PERIOD, RpcConfig.RETRY_PERIOD, TimeUnit.MILLISECONDS);
+    }
 
     public FailbackClusterInvoker(Directory directory) {
         super(directory);
@@ -45,34 +57,13 @@ public class FailbackClusterInvoker extends AbstractClusterInvoker {
             logger.warn("error occurs when trying to invoke the invoker for " + invoker + ", waiting for retry later.");
             // 注意，失败之后是将 FailbackClusterInvoker 对象本身作为 invoker 添加到 failed 集合中，等待线程重新调用
             // 重新调用时，会调用 invoker 的 invoke 方法，重新进行选择，负载均衡操作
-            addFailed(invocation, this);
+            failed.put(invocation, this);
         }
 
         return result;
     }
 
-    // FailbackClusterInvoker 的一个对象可能被同时调用，因此存在线程竞争关系
-    private void addFailed(RpcInvocation invocation, Invoker invoker) {
-        if (retryFuture == null || retryFuture.isCancelled()){
-            synchronized (this){
-                if (retryFuture == null || retryFuture.isCancelled()){
-                    retryFuture = failRetryExecutor.scheduleWithFixedDelay(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                retry();
-                            } catch (Exception e) {
-                                logger.warn("error occurs when trying to retry the failed invoker.");
-                            }
-                        }
-                    }, RpcConfig.RETRY_PERIOD, RpcConfig.RETRY_PERIOD, TimeUnit.MILLISECONDS);
-                }
-            }
-        }
-        failed.put(invocation, invoker);
-    }
-
-    private void retry(){
+    private static void retry(){
         if (!failed.isEmpty()){
             for (Map.Entry<RpcInvocation, Invoker> entry : failed.entrySet()) {
                 RpcInvocation invocation = entry.getKey();

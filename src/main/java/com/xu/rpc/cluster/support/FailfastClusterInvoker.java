@@ -9,13 +9,13 @@ import com.xu.rpc.protocol.Invoker;
 
 import java.util.List;
 
+// 快速失败：只进行一次调用，失败之后直接抛出异常，适合增加、删除记录这种需要保持幂等的操作
 public class FailfastClusterInvoker extends AbstractClusterInvoker {
 
     public FailfastClusterInvoker(Directory directory) {
         super(directory);
     }
 
-    // FailfastClusterInvoker 只进行一次调用，失败之后直接抛出异常，适合增加、删除记录这种需要保持幂等的操作
     @Override
     public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalance loadBalance) throws RpcException{
         if (invokers == null || invokers.isEmpty())

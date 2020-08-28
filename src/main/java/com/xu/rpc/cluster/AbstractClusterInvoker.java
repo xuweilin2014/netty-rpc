@@ -174,6 +174,6 @@ public abstract class AbstractClusterInvoker implements Invoker{
         return directory.getInvokers(invocation);
     }
 
-    public abstract Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalance loadBalance);
+    public abstract Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalance loadBalance) throws RpcException;
 
 }
