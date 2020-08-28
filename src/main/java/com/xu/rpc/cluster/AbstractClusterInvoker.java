@@ -1,10 +1,7 @@
 package com.xu.rpc.cluster;
 
-import com.sun.codemodel.internal.JInvocation;
-import com.sun.org.apache.bcel.internal.generic.FADD;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
-import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.util.AdaptiveExtensionUtil;
@@ -34,12 +31,12 @@ public abstract class AbstractClusterInvoker implements Invoker{
         if (invocation == null)
             return null;
 
-        LoadBalance loadBalance = AdaptiveExtensionUtil.getLoadBalance(getURL());
+        LoadBalancer loadBalancer = AdaptiveExtensionUtil.getLoadBalance(getURL());
         List<Invoker> invokers = list(invocation);
-        return doInvoke(invocation, invokers, loadBalance);
+        return doInvoke(invocation, invokers, loadBalancer);
     }
 
-    public Invoker select(List<Invoker> invokers, List<Invoker> selected, LoadBalance loadBalance, RpcInvocation invocation)
+    public Invoker select(List<Invoker> invokers, List<Invoker> selected, LoadBalancer loadBalance, RpcInvocation invocation)
             throws RpcException{
         if (invokers == null || invokers.isEmpty()){
             logger.error("no provider available to select.");
@@ -78,7 +75,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
 
     // 其它异常均被捕获，在使用负载均衡策略选择 invoker 的时候，可能会抛出异常
     // 返回的结果可能为 null，分别在 1 和 4 处
-    private Invoker select0(List<Invoker> invokers, List<Invoker> selected, LoadBalance loadBalance, RpcInvocation invocation)
+    private Invoker select0(List<Invoker> invokers, List<Invoker> selected, LoadBalancer loadBalance, RpcInvocation invocation)
                 throws RpcException{
         // 1.当 invokers 为 null 或者空集的时候，直接返回 null。
         if (invokers == null || invokers.size() == 0){
@@ -109,7 +106,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
         return invoker;
     }
 
-    private Invoker reselect(List<Invoker> invokers, List<Invoker> selected, LoadBalance loadBalance, RpcInvocation invocation)
+    private Invoker reselect(List<Invoker> invokers, List<Invoker> selected, LoadBalancer loadBalance, RpcInvocation invocation)
             throws RpcException {
         List<Invoker> reselectInvokers = new ArrayList<>();
 
@@ -174,6 +171,6 @@ public abstract class AbstractClusterInvoker implements Invoker{
         return directory.getInvokers(invocation);
     }
 
-    public abstract Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalance loadBalance) throws RpcException;
+    public abstract Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException;
 
 }

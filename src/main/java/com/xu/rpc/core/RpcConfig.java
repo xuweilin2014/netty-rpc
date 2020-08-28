@@ -122,5 +122,9 @@ public class RpcConfig {
     public static final String RETRIES_KEY = "retries";
 
     public static final int DEFAULT_RETRIES = 2;
+
+    public static final String WEIGHT_KEY = "weight";
+
+    public static final int DEFAULT_WEIGHT = 100;
 }
 

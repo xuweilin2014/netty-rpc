@@ -2,7 +2,7 @@ package com.xu.rpc.cluster.support;
 
 import com.xu.rpc.cluster.AbstractClusterInvoker;
 import com.xu.rpc.cluster.Directory;
-import com.xu.rpc.cluster.LoadBalance;
+import com.xu.rpc.cluster.LoadBalancer;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RpcException;
@@ -23,7 +23,7 @@ public class FailoverClusterInvoker extends AbstractClusterInvoker {
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalance loadBalance) throws RpcException{
+    public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException{
         // 获取到重试次数（第一次不算在内）
         // 如果用户没有配置重试次数，那么获取到的就是默认的次数 3 次，第一次 + 两次重试
         // 如果用户配置了重试次数，那么会将其加上一，也就是加上第一次调用，所以说用户配置的重试次数，第一次不算在内

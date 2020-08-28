@@ -2,7 +2,7 @@ package com.xu.rpc.cluster.support;
 
 import com.xu.rpc.cluster.AbstractClusterInvoker;
 import com.xu.rpc.cluster.Directory;
-import com.xu.rpc.cluster.LoadBalance;
+import com.xu.rpc.cluster.LoadBalancer;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
@@ -19,7 +19,7 @@ public class FailsafeClusterInvoker extends AbstractClusterInvoker {
     }
 
     @Override
-    public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalance loadBalance) throws RpcException {
+    public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException {
         Object result = null;
         try {
             Invoker invoker = select(invokers, null, loadBalance, invocation);

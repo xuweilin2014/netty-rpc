@@ -2,7 +2,7 @@ package com.xu.rpc.cluster.support;
 
 import com.xu.rpc.cluster.AbstractClusterInvoker;
 import com.xu.rpc.cluster.Directory;
-import com.xu.rpc.cluster.LoadBalance;
+import com.xu.rpc.cluster.LoadBalancer;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RpcException;
@@ -12,7 +12,6 @@ import org.apache.log4j.Logger;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +42,7 @@ public class FailbackClusterInvoker extends AbstractClusterInvoker {
     }
 
     @Override
-    public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalance loadBalance) throws RpcException {
+    public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException {
         Object result = null;
         Invoker invoker = null;
         try {
