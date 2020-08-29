@@ -1,5 +1,7 @@
 package com.xu.rpc.core;
 
+import java.util.Arrays;
+
 public class RpcInvocation {
 
     private String methodName;
@@ -40,5 +42,11 @@ public class RpcInvocation {
 
     public void setServiceType(Class<?> serviceType) {
         this.serviceType = serviceType;
+    }
+
+    @SuppressWarnings("StringBufferReplaceableByString")
+    public String key(){
+        return new StringBuilder(serviceType.getName()).append(methodName)
+                .append(Arrays.toString(parameterTypes)).append(Arrays.toString(parameters)).toString();
     }
 }

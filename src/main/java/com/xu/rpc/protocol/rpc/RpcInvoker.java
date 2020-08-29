@@ -7,6 +7,8 @@ import com.xu.rpc.protocol.AbstractInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ExchangeClient;
 import com.xu.rpc.util.URL;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Set;
 
@@ -14,7 +16,6 @@ import java.util.Set;
  * RpcInvoker#invoke方法通过向服务器发起远程调用
  */
 public class RpcInvoker extends AbstractInvoker {
-
 
     private Set<Invoker> invokers;
 
@@ -38,7 +39,17 @@ public class RpcInvoker extends AbstractInvoker {
 
     @Override
     public void destroy() {
+        // TODO: 2020/8/29
+    }
 
+    @Override
+    public int hashCode() {
+        int result = invokers != null ? invokers.hashCode() : 0;
+        result = 31 * result + (client != null ? client.hashCode() : 0);
+        result = 31 * result + (getInterface() != null ? getInterface().hashCode() : 0);
+        result = 31 * result + (getURL() != null ? getURL().hashCode() : 0);
+        result = 31 * result + (getDestroyed() != null ? getDestroyed().hashCode() : 0);
+        return result;
     }
 }
 

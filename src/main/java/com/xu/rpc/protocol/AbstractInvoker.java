@@ -6,6 +6,7 @@ import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.remoting.client.ExchangeClient;
 import com.xu.rpc.util.URL;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,6 +44,9 @@ public abstract class AbstractInvoker implements Invoker {
         return doInvoke(invocation);
     }
 
-    public abstract Object doInvoke(RpcInvocation invocation) throws RpcException;
+    public AtomicBoolean getDestroyed() {
+        return destroyed;
+    }
 
+    public abstract Object doInvoke(RpcInvocation invocation) throws RpcException;
 }
