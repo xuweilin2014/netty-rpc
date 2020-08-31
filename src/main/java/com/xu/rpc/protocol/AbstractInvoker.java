@@ -1,6 +1,7 @@
 package com.xu.rpc.protocol;
 
 import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.remoting.client.ExchangeClient;
@@ -38,11 +39,20 @@ public abstract class AbstractInvoker implements Invoker {
         destroyed.compareAndSet(false, true);
     }
 
-    @Override
-    public Object invoke(RpcInvocation invocation) throws RpcException {
-        return doInvoke(invocation);
+    public boolean isDestroyed(){
+        return destroyed.get();
     }
 
-    public abstract Object doInvoke(RpcInvocation invocation) throws RpcException;
+    @Override
+    public RpcResult invoke(RpcInvocation invocation) throws RpcException {
+        try{
+            return doInvoke(invocation);
+        } catch (Throwable e){
+            return new RpcResult(e);
+        }
+
+    }
+
+    public abstract RpcResult doInvoke(RpcInvocation invocation) throws RpcException;
 
 }

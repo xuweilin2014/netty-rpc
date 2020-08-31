@@ -6,7 +6,11 @@ public enum MethodInvokeStatus {
 
     DONE,
 
-    EXCEPTIONAL;
+    EXCEPTIONAL,
+
+    TIMEOUT,
+
+    CANCELLED;
 
     public boolean isDone(){
         return this == DONE;
@@ -14,5 +18,13 @@ public enum MethodInvokeStatus {
 
     public boolean isExceptional(){
         return this == EXCEPTIONAL;
+    }
+
+    public boolean isTimeout(){
+        return this == TIMEOUT;
+    }
+
+    public boolean isCancelled() {
+        return this == CANCELLED;
     }
 }

@@ -12,6 +12,7 @@ import com.xu.rpc.model.MessageResponse;
 
 
 public class NettyClientHandler extends ChannelDuplexHandler{
+
     // 用来存储正在进行中，还没有返回的RPC调用
     private ConcurrentHashMap<String, MessageCallBack> mapCallBack = new ConcurrentHashMap<String, MessageCallBack>();
     private volatile Channel channel;

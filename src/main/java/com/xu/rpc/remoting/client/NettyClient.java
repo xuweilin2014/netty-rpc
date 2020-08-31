@@ -1,5 +1,6 @@
 package com.xu.rpc.remoting.client;
 
+import com.xu.rpc.async.RpcFuture;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.parallel.NamedThreadFactory;
@@ -208,8 +209,23 @@ public class NettyClient implements Client {
         }
     }
 
-    protected boolean isClosed(){
+    @Override
+    public void send(Object message) throws RemotingException {
+        try {
+            // 将消息发出
+            channel.writeAndFlush(message);
+        } catch (Throwable e) {
+            throw new RemotingException("failed to send message, caused by " + e.getMessage());
+        }
+    }
+
+    public boolean isClosed(){
         return closed.get();
+    }
+
+    @Override
+    public URL getUrl() {
+        return url;
     }
 
     public void close(){
@@ -225,6 +241,11 @@ public class NettyClient implements Client {
                 logger.warn(e.getMessage());
             }
         }
+    }
+
+    @Override
+    public void close(int timeout) {
+        // TODO: 2020/8/30  
     }
 
     public void disconnect() {

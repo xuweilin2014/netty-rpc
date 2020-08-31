@@ -2,6 +2,7 @@ package com.xu.rpc.cluster;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.util.AdaptiveExtensionUtil;
@@ -27,7 +28,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
     }
 
     @Override
-    public Object invoke(RpcInvocation invocation) throws RpcException {
+    public RpcResult invoke(RpcInvocation invocation) throws RpcException {
         if (invocation == null)
             return null;
 
@@ -171,6 +172,6 @@ public abstract class AbstractClusterInvoker implements Invoker{
         return directory.getInvokers(invocation);
     }
 
-    public abstract Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException;
+    public abstract RpcResult doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException;
 
 }

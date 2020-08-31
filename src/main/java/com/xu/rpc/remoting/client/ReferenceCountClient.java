@@ -1,6 +1,5 @@
 package com.xu.rpc.remoting.client;
 
-import com.xu.rpc.async.ResponseFuture;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.util.URL;
 

@@ -3,6 +3,7 @@ package com.xu.rpc.core;
 import com.xu.rpc.remoting.execution.MethodInvokeStatus;
 
 import java.io.Serializable;
+import java.util.concurrent.Future;
 
 public class RpcResult implements Serializable {
 
@@ -16,6 +17,14 @@ public class RpcResult implements Serializable {
 
     private long invokeTimespan;
 
+    public RpcResult(){
+
+    }
+
+    public RpcResult(Object result){
+        this.result = result;
+    }
+
     public long getInvokeTimespan() {
         return invokeTimespan;
     }
@@ -24,15 +33,13 @@ public class RpcResult implements Serializable {
         this.invokeTimespan = invokeTimespan;
     }
 
-    public RpcResult(Object result){
-        this.result = result;
-    }
-
     public RpcResult(Throwable t){
         this.exception = t;
     }
 
-    public Object getResult() {
+    public Object getResult() throws Throwable {
+        if (exception != null)
+            throw exception;
         return result;
     }
 
@@ -55,4 +62,6 @@ public class RpcResult implements Serializable {
     public void setInvokeStatus(MethodInvokeStatus invokeStatus) {
         this.invokeStatus = invokeStatus;
     }
+
+
 }

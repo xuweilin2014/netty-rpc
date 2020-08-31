@@ -1,5 +1,7 @@
 package com.xu.rpc.core;
 
+import java.util.concurrent.Future;
+
 public class RpcInvocation {
 
     private String methodName;

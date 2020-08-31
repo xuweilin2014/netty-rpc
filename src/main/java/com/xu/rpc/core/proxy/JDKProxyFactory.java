@@ -1,7 +1,6 @@
 package com.xu.rpc.core.proxy;
 
 import com.xu.rpc.exception.RpcException;
-import com.xu.rpc.remoting.client.MessageSendProxy;
 import com.xu.rpc.protocol.AbstractProxyInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.util.URL;

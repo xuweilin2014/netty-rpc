@@ -109,7 +109,7 @@ public class RpcConfig {
 
     public static final String TIMEOUT_KEY = "timeout";
 
-    public static final int DEFAULT_TIMEOUT = 3000;
+    public static final int DEFAULT_TIMEOUT = 2000;
 
     public static final int RECONNECT_INTERVAL = 2000;
 
@@ -126,5 +126,7 @@ public class RpcConfig {
     public static final String WEIGHT_KEY = "weight";
 
     public static final int DEFAULT_WEIGHT = 100;
+
+    public static final String ASYNC_KEY = "async";
 }
 
