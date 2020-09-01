@@ -5,29 +5,27 @@ import com.xu.rpc.async.RpcFuture;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
+import com.xu.rpc.remoting.exchanger.HeartbeatExchangeEndpoint;
 import com.xu.rpc.util.URL;
+import org.apache.log4j.Logger;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HeaderExchangeClient implements ExchangeClient {
+public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements ExchangeClient {
+
+    private static final Logger logger = Logger.getLogger(HeaderExchangeClient.class);
 
     // client 为 NettyClient
     private final Client client;
 
-    private final AtomicBoolean closed = new AtomicBoolean(false);
-
     public HeaderExchangeClient(Client client) {
+        super(client);
         this.client = client;
+        startHeartbeat(client);
     }
 
     @Override
     public void close() {
-        // TODO: 2020/8/31
-    }
-
-    @Override
-    public void close(int timeout) {
         // TODO: 2020/8/31
     }
 
@@ -45,7 +43,7 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     @Override
     public RpcFuture request(Object invocation, int timeout) throws RemotingException {
-        if (closed.get()){
+        if (isClosed()){
             throw new RemotingException("client " + client + "is closed, cannot send message anymore.");
         }
 
@@ -74,13 +72,8 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     @Override
     public RpcFuture request(Object request) throws RemotingException {
+        // TODO: 2020/9/1  
         return null;
-    }
-
-    @Override
-    public boolean isConnected() {
-        // TODO: 2020/8/31
-        return false;
     }
 
 }
