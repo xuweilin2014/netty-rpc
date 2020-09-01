@@ -1,33 +1,22 @@
 package com.xu.rpc.remoting.handler;
 
+import com.xu.rpc.async.DefaultRpcFuture;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.model.MessageResponse;
 import com.xu.rpc.parallel.NamedThreadFactory;
-import com.xu.rpc.remoting.execution.RecvExecutionTask;
+import com.xu.rpc.remoting.support.RecvExecutionTask;
 import io.netty.channel.Channel;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DispatcherHandler implements ChannelHandler {
+public class ExchangeHandler extends AbstractHandlerDelegate {
 
     private static final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("RpcExecutionThread", true));
 
-    private ChannelHandler handler;
-
-    public DispatcherHandler(ChannelHandler handler) {
-        this.handler = handler;
-    }
-
-    @Override
-    public void sent(Channel channel, Object message) throws RemotingException {
-        handler.sent(channel, message);
-        // 客户端发送请求，进行处理
-        if (message instanceof MessageRequest){
-
-        }
-        // 服务端发送请求，不做任何处理
+    public ExchangeHandler(ChannelHandler handler) {
+        super(handler);
     }
 
     /**
@@ -35,6 +24,7 @@ public class DispatcherHandler implements ChannelHandler {
      * 根据是否开启JMX监控，返回的Task不同。
      */
     public void received(Channel channel, Object message){
+        setReadTimestamp(channel);
         if (message instanceof MessageRequest){
             // 服务端接收到请求，进行处理
             RecvExecutionTask recvTask = new RecvExecutionTask((MessageRequest) message, handler, channel);
@@ -43,17 +33,9 @@ public class DispatcherHandler implements ChannelHandler {
             executor.submit(recvTask);
         }else if (message instanceof MessageResponse){
             // 客户端接收到响应，进行处理
+            DefaultRpcFuture.received((MessageResponse) message);
         }
     }
 
-    @Override
-    public void connected(Channel channel) throws RemotingException {
-        handler.connected(channel);
-    }
-
-    @Override
-    public void disconnected(Channel channel) throws RemotingException {
-        handler.disconnected(channel);
-    }
 
 }

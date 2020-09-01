@@ -1,7 +1,6 @@
 package com.xu.rpc.util;
 
 import com.google.common.collect.ImmutableMap;
-import com.xu.rpc.exception.CreateProxyException;
 
 import java.io.Serializable;
 import java.lang.reflect.GenericArrayType;

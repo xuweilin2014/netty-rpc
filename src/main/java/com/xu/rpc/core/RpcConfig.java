@@ -1,5 +1,6 @@
 package com.xu.rpc.core;
 
+import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -128,5 +129,15 @@ public class RpcConfig {
     public static final int DEFAULT_WEIGHT = 100;
 
     public static final String ASYNC_KEY = "async";
+
+    public static final String HEARTBEAT_KEY = "heartbeat";
+
+    public static final int DEFAULT_HEARTBEAT = 60000;
+
+    public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeat.timeout";
+
+    public static final AttributeKey<Long> LAST_READ_TIMESTAMP = AttributeKey.valueOf("lastReadTimestamp");
+
+    public static final AttributeKey<Long> LAST_WRITE_TIMESTAMP = AttributeKey.valueOf("lastWriteTimestamp");
 }
 

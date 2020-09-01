@@ -4,8 +4,8 @@ import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
 import io.netty.channel.Channel;
 
-public interface ReplyHandler extends ChannelHandler {
+public abstract class ReplyHandler extends AbstractHandlerDelegate {
 
-    public Object reply(Object message, Channel channel) throws RemotingException;
+    public abstract Object reply(Object message, Channel channel) throws RemotingException;
 
 }

@@ -1,9 +1,8 @@
 package com.xu.rpc.core;
 
-import com.xu.rpc.remoting.execution.MethodInvokeStatus;
+import com.xu.rpc.remoting.support.MethodInvokeStatus;
 
 import java.io.Serializable;
-import java.util.concurrent.Future;
 
 public class RpcResult implements Serializable {
 

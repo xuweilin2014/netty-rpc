@@ -1,18 +1,14 @@
 package com.xu.rpc.async;
 
-import com.sun.corba.se.impl.protocol.giopmsgheaders.RequestMessage;
 import com.xu.rpc.core.RpcConfig;
-import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.exception.RpcTimeoutException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.model.MessageResponse;
 import com.xu.rpc.parallel.NamedThreadFactory;
-import com.xu.rpc.remoting.execution.MethodInvokeStatus;
+import com.xu.rpc.remoting.support.MethodInvokeStatus;
 import com.xu.rpc.util.URL;
-import io.netty.channel.Channel;
-import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
@@ -138,6 +134,11 @@ public class DefaultRpcFuture implements RpcFuture{
         MessageResponse res = response;
         if (res == null){
             throw new IllegalStateException("response == null.");
+        }
+
+        if (isCancelled()){
+            logger.error("future is cancelled, cannot proceed to execute the listener.");
+            return;
         }
 
         // 成功执行时，回调 listener 的 done 方法

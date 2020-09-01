@@ -1,8 +1,6 @@
 package com.xu.rpc.protocol.rpc;
 
-import com.xu.rpc.async.DefaultRpcFuture;
-import com.xu.rpc.async.FutureAdapter;
-import com.xu.rpc.async.RpcFuture;
+import com.xu.rpc.async.FutureWrapper;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcContext;
 import com.xu.rpc.core.RpcInvocation;
@@ -10,12 +8,10 @@ import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.exception.RpcTimeoutException;
-import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.protocol.AbstractInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ExchangeClient;
 import com.xu.rpc.util.URL;
-import org.aopalliance.intercept.Invocation;
 
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -47,7 +43,7 @@ public class RpcInvoker extends AbstractInvoker {
         try{
             // 如果为异步调用的话
             if (isAsync){
-                Future<?> future = new FutureAdapter(client.request(invocation, timeout));
+                Future<?> future = new FutureWrapper(client.request(invocation, timeout));
                 RpcContext.getContext().setFuture(future);
                 // 返回一个空的结果
                 return new RpcResult();
@@ -61,6 +57,8 @@ public class RpcInvoker extends AbstractInvoker {
             throw new RpcException("invoke method " + invocation.getMethodName() + " timeout, caused by " + ex.getMessage());
         }catch (RemotingException ex){
             throw new RpcException("failed to invoke the remote method " + invocation.getMethodName() + ", caused by " + ex.getMessage());
+        } catch (InterruptedException e) {
+            throw new RpcException("failed to invoke the remote method" + invocation.getMethodName() + " caused by interruption.");
         }
     }
 

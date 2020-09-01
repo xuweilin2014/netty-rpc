@@ -20,6 +20,8 @@ public class MessageRequest implements Serializable {
 
     private String interfaceName;
 
+    private boolean isHeartbeat;
+
     public String getMessageId() {
         return messageId;
     }
@@ -58,6 +60,14 @@ public class MessageRequest implements Serializable {
 
     public void setInterfaceName(String interfaceName) {
         this.interfaceName = interfaceName;
+    }
+
+    public boolean isHeartbeat() {
+        return isHeartbeat;
+    }
+
+    public void setHeartbeat(boolean heatbeat) {
+        isHeartbeat = heatbeat;
     }
 
     @Override

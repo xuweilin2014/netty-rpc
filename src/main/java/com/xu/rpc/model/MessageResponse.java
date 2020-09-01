@@ -2,7 +2,7 @@ package com.xu.rpc.model;
 
 import java.io.Serializable;
 
-import com.xu.rpc.remoting.execution.MethodInvokeStatus;
+import com.xu.rpc.remoting.support.MethodInvokeStatus;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 
 /**
@@ -18,6 +18,8 @@ public class MessageResponse implements Serializable {
     private Object result;
 
     private MethodInvokeStatus invokeStatus;
+
+    private boolean isHeartbeat;
 
     @Override
     public String toString() {
@@ -54,6 +56,14 @@ public class MessageResponse implements Serializable {
 
     public void setInvokeStatus(MethodInvokeStatus invokeStatus) {
         this.invokeStatus = invokeStatus;
+    }
+
+    public boolean isHeartbeat() {
+        return isHeartbeat;
+    }
+
+    public void setHeartbeat(boolean heartbeat) {
+        isHeartbeat = heartbeat;
     }
 }
 

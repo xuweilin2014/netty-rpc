@@ -43,23 +43,6 @@ public class RpcProtocol extends AbstractProtocol {
 
     private ReplyHandler replyHandler = new ReplyHandler() {
         @Override
-        public void sent(Channel channel, Object message) {
-        }
-
-        @Override
-        public void received(Channel channel, Object message) {
-            throw new UnsupportedOperationException("cannot execute received function in ReplyHandler.");
-        }
-
-        @Override
-        public void connected(Channel channel) {
-        }
-
-        @Override
-        public void disconnected(Channel channel) {
-        }
-
-        @Override
         public Object reply(Object message, Channel channel) throws RemotingException {
             if (message instanceof RpcInvocation){
                 RpcInvocation invocation = (RpcInvocation) message;

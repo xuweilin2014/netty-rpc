@@ -11,11 +11,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class FutureAdapter implements Future {
+public class FutureWrapper implements Future {
 
     private final RpcFuture future;
 
-    public FutureAdapter(RpcFuture future) {
+    public FutureWrapper(RpcFuture future) {
         this.future = future;
     }
 

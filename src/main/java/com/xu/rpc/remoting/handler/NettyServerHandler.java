@@ -13,9 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyServerHandler extends ChannelDuplexHandler{
 
-    private ChannelHandler handler;
+    private final ChannelHandler handler;
 
-    private Map<String, Channel> channels = new ConcurrentHashMap<>();
+    private final Map<String, Channel> channels = new ConcurrentHashMap<>();
 
     public NettyServerHandler(ChannelHandler handler){
         this.handler = handler;
