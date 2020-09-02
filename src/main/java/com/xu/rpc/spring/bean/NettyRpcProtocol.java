@@ -8,15 +8,19 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
 
 public class NettyRpcProtocol {
-
+    // 协议 id
     private String id;
 
+    // 协议名称
     private String name;
 
+    // 端口号
     private String port;
 
+    // 序列化方式
     private String serialize;
 
+    // 端口号
     private String host;
 
     public String getId() {

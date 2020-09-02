@@ -6,6 +6,7 @@ import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.client.Client;
 import com.xu.rpc.remoting.client.EndPoint;
 import com.xu.rpc.remoting.server.Server;
+import com.xu.rpc.util.URL;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import org.apache.log4j.Logger;
@@ -17,24 +18,27 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HeartbeatExchangeEndpoint {
+public abstract class HeartbeatExchangeEndpoint{
 
     private static final Logger logger = Logger.getLogger(HeartbeatExchangeEndpoint.class);
 
     protected static final ScheduledThreadPoolExecutor heartbeatExecutor = new ScheduledThreadPoolExecutor(2, new NamedThreadFactory("RpcHeartbeatThread", true));
 
-    protected int heartbeat;
+    private int heartbeat;
 
-    protected int heartbeatTimeout;
+    private int heartbeatTimeout;
 
-    protected ScheduledFuture<?> heartbeatFuture;
+    private ScheduledFuture<?> heartbeatFuture;
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    private final URL url;
 
     public HeartbeatExchangeEndpoint(EndPoint endPoint){
         if (endPoint == null)
             throw new IllegalArgumentException("endpoint == null.");
 
+        url = endPoint.getUrl();
         heartbeat = endPoint.getUrl().getParameter(RpcConfig.HEARTBEAT_KEY, RpcConfig.DEFAULT_HEARTBEAT);
         // heartbeat 是强制开启的，如果其小于0，那么就直接设定为默认值
         if (heartbeat <= 0){
@@ -47,7 +51,7 @@ public class HeartbeatExchangeEndpoint {
         }
     }
 
-    public void startHeartbeat(EndPoint endPoint){
+    protected void startHeartbeat(EndPoint endPoint){
         stopHeartbeat();
         heartbeatFuture = heartbeatExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
@@ -96,7 +100,7 @@ public class HeartbeatExchangeEndpoint {
         }, heartbeat, heartbeat, TimeUnit.MILLISECONDS);
     }
 
-    protected void stopHeartbeat(){
+    private void stopHeartbeat(){
         if (heartbeatFuture != null && !heartbeatFuture.isCancelled()){
             try {
                 heartbeatFuture.cancel(true);
@@ -108,7 +112,17 @@ public class HeartbeatExchangeEndpoint {
         heartbeatFuture = null;
     }
 
-    public boolean isClosed(){
+    public boolean isClosed() {
         return closed.get();
     }
+
+    public void close(){
+        if (closed.compareAndSet(false, true)) {
+            stopHeartbeat();
+            // 如果是客户端关闭的话，什么都不做；如果
+            doClose();
+        }
+    }
+
+    public abstract void doClose();
 }

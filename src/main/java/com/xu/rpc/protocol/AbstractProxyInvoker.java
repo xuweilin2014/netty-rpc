@@ -1,12 +1,14 @@
 package com.xu.rpc.protocol;
 
+import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
+import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.util.URL;
 import org.apache.log4j.Logger;
 
 // 真正执行本地方法的 Invoker
-public abstract class AbstractProxyInvoker implements Invoker{
+public abstract class AbstractProxyInvoker<T> implements Invoker<T>{
 
     private Object serviceBean;
 
@@ -20,11 +22,6 @@ public abstract class AbstractProxyInvoker implements Invoker{
 
     public void setUrl(URL url) {
         this.url = url;
-    }
-
-    @Override
-    public URL getURL() {
-        return url;
     }
 
     public AbstractProxyInvoker(Object serviceBean, URL url) {
@@ -41,11 +38,11 @@ public abstract class AbstractProxyInvoker implements Invoker{
     }
 
     @Override
-    public Object invoke(MessageRequest request) {
+    public RpcResult invoke(RpcInvocation invocation) throws RpcException {
         try{
-             return new RpcResult(doInvoke(serviceBean, request.getMethodName(), request.getParametersVal()));
+            return new RpcResult(doInvoke(serviceBean, invocation.getMethodName(), invocation.getParameters()));
         } catch (Throwable e) {
-            logger.error("failed to invoke remote method " + request.getMethodName() + " to url " +
+            logger.error("failed to invoke remote method " + invocation.getMethodName() + " to url " +
                     url.toFullString() + " " + e.getMessage());
             return new RpcResult(e);
         }

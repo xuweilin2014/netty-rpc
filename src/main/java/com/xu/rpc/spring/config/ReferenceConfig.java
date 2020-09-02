@@ -23,33 +23,34 @@ import java.util.Map;
 public class ReferenceConfig<T> extends AbstractConfig {
 
     private static final Logger logger = Logger.getLogger(ReferenceConfig.class);
-
+    // 超时时间
     protected String timeout;
-
+    // 重试次数
     protected String retries;
-
+    // 负载均衡控制
     protected String loadbalance;
-
+    // 是否开启异步
     protected String async;
-
+    // 集群容错方式
     protected String cluster;
-
+    // 发送心跳包的时间间隔
     protected String heartbeat;
-
+    // 心跳超时时间
     protected String heartbeatTimeout;
-
+    // 桩
     protected String stub;
-
+    // 范围
     protected String scope;
-
+    // 过滤器
     protected String filter;
-
     // 进行服务直连
     protected String url;
 
     protected T ref;
-
+    // 指定协议，客户端只会调用指定协议的服务，其它协议忽略
     protected String protocol;
+    // 是否开启粘滞连接
+    protected String sticky;
 
     private List<URL> urls;
 
@@ -133,7 +134,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
 
                 // 有多个注册中心，使用 AvailableCluster 和 StaticDirectory
                 if (registryURL != null){
-                    URL url = registryURL.addParameter(RpcConfig.CLUSTER, AvailableCluster.NAME);
+                    URL url = registryURL.addParameter(RpcConfig.CLUSTER_KEY, AvailableCluster.NAME);
                     Cluster cluster = AdaptiveExtensionUtil.getCluster(url);
                     invoker = cluster.join(new StaticDirectory(invokers, url));
 
@@ -142,7 +143,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
                     if (invokers.size() == 0){
                         throw new IllegalStateException("no invoker available.");
                     }
-                    URL url = invokers.get(0).getURL();
+                    URL url = invokers.get(0).getUrl();
                     Cluster cluster = AdaptiveExtensionUtil.getCluster(url);
                     invoker = cluster.join(new StaticDirectory(invokers, url));
                 }
@@ -153,7 +154,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
             throw new IllegalStateException("no provider available for the service " + interfaceName);
         }
 
-        logger.info("refer service " + interfaceName + " from url " +invoker.getURL());
+        logger.info("refer service " + interfaceName + " from url " +invoker.getUrl());
 
         return (T) JDKProxyFactory.getProxy(invoker);
     }

@@ -4,7 +4,7 @@ import com.xu.rpc.util.URL;
 
 public interface Node {
 
-    public URL getURL();
+    public URL getUrl();
 
     public boolean isAvailable();
 

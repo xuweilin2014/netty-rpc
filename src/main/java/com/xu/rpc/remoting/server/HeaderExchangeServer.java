@@ -1,5 +1,6 @@
 package com.xu.rpc.remoting.server;
 
+import com.xu.rpc.remoting.client.HeaderExchangeClient;
 import com.xu.rpc.remoting.exchanger.HeartbeatExchangeEndpoint;
 import com.xu.rpc.util.URL;
 import io.netty.channel.Channel;
@@ -9,9 +10,9 @@ import java.util.List;
 
 public class HeaderExchangeServer extends HeartbeatExchangeEndpoint implements Server{
 
-    private final Server server;
-
     private static final Logger logger = Logger.getLogger(HeaderExchangeServer.class);
+
+    private final Server server;
 
     public HeaderExchangeServer(Server server) {
         super(server);
@@ -20,26 +21,30 @@ public class HeaderExchangeServer extends HeartbeatExchangeEndpoint implements S
     }
 
     public void close(){
-        // TODO: 2020/8/16
+        server.close();
         doClose();
     }
 
     @Override
     public boolean isClosed() {
-        return false;
+        return server.isClosed();
     }
 
     @Override
     public URL getUrl() {
-        return null;
+        return server.getUrl();
     }
 
     public void doClose(){
-        // TODO: 2020/8/16
+        try {
+            heartbeatExecutor.shutdown();
+        } catch (Throwable e) {
+            logger.error("error occurs when shutting down the executor, caused by " + e.getMessage());
+        }
     }
 
     @Override
     public List<Channel> getChannels() {
-        return null;
+        return server.getChannels();
     }
 }

@@ -13,7 +13,7 @@ public class InjvmProtocol extends AbstractProtocol {
     }
 
     @Override
-    public Invoker refer(URL url) throws RpcException {
+    public Invoker refer(URL url, Class<?> type) throws RpcException {
         return null;
     }
 }

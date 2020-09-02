@@ -1,9 +1,10 @@
 package com.xu.rpc.spring.bean;
 
 public class NettyRpcApplication {
-
+    // 是否开启监控
     private String metrics;
 
+    // 应用的名称
     private String name;
 
     public String getMetrics() {

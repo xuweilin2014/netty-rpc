@@ -108,10 +108,11 @@ public class ServiceConfig<T> extends AbstractConfig{
         String scope = url.getParameter("scope");
 
         // 当 scope 为 remote 的时候，只导出到远程，不导出到本地
+        // 当 scope 为 local 的时候，只导出到本地，不导出到远程
+        // 当用户没有配置 scope 的时候，既导出到本地，又导出到远程，这是默认的选项
         if (!RpcConfig.SCOPE_REMOTE.equals(scope))
             doExportLocal(protocol, url);
 
-        // 当 scope 为 local 的时候，只导出到本地，不导出到远程
         if (!RpcConfig.SCOPE_LOCAL.equals(scope))
             doExportRemote(protocol, url, registries);
     }
@@ -121,15 +122,17 @@ public class ServiceConfig<T> extends AbstractConfig{
         if (protocol.getName() == null)
             throw new IllegalStateException("protocol name cannot be null");
         // 导出服务到远程的时候，<nettyrpc:service/> 中配置的协议里面不能包含 injvm 协议
-        if (RpcConfig.INJVM.equals(protocol.getName()))
-            throw new IllegalStateException("cannot configure injvm protocol when scope attribute is "
+        if (RpcConfig.INJVM_PROTOCOL.equals(protocol.getName())) {
+            logger.error("cannot configure injvm protocol when scope attribute is "
                     + scope + ", in " + id + " <nettyrpc:service/>");
+            return;
+        }
 
         if (logger.isInfoEnabled())
             logger.info("export service " + interfaceName + " to " + url.toFullString());
 
         for (URL registryURL : registries) {
-            Protocol regProtocol = AdaptiveExtensionUtil.getProtocolExtension(registryURL);
+            Protocol regProtocol = AdaptiveExtensionUtil.getProtocol(registryURL);
             try {
                 Object proxy = interfaceClass.newInstance();
                 // 先导出 AbstractProxyInvoker 子类的对象，用于具体的执行客户端要调用的方法
@@ -146,9 +149,16 @@ public class ServiceConfig<T> extends AbstractConfig{
         }
     }
 
-    private void doExportLocal(NettyRpcProtocol protocol, URL url) {
-        // 导出服务到本地的时候，<nettyrpc:service/> 中配置的协议只能为 injvm
-        // TODO: 2020/8/9  
+    private void doExportLocal(URL url) {
+        // 导出服务到本地的时候，<nettyrpc:service/> 中配置的协议如果为 injvm，则不做处理，
+        // 如果为其它协议，则将其转换为 injvm 协议
+        URL localUrl = url;
+        if (!RpcConfig.INJVM_PROTOCOL.equals(url.getProtocol())){
+            localUrl = URL.valueOf(url.toFullString()).setProtocol(RpcConfig.INJVM_PROTOCOL);
+        }
+
+        Protocol protocol = AdaptiveExtensionUtil.getProtocol(localUrl);
+        Exporter<T> exporter = protocol.refer(localUrl, )
     }
 
     // 如果用户配置了合法的 IP 地址，则直接返回，否则，默认使用本机 IP 地址

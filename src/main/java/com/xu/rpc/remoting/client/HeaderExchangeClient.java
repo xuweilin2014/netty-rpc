@@ -2,11 +2,13 @@ package com.xu.rpc.remoting.client;
 
 import com.xu.rpc.async.DefaultRpcFuture;
 import com.xu.rpc.async.RpcFuture;
+import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.remoting.exchanger.HeartbeatExchangeEndpoint;
 import com.xu.rpc.util.URL;
+import javafx.scene.paint.Stop;
 import org.apache.log4j.Logger;
 
 import java.util.UUID;
@@ -26,19 +28,17 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
 
     @Override
     public void close() {
-        // TODO: 2020/8/31
+        super.close();
     }
 
     @Override
     public boolean isClosed() {
-        // TODO: 2020/8/31
-        return false;
+        return client.isClosed();
     }
 
     @Override
     public URL getUrl() {
-        // TODO: 2020/8/31
-        return null;
+        return client.getUrl();
     }
 
     @Override
@@ -72,8 +72,12 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
 
     @Override
     public RpcFuture request(Object request) throws RemotingException {
-        // TODO: 2020/9/1  
-        return null;
+        // 使用默认的超时时间，也就是 2000ms
+        return request(request, RpcConfig.DEFAULT_TIMEOUT);
     }
 
+    @Override
+    public void doClose() {
+        // do nothing
+    }
 }

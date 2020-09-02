@@ -1,6 +1,6 @@
 package com.xu.rpc.protocol;
 
-public class AbstractExporter implements Exporter {
+public class AbstractExporter<T> implements Exporter<T> {
 
     private Invoker invoker;
 

@@ -68,7 +68,7 @@ public class RpcProtocol extends AbstractProtocol {
     @Override
     public Exporter export(Invoker invoker) throws RpcException {
         // 1.从 invoker 中获取 url
-        URL url = invoker.getURL();
+        URL url = invoker.getUrl();
         // 2.根据 url 获取 ServiceKey, ServiceKey 由以下两个部分组成：服务名:端口号
         String serviceKey = getServiceKey(url);
         // 3.创建 RpcExporter

@@ -42,7 +42,7 @@ public class RpcConfig {
 
     public static final String SCOPE_REMOTE = "remote";
 
-    public static final String INJVM = "injvm";
+    public static final String INJVM_PROTOCOL = "injvm";
 
     public static final String EXPORT_KEY = "export";
 
@@ -139,5 +139,7 @@ public class RpcConfig {
     public static final AttributeKey<Long> LAST_READ_TIMESTAMP = AttributeKey.valueOf("lastReadTimestamp");
 
     public static final AttributeKey<Long> LAST_WRITE_TIMESTAMP = AttributeKey.valueOf("lastWriteTimestamp");
+
+    public static final String STUB_KEY = "stub";
 }
 

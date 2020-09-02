@@ -7,7 +7,7 @@ import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.util.URL;
 
-public interface Invoker extends Node {
+public interface Invoker<T> extends Node {
 
     public Class<?> getInterface();
 
