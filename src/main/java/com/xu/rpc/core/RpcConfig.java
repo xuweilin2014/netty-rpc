@@ -141,5 +141,7 @@ public class RpcConfig {
     public static final AttributeKey<Long> LAST_WRITE_TIMESTAMP = AttributeKey.valueOf("lastWriteTimestamp");
 
     public static final String STUB_KEY = "stub";
+
+    public static final String SCOPE_KEY = "scope";
 }
 

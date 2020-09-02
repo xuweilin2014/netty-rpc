@@ -7,6 +7,7 @@ import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
+import com.xu.rpc.protocol.rpc.RpcProtocol;
 import com.xu.rpc.util.AdaptiveExtensionUtil;
 import com.xu.rpc.util.URL;
 import lombok.Getter;
@@ -95,12 +96,15 @@ public class ReferenceConfig<T> extends AbstractConfig {
 
         // 进行本地引用
         if (isJvmRefer){
-
-        // 进行远程引用
+            URL injvmLocal = tmpUrl.setProtocol(RpcConfig.INJVM_PROTOCOL);
+            Protocol protocol = AdaptiveExtensionUtil.getProtocol(injvmLocal);
+            invoker = protocol.refer(injvmLocal, interfaceClass);
+            logger.info("using injvm service " + interfaceClass.getName());
+            // 进行远程引用
         }else{
             // url 不等于 null 的话，意味着进行服务直连
             if (url != null && url.length() != 0){
-
+                // TODO: 2020/9/2
             // 使用注册中心
             }else{
                 List<URL> us = getRegistries();
@@ -119,7 +123,6 @@ public class ReferenceConfig<T> extends AbstractConfig {
             if (urls.size() == 1){
                 URL url = urls.get(0);
                 invoker = AdaptiveExtensionUtil.getProtocol(url).refer(url, interfaceClass);
-
             // 有多个注册中心或者多个服务直连 url
             }else {
                 List<Invoker> invokers = new ArrayList<>();
@@ -159,9 +162,12 @@ public class ReferenceConfig<T> extends AbstractConfig {
         return (T) JDKProxyFactory.getProxy(invoker);
     }
 
-    private boolean isJvm(URL url) {
-        // TODO: 2020/8/19
-        return false;
+    private boolean isJvm(URL tmpUrl) {
+        // 如果指定使用 url 直连的方式调用服务，那么就不使用本地调用的方式
+        if (url != null && url.length() > 0)
+            return false;
+        // 如果用户指定使用本地的方法，就进行本地调用
+        return RpcConfig.SCOPE_LOCAL.equals(tmpUrl.getParameter(RpcConfig.SCOPE_KEY));
     }
 
     public synchronized void destroy(){

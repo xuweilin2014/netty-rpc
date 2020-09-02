@@ -123,8 +123,7 @@ public class ServiceConfig<T> extends AbstractConfig{
             throw new IllegalStateException("protocol name cannot be null");
         // 导出服务到远程的时候，<nettyrpc:service/> 中配置的协议里面不能包含 injvm 协议
         if (RpcConfig.INJVM_PROTOCOL.equals(protocol.getName())) {
-            logger.error("cannot configure injvm protocol when scope attribute is "
-                    + scope + ", in " + id + " <nettyrpc:service/>");
+            logger.error("cannot configure injvm protocol when scope attribute is " + scope + ", in " + id + " <nettyrpc:service/>");
             return;
         }
 
@@ -149,16 +148,19 @@ public class ServiceConfig<T> extends AbstractConfig{
         }
     }
 
-    private void doExportLocal(URL url) {
+    @SuppressWarnings("unchecked")
+    private void doExportLocal(NettyRpcProtocol protocol, URL url) {
         // 导出服务到本地的时候，<nettyrpc:service/> 中配置的协议如果为 injvm，则不做处理，
         // 如果为其它协议，则将其转换为 injvm 协议
         URL localUrl = url;
-        if (!RpcConfig.INJVM_PROTOCOL.equals(url.getProtocol())){
+        if (!RpcConfig.INJVM_PROTOCOL.equals(protocol.getName())){
             localUrl = URL.valueOf(url.toFullString()).setProtocol(RpcConfig.INJVM_PROTOCOL);
         }
 
-        Protocol protocol = AdaptiveExtensionUtil.getProtocol(localUrl);
-        Exporter<T> exporter = protocol.refer(localUrl, )
+        Protocol protocolLocal = AdaptiveExtensionUtil.getProtocol(localUrl);
+        // 通过 JDKProxyFactory 生成一个 invoker，用来真正执行具体的方法，再调用 export 方法将其导出成为一个 exporter
+        Exporter exporter = protocolLocal.export(JDKProxyFactory.getInvoker(ref, localUrl));
+        exporters.add(exporter);
     }
 
     // 如果用户配置了合法的 IP 地址，则直接返回，否则，默认使用本机 IP 地址

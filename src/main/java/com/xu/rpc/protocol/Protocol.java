@@ -6,9 +6,10 @@ import com.xu.rpc.util.URL;
 
 @Extension("rpc")
 public interface Protocol {
-    public Exporter export(Invoker invoker) throws RpcException;
 
-    public Invoker refer(URL url, Class<?> type) throws RpcException;
+    public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException;
+
+    public <T> Invoker<T> refer(URL url, Class<?> type) throws RpcException;
 
     public void destroy();
 }

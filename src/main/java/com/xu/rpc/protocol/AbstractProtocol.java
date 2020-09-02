@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractProtocol implements Protocol {
 
-    protected final Map<String, Exporter> exporters = new ConcurrentHashMap<>();
+    protected final Map<String, Exporter<?>> exporters = new ConcurrentHashMap<>();
 
     protected final Set<Invoker> invokers = new ConcurrentSet<>();
 

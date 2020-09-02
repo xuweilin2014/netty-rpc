@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractInvoker implements Invoker {
+public abstract class AbstractInvoker<T> implements Invoker<T> {
 
     private Class<?> type;
 
@@ -25,7 +25,7 @@ public abstract class AbstractInvoker implements Invoker {
     }
 
     @Override
-    public URL getURL() {
+    public URL getUrl() {
         return url;
     }
 
