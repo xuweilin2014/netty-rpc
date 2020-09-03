@@ -5,8 +5,12 @@ import com.xu.rpc.commons.cache.Cache;
 import com.xu.rpc.commons.cache.CacheFactory;
 
 public class ThreadLocalFactory implements CacheFactory {
+
+    public static final String NAME = "threadlocal";
+
     @Override
     public Cache createCache(URL url) {
-        return null;
+        return new ThreadLocalCache();
     }
+
 }

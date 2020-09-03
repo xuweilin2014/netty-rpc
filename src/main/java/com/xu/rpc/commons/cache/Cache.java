@@ -6,13 +6,6 @@ public interface Cache<K,V> {
 
     public void put(K key, V value);
 
-    public int size();
-
-    public int capacity();
-
     public void clear();
-
-    // 该方法，专门为segmentCache设计，
-    public void removeLast();
 
 }

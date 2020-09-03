@@ -1,14 +1,13 @@
-package com.xu.rpc.commons.cache;
+package com.xu.rpc.commons.cache.lru;
 
 import com.xu.rpc.commons.URL;
-import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.cache.Cache;
+import com.xu.rpc.core.RpcConfig;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class DefaultSegmentCache<K, V> implements SegmentCache<K, V>{
-
-    private final CacheFactory cacheFactory;
+public class DefaultLruSegmentCache<K, V> implements Cache<K, V> {
 
     // 桶的数量，或者说独立缓存的数量，其大小可以任意指定，不一定非要2的整数幂
     private final int segmentCount;
@@ -28,21 +27,22 @@ public class DefaultSegmentCache<K, V> implements SegmentCache<K, V>{
      * @param url 总线 url
      */
     @SuppressWarnings("unchecked")
-    public DefaultSegmentCache(int segmentCount, URL url) {
+    public DefaultLruSegmentCache(int segmentCount, URL url) {
         if (segmentCount <= 0) {
-            throw new IllegalArgumentException("segmentCount 必须大于0");
+            throw new IllegalArgumentException("segmentCount must be positive.");
         }
+
         this.segmentCount = segmentCount;
         caches = new Segment[segmentCount];
 
-        cacheFactory = AdaptiveExtensionUtil.getCacheFactory(url);
         for (int i = 0; i < segmentCount; i++) {
-            Cache cache =  cacheFactory.createCache(url);
+            int capacity = url.getParameter(RpcConfig.CACHE_CAPACITY_KEY, 100);
+            LruCache cache =  new DefaultLruCache(capacity);
             caches[i] = new Segment<>(cache);
         }
     }
 
-    public DefaultSegmentCache(URL url) {
+    public DefaultLruSegmentCache(URL url) {
         this(DEFAULT_SEGMENT_COUNT, url);
     }
 
@@ -57,7 +57,9 @@ public class DefaultSegmentCache<K, V> implements SegmentCache<K, V>{
     public void put(K key, V value) {
         int place = getSegmentPlace(key);
         Segment<K, V> cache = caches[place];
-        if (cache.size() < cache.capacity()) {//小于
+
+        // 小于
+        if (cache.size() < cache.capacity()) {
             cache.put(key, value);
             weedout(place);
             return;
@@ -110,12 +112,12 @@ public class DefaultSegmentCache<K, V> implements SegmentCache<K, V>{
     /**
      * 缓存：对真正的 cache 做了一层封装，也就是添加了锁机制，使其变为线程安全
      */
-    static final class Segment<K, V> extends ReentrantReadWriteLock implements Cache<K, V> {
+    static final class Segment<K, V> extends ReentrantReadWriteLock implements LruCache<K, V> {
 
         // segment中缓存的具体实现
-        private volatile Cache<K, V> cache;
+        private volatile LruCache<K, V> cache;
 
-        public Segment(Cache<K, V> cache) {
+        public Segment(LruCache<K, V> cache) {
             this.cache = cache;
         }
 
