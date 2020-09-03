@@ -1,7 +1,9 @@
-package com.xu.rpc.util;
+package com.xu.rpc.commons.util;
 
 import com.xu.rpc.cluster.Cluster;
 import com.xu.rpc.cluster.LoadBalancer;
+import com.xu.rpc.commons.URL;
+import com.xu.rpc.commons.cache.CacheFactory;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.protocol.Protocol;
@@ -55,6 +57,18 @@ public class AdaptiveExtensionUtil {
         ExtensionLoader<LoadBalancer> loader = ExtensionLoader.getExtensionLoader(LoadBalancer.class);
         if (loadbalance == null || loadbalance.length() == 0)
             return loader.getExtension(loadbalance);
+        else
+            return loader.getDefaultExtension();
+    }
+
+    public static CacheFactory getCacheFactory(URL url){
+        if (url == null)
+            throw new IllegalArgumentException("url cannot be null.");
+
+        String cache = url.getParameter(RpcConfig.CACHE_KEY);
+        ExtensionLoader<CacheFactory> loader = ExtensionLoader.getExtensionLoader(CacheFactory.class);
+        if (cache == null || cache.length() == 0)
+            return loader.getExtension(cache);
         else
             return loader.getDefaultExtension();
     }

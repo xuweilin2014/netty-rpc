@@ -2,7 +2,7 @@ package com.xu.rpc.registry;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.NamedThreadFactory;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 import java.util.*;
 import java.util.concurrent.*;

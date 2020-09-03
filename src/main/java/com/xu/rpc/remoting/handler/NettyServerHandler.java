@@ -1,6 +1,6 @@
 package com.xu.rpc.remoting.handler;
 
-import com.xu.rpc.util.NetUtil;
+import com.xu.rpc.commons.util.NetUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;

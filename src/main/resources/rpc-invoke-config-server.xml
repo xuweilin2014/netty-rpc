@@ -9,7 +9,7 @@
     http://www.newlandframework.com/nettyrpc http://www.newlandframework.com/nettyrpc/nettyrpc.xsd">
 
     <context:property-placeholder location="classpath:rpc-server.properties"/>
-    <bean id="beanFactory" class="com.xu.rpc.util.BeanFactoryUtil"/>
+    <bean id="beanFactory" class="com.xu.rpc.commons.util.BeanFactoryUtil"/>
 
     <nettyrpc:application name="application-provider" metrics="true"/>
 

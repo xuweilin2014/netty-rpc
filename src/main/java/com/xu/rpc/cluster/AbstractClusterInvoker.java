@@ -5,8 +5,8 @@ import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.util.AdaptiveExtensionUtil;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

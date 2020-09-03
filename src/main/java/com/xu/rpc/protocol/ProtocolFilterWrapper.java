@@ -5,8 +5,8 @@ import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.filter.ChainFilter;
 import com.xu.rpc.model.MessageRequest;
-import com.xu.rpc.util.Assert;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.Assert;
+import com.xu.rpc.commons.URL;
 
 import java.util.List;
 

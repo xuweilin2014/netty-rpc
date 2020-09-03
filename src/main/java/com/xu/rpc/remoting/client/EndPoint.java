@@ -1,6 +1,6 @@
 package com.xu.rpc.remoting.client;
 
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 public interface EndPoint {
 

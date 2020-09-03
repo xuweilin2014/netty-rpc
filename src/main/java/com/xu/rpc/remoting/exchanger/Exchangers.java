@@ -6,7 +6,7 @@ import com.xu.rpc.remoting.client.NettyClient;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.server.HeaderExchangeServer;
 import com.xu.rpc.remoting.server.NettyServer;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 public class Exchangers {
 

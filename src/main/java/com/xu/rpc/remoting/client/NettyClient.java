@@ -1,6 +1,5 @@
 package com.xu.rpc.remoting.client;
 
-import com.xu.rpc.async.RpcFuture;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.parallel.NamedThreadFactory;
@@ -9,7 +8,7 @@ import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyClientHandler;
 import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;

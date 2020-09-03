@@ -2,7 +2,7 @@ package com.xu.rpc.jmx;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.SemaphoreWrapper;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 

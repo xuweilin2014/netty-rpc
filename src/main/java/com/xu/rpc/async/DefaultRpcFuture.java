@@ -8,7 +8,7 @@ import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.model.MessageResponse;
 import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.support.MethodInvokeStatus;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;

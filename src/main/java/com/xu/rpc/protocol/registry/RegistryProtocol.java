@@ -10,8 +10,8 @@ import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.registry.Registry;
 import com.xu.rpc.registry.RegistryFactory;
-import com.xu.rpc.util.AdaptiveExtensionUtil;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.URL;
 
 import java.util.HashMap;
 import java.util.Map;

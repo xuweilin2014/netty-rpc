@@ -1,7 +1,7 @@
 package com.xu.rpc.remoting.echo;
 
 import com.xu.rpc.core.RpcConfig;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;

@@ -1,4 +1,4 @@
-package com.xu.rpc.util;
+package com.xu.rpc.commons;
 
 import com.xu.rpc.core.RpcConfig;
 import org.apache.commons.lang3.StringUtils;

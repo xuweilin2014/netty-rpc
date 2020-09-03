@@ -11,7 +11,7 @@ import com.xu.rpc.exception.RpcTimeoutException;
 import com.xu.rpc.protocol.AbstractInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ExchangeClient;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 import java.util.Set;
 import java.util.concurrent.Future;

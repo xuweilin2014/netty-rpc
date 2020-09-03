@@ -7,7 +7,7 @@ import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyServerHandler;
 import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;

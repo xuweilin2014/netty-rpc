@@ -1,4 +1,6 @@
-package com.xu.rpc.util;
+package com.xu.rpc.commons.util;
+
+import com.xu.rpc.commons.Assert;
 
 import java.net.InetSocketAddress;
 

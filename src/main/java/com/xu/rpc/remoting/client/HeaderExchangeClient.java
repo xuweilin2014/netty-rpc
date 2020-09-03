@@ -7,8 +7,7 @@ import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.remoting.exchanger.HeartbeatExchangeEndpoint;
-import com.xu.rpc.util.URL;
-import javafx.scene.paint.Stop;
+import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
 import java.util.UUID;

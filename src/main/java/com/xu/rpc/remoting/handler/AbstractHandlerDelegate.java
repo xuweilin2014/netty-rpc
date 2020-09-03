@@ -2,9 +2,7 @@ package com.xu.rpc.remoting.handler;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RemotingException;
-import com.xu.rpc.model.MessageRequest;
-import com.xu.rpc.model.MessageResponse;
-import com.xu.rpc.util.Assert;
+import com.xu.rpc.commons.Assert;
 import io.netty.channel.Channel;
 
 public class AbstractHandlerDelegate implements ChannelHandler {

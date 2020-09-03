@@ -6,7 +6,7 @@ import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.client.Client;
 import com.xu.rpc.remoting.client.EndPoint;
 import com.xu.rpc.remoting.server.Server;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import org.apache.log4j.Logger;

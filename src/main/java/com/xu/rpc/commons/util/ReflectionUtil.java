@@ -1,4 +1,4 @@
-package com.xu.rpc.util;
+package com.xu.rpc.commons.util;
 
 import com.google.common.collect.ImmutableMap;
 

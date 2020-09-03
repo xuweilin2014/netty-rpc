@@ -1,7 +1,7 @@
 package com.xu.rpc.registry;
 
-import com.xu.rpc.util.Assert;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.Assert;
+import com.xu.rpc.commons.URL;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;

@@ -1,14 +1,12 @@
 package com.xu.rpc.registry.zookeeper;
 
-import com.sun.org.apache.bcel.internal.generic.FADD;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.registry.FailbackRegistry;
 import com.xu.rpc.registry.KeeperStateListener;
 import com.xu.rpc.registry.NotifyListener;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import org.I0Itec.zkclient.IZkChildListener;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;

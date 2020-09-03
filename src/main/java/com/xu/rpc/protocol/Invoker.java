@@ -4,8 +4,6 @@ import com.xu.rpc.cluster.Node;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
-import com.xu.rpc.model.MessageRequest;
-import com.xu.rpc.util.URL;
 
 public interface Invoker<T> extends Node {
 

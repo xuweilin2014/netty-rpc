@@ -1,7 +1,7 @@
 package com.xu.rpc.registry;
 
-import com.xu.rpc.util.Assert;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.Assert;
+import com.xu.rpc.commons.URL;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 

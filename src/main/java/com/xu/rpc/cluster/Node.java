@@ -1,6 +1,6 @@
 package com.xu.rpc.cluster;
 
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 public interface Node {
 

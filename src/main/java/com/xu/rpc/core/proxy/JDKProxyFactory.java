@@ -1,13 +1,11 @@
 package com.xu.rpc.core.proxy;
 
 import com.xu.rpc.core.RpcConfig;
-import com.xu.rpc.core.RpcInvocation;
-import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.AbstractProxyInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ProxyWrapper;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
 import java.lang.reflect.InvocationTargetException;

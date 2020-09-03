@@ -2,7 +2,7 @@ package com.xu.rpc.registry.zookeeper;
 
 import com.xu.rpc.registry.AbstractRegistryFactory;
 import com.xu.rpc.registry.Registry;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
     @Override

@@ -143,5 +143,13 @@ public class RpcConfig {
     public static final String STUB_KEY = "stub";
 
     public static final String SCOPE_KEY = "scope";
+
+    public static final String LRU_CACHE = "lru";
+
+    public static final String THREADLOCAL_CACHE = "threadlocal";
+
+    public static final String CACHE_KEY = "cache";
+
+    public static final String CACHE_CAPACITY_KEY = "cache.capacity";
 }
 

@@ -1,11 +1,10 @@
 package com.xu.rpc.registry.zookeeper;
 
 import com.xu.rpc.registry.KeeperStateListener;
-import com.xu.rpc.util.Assert;
+import com.xu.rpc.commons.Assert;
 import org.I0Itec.zkclient.IZkChildListener;
 import org.I0Itec.zkclient.IZkStateListener;
 import org.I0Itec.zkclient.ZkClient;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 

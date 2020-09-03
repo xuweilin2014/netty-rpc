@@ -3,7 +3,7 @@ package com.xu.rpc.spring.config;
 import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.spring.bean.NettyRpcProtocol;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
 import java.util.List;

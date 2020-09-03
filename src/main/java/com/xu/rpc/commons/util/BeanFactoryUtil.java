@@ -1,4 +1,4 @@
-package com.xu.rpc.util;
+package com.xu.rpc.commons.util;
 
 
 import org.springframework.beans.BeansException;

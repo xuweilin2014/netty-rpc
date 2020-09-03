@@ -3,8 +3,7 @@ package com.xu.rpc.protocol;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
-import com.xu.rpc.model.MessageRequest;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
 // 真正执行本地方法的 Invoker
