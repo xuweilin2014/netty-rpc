@@ -1,11 +1,12 @@
 package com.xu.rpc.filter.support;
 
+import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.extension.Activate;
 import com.xu.rpc.event.InvokeEventFacade;
 import com.xu.rpc.event.ModuleEvent;
-import com.xu.rpc.filter.AbstractChainFilter;
+import com.xu.rpc.filter.ChainFilter;
 import com.xu.rpc.jmx.MetricsVisitor;
 import com.xu.rpc.jmx.MetricsVisitorHandler;
 import com.xu.rpc.model.MessageRequest;
@@ -19,7 +20,7 @@ import com.xu.rpc.commons.util.ReflectionUtil;
 import java.lang.reflect.Method;
 
 @Activate(group = {RpcConfig.PROVIDER}, order = 4)
-public class MonitorChainFilter extends AbstractChainFilter {
+public class MonitorChainFilter implements ChainFilter {
 
     private MessageRequest request;
 
@@ -39,12 +40,12 @@ public class MonitorChainFilter extends AbstractChainFilter {
      * 5.如果方法调用时抛出异常，就会修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
      */
     @Override
-    public Object doIntercept(Invoker invoker, MessageRequest request) {
+    public RpcResult intercept(Invoker invoker, RpcInvocation invocation) {
         this.request = request;
-        RpcResult result = (RpcResult) invoker.invoke(request);
+        RpcResult result = (RpcResult) invoker.invoke(invocation);
 
-        if (invoker.getURL().getParameter(RpcConfig.METRICS, true)
-                && invoker.getURL().getParameter(RpcConfig.MONITOR, true)){
+        if (invoker.getUrl().getParameter(RpcConfig.METRICS, true)
+                && invoker.getUrl().getParameter(RpcConfig.MONITOR, true)){
             // 增加方法的调用次数
             injectInvoke();
             if (result.getException() != null){

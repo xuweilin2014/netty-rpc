@@ -61,7 +61,7 @@ public class AdaptiveExtensionUtil {
             return loader.getDefaultExtension();
     }
 
-    public static CacheFactory getCacheFactory(URL url){
+    public static <K,V> CacheFactory<K,V> getCacheFactory(URL url){
         if (url == null)
             throw new IllegalArgumentException("url cannot be null.");
 

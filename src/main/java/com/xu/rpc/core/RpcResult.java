@@ -36,9 +36,13 @@ public class RpcResult implements Serializable {
         this.exception = t;
     }
 
-    public Object getResult() throws Throwable {
+    public Object returnResult() throws Throwable {
         if (exception != null)
             throw exception;
+        return result;
+    }
+
+    public Object getResult() {
         return result;
     }
 

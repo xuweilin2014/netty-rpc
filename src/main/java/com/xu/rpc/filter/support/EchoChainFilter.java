@@ -1,6 +1,5 @@
 package com.xu.rpc.filter.support;
 
-import com.xu.rpc.filter.AbstractChainFilter;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.protocol.Invoker;
 

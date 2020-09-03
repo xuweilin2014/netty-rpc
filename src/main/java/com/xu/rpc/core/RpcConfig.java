@@ -151,5 +151,7 @@ public class RpcConfig {
     public static final String CACHE_KEY = "cache";
 
     public static final String CACHE_CAPACITY_KEY = "cache.capacity";
+
+    public static final String CACHE_KEY_SEPARATOR = ",";
 }
 
