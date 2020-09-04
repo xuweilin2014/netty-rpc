@@ -5,10 +5,9 @@ import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Exporter;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
-import com.xu.rpc.util.AdaptiveExtensionUtil;
-import com.xu.rpc.util.ReflectionUtil;
 import com.xu.rpc.spring.bean.NettyRpcProtocol;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.*;
+import com.xu.rpc.commons.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +19,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -38,6 +38,8 @@ public class ServiceConfig<T> extends AbstractConfig{
     protected String monitor;
 
     protected boolean exported;
+
+    protected String token;
 
     private String path;
 
@@ -100,6 +102,16 @@ public class ServiceConfig<T> extends AbstractConfig{
         // 获取协议所使用的序列化方式
         String serialize = protocol.getSerialize();
         map.put(RpcConfig.SERIALIZE, serialize);
+
+        if (token != null && token.length() != 0 && !RpcConfig.FALSE.equals(token)) {
+            // token 的值为 true 的话，使用随机 token 令牌，即使用 UUID 生成
+            if (RpcConfig.TRUE.equals(token)){
+                map.put(RpcConfig.TOKEN_KEY, UUID.randomUUID().toString());
+            // token 不为 true 的话，即本身相当于密码
+            }else{
+                map.put(RpcConfig.TOKEN_KEY, token);
+            }
+        }
 
         String host = this.getHostAddress(protocol);
         int port = Integer.parseInt(protocol.getPort());

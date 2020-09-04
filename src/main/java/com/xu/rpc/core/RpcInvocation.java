@@ -12,6 +12,8 @@ public class RpcInvocation {
 
     private Class<?> serviceType;
 
+    private String token;
+
     public String getMethodName() {
         return methodName;
     }
@@ -42,5 +44,13 @@ public class RpcInvocation {
 
     public void setServiceType(Class<?> serviceType) {
         this.serviceType = serviceType;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

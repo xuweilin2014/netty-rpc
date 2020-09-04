@@ -37,8 +37,15 @@ public class RpcInvoker extends AbstractInvoker {
 
     @Override
     public RpcResult doInvoke(RpcInvocation invocation) throws RpcException {
-        int timeout = getURL().getParameter(RpcConfig.TIMEOUT_KEY, RpcConfig.DEFAULT_TIMEOUT);
-        boolean isAsync = getURL().getParameter(RpcConfig.ASYNC_KEY, false);
+        int timeout = getUrl().getParameter(RpcConfig.TIMEOUT_KEY, RpcConfig.DEFAULT_TIMEOUT);
+        boolean isAsync = getUrl().getParameter(RpcConfig.ASYNC_KEY, false);
+        String token = getUrl().getParameter(RpcConfig.TOKEN_KEY);
+
+        // 在向服务器发送请求之前，先检查服务器是否开启了 token 验证，如果开启了的话，就把 token 放入到
+        // RpcInvocation 中保存起来
+        if (token != null && token.length() != 0){
+            invocation.setToken(token);
+        }
 
         try{
             // 如果为异步调用的话
