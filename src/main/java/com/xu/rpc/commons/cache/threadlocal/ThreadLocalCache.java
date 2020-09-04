@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 public class ThreadLocalCache<K, V> implements Cache<K, V> {
 
+    // 每一个线程里面都有一份独立的 HashMap，用来保存数据，因此不用进行并发控制
     private final ThreadLocal<HashMap<K, V>> cache;
 
     public ThreadLocalCache(){

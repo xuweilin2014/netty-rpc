@@ -209,7 +209,7 @@ public final class ExtensionLoader<T> {
                 String name = entry.getKey();
                 Activate activate = entry.getValue();
                 if (isGroupMatch(group, activate.group())){
-                    if (!names.contains(RpcConfig.REMOVE_PREFIX + name)){
+                    if (!names.contains(RpcConfig.REMOVE_PREFIX + name) && isActive(url, activate)){
                         T ext = getExtension(name);
                         exts.add(ext);
                     }
@@ -254,6 +254,11 @@ public final class ExtensionLoader<T> {
             }
         }
 
+        return false;
+    }
+
+    private boolean isActive(URL url, Activate activate){
+        // TODO: 2020/9/4
         return false;
     }
 

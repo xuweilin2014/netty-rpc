@@ -1,15 +1,10 @@
 package com.xu.rpc.protocol;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
-import com.xu.rpc.model.MessageRequest;
-import com.xu.rpc.remoting.client.ExchangeClient;
-import com.xu.rpc.util.URL;
-
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractInvoker<T> implements Invoker<T> {
 

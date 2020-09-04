@@ -20,7 +20,7 @@ public class ProtocolFilterWrapper implements Protocol {
     }
 
     private Invoker buildInvokerChain(Invoker invoker, String group){
-        URL url = invoker.getURL();
+        URL url = invoker.getUrl();
         List<ChainFilter> filters = ExtensionLoader.getExtensionLoader(ChainFilter.class)
                             .getActivateExtension(url, RpcConfig.FILTER, group);
         for (ChainFilter filter : filters) {
@@ -33,7 +33,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
                 @Override
                 public URL getURL() {
-                    return next.getURL();
+                    return next.getUrl();
                 }
 
                 @Override
@@ -48,7 +48,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
     @Override
     public Exporter export(Invoker invoker) throws RpcException {
-        if (RpcConfig.REGISTRY_PROTOCOL.equals(invoker.getURL().getProtocol())){
+        if (RpcConfig.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())){
             return protocol.export(invoker);
         }
         return protocol.export(buildInvokerChain(invoker, RpcConfig.PROVIDER));

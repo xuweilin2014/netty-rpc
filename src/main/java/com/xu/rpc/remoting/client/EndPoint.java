@@ -10,4 +10,6 @@ public interface EndPoint {
 
     public URL getUrl();
 
+    public boolean isConnected();
+
 }

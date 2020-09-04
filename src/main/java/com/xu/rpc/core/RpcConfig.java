@@ -153,5 +153,11 @@ public class RpcConfig {
     public static final String CACHE_CAPACITY_KEY = "cache.capacity";
 
     public static final String CACHE_KEY_SEPARATOR = ",";
+
+    public static final String FALSE = "false";
+
+    public static final String TRUE = "true";
+
+    public static final String TOKEN_KEY = "token";
 }
 
