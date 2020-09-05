@@ -49,6 +49,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
         RpcResult result;
         if (mock.length() == 0 || RpcConfig.FALSE.equalsIgnoreCase(mock)){
             result = invoker.invoke(invocation);
+        // 当 mock 为 fail 时
         } else if (RpcConfig.MOCK_FAIL_KEY.equalsIgnoreCase(mock)){
             try{
                 result = invoker.invoke(invocation);
@@ -56,13 +57,16 @@ public class MockClusterInvoker<T> implements Invoker<T> {
                 result = new RpcResult();
                 result.setResult(null);
             }
+        // 当 mock 为 force 时，直接返回 null 结果，不会进行远程调用
         } else if (RpcConfig.MOCK_FORCE_KEY.equalsIgnoreCase(mock)) {
             result = new RpcResult();
             result.setResult(null);
+        // 当 mock 为 true 或者类名时
         } else {
             try {
                 result = invoker.invoke(invocation);
             } catch (RpcException e) {
+                // 调用失败之后，调用用户自己定义的 Mock 类
                 if (RpcConfig.TRUE.equalsIgnoreCase(mock)){
                     mock = invocation.getServiceType().getName() + "Mock";
                 }
