@@ -159,5 +159,11 @@ public class RpcConfig {
     public static final String TRUE = "true";
 
     public static final String TOKEN_KEY = "token";
+
+    public static final String MOCK_KEY = "mock";
+
+    public static final String MOCK_FAIL_KEY = "fail";
+
+    public static final String MOCK_FORCE_KEY = "force";
 }
 
