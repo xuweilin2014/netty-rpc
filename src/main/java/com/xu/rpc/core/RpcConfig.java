@@ -165,5 +165,7 @@ public class RpcConfig {
     public static final String MOCK_FAIL_KEY = "fail";
 
     public static final String MOCK_FORCE_KEY = "force";
+
+    public static final String FILE_KEY = "file";
 }
 

@@ -3,6 +3,7 @@ package com.xu.rpc.registry;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.commons.URL;
+import io.netty.util.internal.ConcurrentSet;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -15,11 +16,11 @@ public abstract class FailbackRegistry extends AbstractRegistry{
 
     private List<URL> failedUnregisteredURLs = new CopyOnWriteArrayList<>();
 
-    private Map<URL, NotifyListener> failedSubscribedListeners = new ConcurrentHashMap<>();
+    private Map<URL, Set<NotifyListener>> failedSubscribedListeners = new ConcurrentHashMap<>();
 
-    private Map<URL, NotifyListener> failedUnsubscribedListeners = new ConcurrentHashMap<>();
+    private Map<URL, Set<NotifyListener>> failedUnsubscribedListeners = new ConcurrentHashMap<>();
 
-    private Map<NotifyListener, List<URL>> failedNotified = new ConcurrentHashMap<>();
+    private Map<URL, Map<NotifyListener, List<URL>>> failedNotified = new ConcurrentHashMap<>();
 
     private AtomicBoolean destroyed = new AtomicBoolean(false);
 
@@ -79,15 +80,45 @@ public abstract class FailbackRegistry extends AbstractRegistry{
             return;
         }
         super.subscribe(url, listener);
-        failedSubscribedListeners.remove(url);
-        failedUnsubscribedListeners.remove(url);
-        failedNotified.remove(listener);
+        // 如果是重新注册监听器的话，就先移除掉这个 listener
+        removeFailedSubscribed(url, listener);
 
         try {
             doSubscribe(url, listener);
         } catch (Exception e) {
-            logger.error("failed to subscribe url " + url + ", caused by " + e.getMessage());
-            failedSubscribedListeners.remove(url, listener);
+            // 当向注册中心上注册监听器失败时，就从磁盘上获取缓存的提供者 urls，然后执行 notify 方法，并且把此 listener
+            // 添加到 failedSubscribedListeners 中，等待随后进行重试，重新注册
+            List<URL> cachedUrls = getCachedUrls(url);
+            if (cachedUrls != null && cachedUrls.size() > 0){
+                notify(url, listener, cachedUrls);
+            }
+
+            logger.error("failed to subscribe url " + url + " waiting for retry later, caused by " + e.getMessage());
+            addFailedSubscribed(url, listener);
+        }
+    }
+
+    private void addFailedSubscribed(URL url, NotifyListener listener){
+        Set<NotifyListener> listeners = failedSubscribedListeners.get(url);
+        if (listeners == null){
+            failedSubscribedListeners.put(url, new ConcurrentSet<>());
+            listeners = failedSubscribedListeners.get(url);
+        }
+        listeners.add(listener);
+    }
+
+    private void removeFailedSubscribed(URL url, NotifyListener listener){
+        Set<NotifyListener> listeners = failedSubscribedListeners.get(url);
+        if (listeners != null) {
+            listeners.remove(listener);
+        }
+        listeners = failedUnsubscribedListeners.get(url);
+        if (listeners != null) {
+            listeners.remove(listener);
+        }
+        Map<NotifyListener, List<URL>> listenerListMap = failedNotified.get(url);
+        if (listenerListMap != null) {
+            listenerListMap.remove(listener);
         }
     }
 
@@ -97,15 +128,19 @@ public abstract class FailbackRegistry extends AbstractRegistry{
             return;
         }
         super.unsubscribe(url, listener);
-        failedSubscribedListeners.remove(url);
-        failedUnsubscribedListeners.remove(url);
-        failedNotified.remove(listener);
+        removeFailedSubscribed(url, listener);
 
         try {
             doUnsubscribe(url, listener);
         } catch (Exception e) {
-            logger.error("failed to unsubscribe url " + url + ", caused by " + e.getMessage());
-            failedUnsubscribedListeners.put(url, listener);
+            // 取消注册失败，等待之后进行重试
+            logger.error("failed to unsubscribe url " + url + " waiting for retry later, caused by " + e.getMessage());
+            Set<NotifyListener> listeners = failedUnsubscribedListeners.get(url);
+            if (listeners == null){
+                failedUnsubscribedListeners.put(url, new ConcurrentSet<>());
+                listeners = failedUnsubscribedListeners.get(url);
+            }
+            listeners.add(listener);
         }
     }
 
@@ -114,8 +149,13 @@ public abstract class FailbackRegistry extends AbstractRegistry{
         try {
             doNotify(url, listener, urls);
         } catch (Exception e) {
-            logger.error("failed to notify for subscribe url " + url + ", caused by " + e.getMessage());
-            failedNotified.put(listener, urls);
+            logger.error("failed to notify for subscribe url " + url + " waiting for retry later, caused by " + e.getMessage());
+            Map<NotifyListener, List<URL>> map = failedNotified.get(url);
+            if (map == null){
+                failedNotified.put(url, new ConcurrentHashMap<>());
+                map = failedNotified.get(url);
+            }
+            map.put(listener, urls);
         }
     }
 
@@ -155,44 +195,50 @@ public abstract class FailbackRegistry extends AbstractRegistry{
         }
 
         if (failedSubscribedListeners.size() > 0) {
-            HashMap<URL, NotifyListener> subscribed = new HashMap<>(failedSubscribedListeners);
-            for (Map.Entry<URL, NotifyListener> entry : subscribed.entrySet()) {
+            HashMap<URL, Set<NotifyListener>> subscribed = new HashMap<>(failedSubscribedListeners);
+            for (Map.Entry<URL, Set<NotifyListener>> entry : subscribed.entrySet()) {
                 URL url = entry.getKey();
-                NotifyListener listener = entry.getValue();
-                try {
-                    doSubscribe(url, listener);
-                    subscribed.remove(url);
-                } catch (Throwable t) {
-                    logger.error("failed to subscribe " + url + " again, waiting for another retry.");
+                Set<NotifyListener> listeners = entry.getValue();
+                for (NotifyListener listener : listeners) {
+                    try {
+                        doSubscribe(url, listener);
+                        listeners.remove(listener);
+                    } catch (Throwable t) {
+                        logger.error("failed to subscribe " + url + " again, waiting for another retry.");
+                    }
                 }
             }
         }
 
         if (failedUnsubscribedListeners.size() > 0){
-            HashMap<URL, NotifyListener> unsubscribed = new HashMap<>(failedUnsubscribedListeners);
-            for (Map.Entry<URL, NotifyListener> entry : unsubscribed.entrySet()) {
+            HashMap<URL, Set<NotifyListener>> unsubscribed = new HashMap<>(failedUnsubscribedListeners);
+            for (Map.Entry<URL, Set<NotifyListener>> entry : unsubscribed.entrySet()) {
                 URL url = entry.getKey();
-                NotifyListener listener = entry.getValue();
-                try{
-                    doUnsubscribe(url, listener);
-                    unsubscribed.remove(url);
-                }catch (Throwable t){
-                    logger.error("failed to unsubscribe " + url + " again, waiting for another retry.");
+                Set<NotifyListener> listeners = entry.getValue();
+                for (NotifyListener listener : listeners) {
+                    try{
+                        doUnsubscribe(url, listener);
+                        listeners.remove(listener);
+                    }catch (Throwable t){
+                        logger.error("failed to unsubscribe " + url + " again, waiting for another retry.");
+                    }
                 }
             }
         }
 
         if (failedNotified.size() > 0){
-            HashMap<NotifyListener, List<URL>> map = new HashMap<>(failedNotified);
+            HashMap<URL, Map<NotifyListener,List<URL>>> map = new HashMap<>(failedNotified);
             if (!map.isEmpty()){
-                for (Map.Entry<NotifyListener, List<URL>> entry : map.entrySet()) {
-                    NotifyListener listener = entry.getKey();
-                    List<URL> urls = entry.getValue();
-                    try{
-                        listener.notify(urls);
-                        map.remove(listener);
-                    }catch (Throwable t){
-                        logger.error("failed to notify " + urls + " again, waiting for another retry.");
+                for (Map<NotifyListener, List<URL>> listenerUrlMap : map.values()) {
+                    for (Map.Entry<NotifyListener, List<URL>> entry : listenerUrlMap.entrySet()) {
+                        NotifyListener listener = entry.getKey();
+                        List<URL> urls = entry.getValue();
+                        try{
+                            listener.notify(urls);
+                            listenerUrlMap.remove(listener);
+                        }catch (Throwable t){
+                            logger.error("failed to notify " + urls + " again, waiting for another retry.");
+                        }
                     }
                 }
             }
@@ -211,12 +257,14 @@ public abstract class FailbackRegistry extends AbstractRegistry{
             failedRegisteredURLs.add(url);
         }
 
-        Map<URL, NotifyListener> subscribed = new HashMap<>(getSubscribed());
-        for (Map.Entry<URL, NotifyListener> entry : subscribed.entrySet()) {
+        Map<URL, Set<NotifyListener>> subscribed = new HashMap<>(getSubscribed());
+        for (Map.Entry<URL, Set<NotifyListener>> entry : subscribed.entrySet()) {
             URL url = entry.getKey();
-            NotifyListener listener = entry.getValue();
+            Set<NotifyListener> listeners = entry.getValue();
             logger.info("re-subscribe for url " + url);
-            failedSubscribedListeners.put(url, listener);
+            for (NotifyListener listener : listeners) {
+                addFailedSubscribed(url, listener);
+            }
         }
     }
 
