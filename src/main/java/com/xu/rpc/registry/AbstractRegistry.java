@@ -26,9 +26,6 @@ public abstract class AbstractRegistry implements Registry {
 
     private final Map<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<>();
 
-    // notified 键值对为：消费者的 url -> 提供者的 url 集合
-    private final Map<URL, List<URL>> notified = new ConcurrentHashMap<>();
-
     private static final ExecutorService cacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("RegistrySaveCacheThread"));
 
     private static final int MAX_SAVE_CACHE_RETRY_TIMES = 3;
@@ -39,8 +36,6 @@ public abstract class AbstractRegistry implements Registry {
 
     private final File file;
 
-    private static final String defaultPath = "./.cache";
-
     private final AtomicBoolean destroyed = new AtomicBoolean(false);
 
     private URL registryURL;
@@ -49,6 +44,7 @@ public abstract class AbstractRegistry implements Registry {
         this.registryURL = url;
 
         // 如果用户在 <nettyrpc:registry/> 中配置了 file 属性的话，使用用户自己的设置，否则使用默认的设置
+        String defaultPath = url.getServiceName() + "-" + url.getParameter(RpcConfig.APPLICATION_KEY) + "-cache";
         String path = url.getParameter(RpcConfig.FILE_KEY, defaultPath);
         this.file = new File(path);
         // 如果 file 文件已经存在的话，那么它的父目录肯定已经被创建了
@@ -147,7 +143,6 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
 
-        notified.put(url, result);
         // 每当注册中心的提供者 url 发生了改变时，就会从注册中心获取到最新的提供者的全量数据，并将其保存到内存中的
         // properties 对象里面
         saveCacheUrls(url, result);
@@ -174,6 +169,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     private void doSaveCacheUrls(long version, int retries) {
+        // 如果此 task 中缓存的版本小于缓存的最新版本，或者重试次数达到了上限，那么直接返回
         if (version < cacheVersion.get() || retries >= MAX_SAVE_CACHE_RETRY_TIMES){
             return;
         }
@@ -189,6 +185,7 @@ public abstract class AbstractRegistry implements Registry {
                 }
 
                 try(FileOutputStream fos = new FileOutputStream(file)){
+                    // 将内存中 properties 对象中所保存的缓存 url 写入到磁盘里面
                     properties.store(fos, "SaveCacheUrls");
                 }catch (IOException e){
                     throw e;
@@ -220,6 +217,7 @@ public abstract class AbstractRegistry implements Registry {
 
         logger.info("destroy the registry for url " + registryURL);
 
+        // 取消注册在注册中心上的节点
         ArrayList<URL> registered = new ArrayList<>(getRegistered());
         if (registered.size() > 0){
             for (URL url : registered) {
@@ -232,6 +230,7 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
 
+        // 取消注册在注册中心上的监听器
         HashMap<URL, Set<NotifyListener>> subscribed = new HashMap<>(getSubscribed());
         for (Map.Entry<URL, Set<NotifyListener>> entry : subscribed.entrySet()) {
             URL url = entry.getKey();

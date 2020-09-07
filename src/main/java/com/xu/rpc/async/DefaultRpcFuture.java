@@ -12,10 +12,7 @@ import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -87,13 +84,21 @@ public class DefaultRpcFuture implements RpcFuture{
         futures.put(id, this);
     }
 
+    public static Map<String, RpcFuture> getFutures(){
+        return Collections.unmodifiableMap(futures);
+    }
+
     public static void received(MessageResponse response){
-        DefaultRpcFuture future = futures.remove(response.getMessageId());
-        if (future != null){
-            future.doReceived(response);
-        }else {
-            logger.warn("timeout response arrived at " + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                    .format(new Date())));
+        try{
+            DefaultRpcFuture future = futures.get(response.getMessageId());
+            if (future != null){
+                future.doReceived(response);
+            }else {
+                logger.warn("timeout response arrived at " + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                        .format(new Date())));
+            }
+        }finally {
+            futures.remove(response.getMessageId());
         }
     }
 

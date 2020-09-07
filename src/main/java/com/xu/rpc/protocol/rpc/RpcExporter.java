@@ -10,9 +10,9 @@ public class RpcExporter extends AbstractExporter {
 
     private String key;
 
-    private Map<String, Exporter> exporterMap;
+    private Map<String, Exporter<?>> exporterMap;
 
-    public RpcExporter(Invoker invoker, String key, Map<String, Exporter> exporterMap) {
+    public RpcExporter(Invoker invoker, String key, Map<String, Exporter<?>> exporterMap) {
         super(invoker);
         this.key = key;
         this.exporterMap = exporterMap;

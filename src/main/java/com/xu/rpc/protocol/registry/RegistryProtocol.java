@@ -19,7 +19,7 @@ import java.util.Map;
 public class RegistryProtocol extends AbstractProtocol {
 
     @Override
-    public Exporter export(Invoker invoker) throws RpcException {
+    public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (invoker == null)
             throw new IllegalArgumentException("invoker cannot be null.");
         if (invoker.getUrl() == null)
@@ -29,7 +29,7 @@ public class RegistryProtocol extends AbstractProtocol {
         URL providerURL =  getProviderURL(invoker);
         // 2.使用 providerURL 进行真正的导出
         Protocol protocol = AdaptiveExtensionUtil.getProtocol(providerURL);
-        Exporter exporter = protocol.export(invoker);
+        Exporter<T> exporter = protocol.export(invoker);
         // 3.获取 registry 对象的类型
         Registry registry = getRegistry(invoker);
         // 4.将 providerURL 注册到 registryURL 上
@@ -65,14 +65,5 @@ public class RegistryProtocol extends AbstractProtocol {
 
         Cluster cluster = AdaptiveExtensionUtil.getCluster(directory.getURL());
         return cluster.join(directory);
-    }
-
-    @Override
-    public void destroy() {
-        // TODO: 2020/8/9
-    }
-
-    public void subscribe(){
-        // TODO: 2020/8/9
     }
 }

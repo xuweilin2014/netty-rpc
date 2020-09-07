@@ -22,7 +22,7 @@ public abstract class HeartbeatExchangeEndpoint{
 
     private static final Logger logger = Logger.getLogger(HeartbeatExchangeEndpoint.class);
 
-    protected static final ScheduledThreadPoolExecutor heartbeatExecutor = new ScheduledThreadPoolExecutor(2, new NamedThreadFactory("RpcHeartbeatThread", true));
+    private static final ScheduledThreadPoolExecutor heartbeatExecutor = new ScheduledThreadPoolExecutor(2, new NamedThreadFactory("RpcHeartbeatThread", true));
 
     private int heartbeat;
 
@@ -52,6 +52,9 @@ public abstract class HeartbeatExchangeEndpoint{
     }
 
     protected void startHeartbeat(EndPoint endPoint){
+        if (isClosed())
+            return;
+
         stopHeartbeat();
         heartbeatFuture = heartbeatExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
@@ -119,10 +122,11 @@ public abstract class HeartbeatExchangeEndpoint{
     public void close(){
         if (closed.compareAndSet(false, true)) {
             stopHeartbeat();
-            // 如果是客户端关闭的话，什么都不做；如果
-            doClose();
+            try {
+                heartbeatExecutor.shutdown();
+            } catch (Throwable e) {
+                logger.error("error occurs when shutting down the executor, caused by " + e.getMessage());
+            }
         }
     }
-
-    public abstract void doClose();
 }

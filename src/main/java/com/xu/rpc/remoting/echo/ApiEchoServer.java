@@ -22,6 +22,12 @@ public class ApiEchoServer{
 
     private static final boolean SSL = System.getProperty("ssl") != null;
 
+    private EventLoopGroup bossGroup;
+
+    private EventLoopGroup workerGroup;
+
+    private Channel channel;
+
     private String host;
 
     private URL url;
@@ -32,8 +38,8 @@ public class ApiEchoServer{
     }
     
     public void start() {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        this.bossGroup = new NioEventLoopGroup(1);
+        this.workerGroup = new NioEventLoopGroup();
 
         try {
             SslContext sslCtx = null;
@@ -54,21 +60,31 @@ public class ApiEchoServer{
                      */
                     .childHandler(new ApiEchoInitializer(sslCtx));
 
-            Channel ch = b.bind(host, RpcConfig.ECHO_PORT).sync().channel();
+            this.channel = b.bind(host, RpcConfig.ECHO_PORT).sync().channel();
 
             logger.info("netty-rpc server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html");
             if (url.getParameter(RpcConfig.METRICS, true)){
                 logger.info("netty-rpc server metrics:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html/metrics");
             }
 
-            ch.closeFuture().sync();
         } catch (Throwable e) {
             logger.error("failed to start echo server, caused by: " + e.getMessage());
         }
     }
     
     public void stop(){
-        // TODO: 2020/8/15  
+        try {
+            channel.close();
+        } catch (Exception e) {
+            logger.warn("failed to close the echo server channel " + channel);
+        }
+
+        try {
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+        } catch (Exception e) {
+            logger.warn("failed to shutdown the event loop group.");
+        }
     }
 }
 

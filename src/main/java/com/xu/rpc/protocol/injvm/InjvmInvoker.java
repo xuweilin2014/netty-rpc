@@ -1,11 +1,11 @@
 package com.xu.rpc.protocol.injvm;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.AbstractInvoker;
 import com.xu.rpc.protocol.Exporter;
-import com.xu.rpc.util.URL;
 
 import java.util.Map;
 

@@ -189,6 +189,10 @@ public final class ExtensionLoader<T> {
         }
     }
 
+    public List<T> getExtensions() {
+        return Collections.unmodifiableList((List<T>) extensions.values());
+    }
+
     public List<T> getActivateExtension(URL url, String key, String group){
         String value = url.getParameter(key);
         String[] values = null;

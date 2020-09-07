@@ -1,7 +1,6 @@
 package com.xu.rpc.core;
 
 import io.netty.util.AttributeKey;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * RPC服务器一些参数配置
@@ -11,16 +10,6 @@ public class RpcConfig {
     public static final String SYSTEM_PROPERTY_THREADPOOL_REJECTED_POLICY_ATTR = "nettyrpc.parallel.rejected.policy";
 
     public static final String SYSTEM_PROPERTY_THREADPOOL_QUEUE_NAME_ATTR = "nettyrpc.parallel.queue";
-
-    public static final long SYSTEM_PROPERTY_MESSAGE_CALLBACK_TIMEOUT = Long.getLong("nettyrpc.default.msg.timeout", 30 * 1000L);
-
-    public static final long SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT = Long.getLong("nettyrpc.default.asyncmsg.timeout", 60 * 1000L);
-
-    public static final int SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS = Integer.getInteger("nettyrpc.default.thread.nums", 16);
-
-    public static final int SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS = Integer.getInteger("nettyrpc.default.queue.nums", -1);
-
-    public static final int SYSTEM_PROPERTY_CLIENT_RECONNECT_DELAY = Integer.parseInt(System.getProperty("nettyrpc.default.client.reconnect.delay", "10"));
 
     public static final int SYSTEM_PROPERTY_PARALLEL = Math.max(2, Runtime.getRuntime().availableProcessors());
 
@@ -167,5 +156,7 @@ public class RpcConfig {
     public static final String MOCK_FORCE_KEY = "force";
 
     public static final String FILE_KEY = "file";
+
+    public static final String APPLICATION_KEY = "application";
 }
 
