@@ -26,8 +26,24 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
     }
 
     @Override
-    public void close() {
+    public void close(int timeout) {
+        // 关闭掉心跳机制
         super.close();
+        if (timeout > 0){
+            long start = System.currentTimeMillis();
+            // 若关闭服务消费者，已经发出的服务请求，需要等待响应返回，若在 timeout 时间间隔内响应没有返回，强制关闭
+            while (!DefaultRpcFuture.getFutures().isEmpty()
+                    && System.currentTimeMillis() - start < timeout){
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    logger.warn(e.getMessage());
+                }
+            }
+        }
+
+        // 在 timeout 时间间隔内关闭掉 NettyClient
+        client.close(timeout);
     }
 
     @Override
@@ -38,6 +54,11 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
     @Override
     public URL getUrl() {
         return client.getUrl();
+    }
+
+    @Override
+    public boolean isConnected() {
+        return client.isConnected();
     }
 
     @Override
@@ -75,8 +96,4 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
         return request(request, RpcConfig.DEFAULT_TIMEOUT);
     }
 
-    @Override
-    public void doClose() {
-        // do nothing
-    }
 }

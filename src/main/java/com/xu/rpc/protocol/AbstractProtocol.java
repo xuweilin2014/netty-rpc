@@ -1,12 +1,15 @@
 package com.xu.rpc.protocol;
 
 import io.netty.util.internal.ConcurrentSet;
+import org.apache.log4j.Logger;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractProtocol implements Protocol {
+
+    private static final Logger logger = Logger.getLogger(AbstractProtocol.class);
 
     protected final Map<String, Exporter<?>> exporters = new ConcurrentHashMap<>();
 
@@ -18,7 +21,24 @@ public abstract class AbstractProtocol implements Protocol {
 
     @Override
     public void destroy() {
-        // TODO: 2020/8/9
+        // 销毁掉 invokers 中所有的 invoker
+        for (Invoker invoker : invokers) {
+            try {
+                invoker.destroy();
+                invokers.remove(invoker);
+            } catch (Exception e) {
+                logger.warn("failed to destroy the invoker " + invoker.getInterface());
+            }
+        }
+
         // 销毁掉 exporters 中所有的 exporter
+        for (String key : exporters.keySet()) {
+            Exporter<?> exporter = exporters.remove(key);
+            try {
+                exporter.unexport();
+            } catch (Exception e) {
+                logger.warn("failed to unexport the exporter " + key);
+            }
+        }
     }
 }

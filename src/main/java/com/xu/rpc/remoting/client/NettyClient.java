@@ -60,7 +60,7 @@ public class NettyClient implements Client {
 
     private long lastConnectedTime = System.currentTimeMillis();
 
-    private Lock lock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();
 
     public NettyClient(URL url, ChannelHandler handler) throws RemotingException {
         this.url = url;
@@ -195,6 +195,10 @@ public class NettyClient implements Client {
 
     @Override
     public void send(Object message) throws RemotingException {
+        if (isClosed()){
+            logger.warn("client is closed, cannot send message.");
+        }
+
         try {
             // 将消息发出
             channel.writeAndFlush(message);
@@ -212,10 +216,15 @@ public class NettyClient implements Client {
         return url;
     }
 
-    public void close(){
+    @Override
+    public void close(int timeout){
         if (closed.get())
             return;
 
+        close();
+    }
+
+    private void close(){
         if (closed.compareAndSet(false, true)){
             try {
                 reconnectExecutor.shutdownNow();
