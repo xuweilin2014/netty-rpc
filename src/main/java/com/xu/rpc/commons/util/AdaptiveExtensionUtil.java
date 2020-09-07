@@ -4,6 +4,7 @@ import com.xu.rpc.cluster.Cluster;
 import com.xu.rpc.cluster.LoadBalancer;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.commons.cache.CacheFactory;
+import com.xu.rpc.commons.limiter.RateLimiterFactory;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.protocol.Protocol;
@@ -69,6 +70,18 @@ public class AdaptiveExtensionUtil {
         ExtensionLoader<CacheFactory> loader = ExtensionLoader.getExtensionLoader(CacheFactory.class);
         if (cache == null || cache.length() == 0)
             return loader.getExtension(cache);
+        else
+            return loader.getDefaultExtension();
+    }
+
+    public static RateLimiterFactory getLimiterFactory(URL url){
+        if (url == null)
+            throw new IllegalArgumentException("url cannot be null.");
+
+        String limiter = url.getParameter(RpcConfig.LIMITER_KEY);
+        ExtensionLoader<RateLimiterFactory> loader = ExtensionLoader.getExtensionLoader(RateLimiterFactory.class);
+        if (limiter == null || limiter.length() == 0)
+            return loader.getExtension(limiter);
         else
             return loader.getDefaultExtension();
     }

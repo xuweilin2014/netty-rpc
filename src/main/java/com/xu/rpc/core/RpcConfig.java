@@ -158,5 +158,11 @@ public class RpcConfig {
     public static final String FILE_KEY = "file";
 
     public static final String APPLICATION_KEY = "application";
+
+    public static final String RATE_KEY = "rate";
+
+    public static final int DEFAULT_RATE_LIMIT_PER_SECOND = Integer.MAX_VALUE;
+
+    public static final String LIMITER_KEY = "limiter";
 }
 
