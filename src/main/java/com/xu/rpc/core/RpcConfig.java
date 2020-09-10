@@ -1,6 +1,6 @@
 package com.xu.rpc.core;
 
-import io.netty.util.AttributeKey;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * RPC服务器一些参数配置

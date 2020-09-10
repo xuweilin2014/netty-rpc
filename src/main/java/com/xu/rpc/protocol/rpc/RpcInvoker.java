@@ -7,6 +7,8 @@ import com.xu.rpc.protocol.AbstractInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ExchangeClient;
 import com.xu.rpc.util.URL;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Set;
 
@@ -15,11 +17,9 @@ import java.util.Set;
  */
 public class RpcInvoker extends AbstractInvoker {
 
-    private final Set<Invoker> invokers;
+    private Set<Invoker> invokers;
 
-    private final ExchangeClient client;
-
-    private final Lock lock = new ReentrantLock();
+    private ExchangeClient client;
 
     public RpcInvoker(Class<?> type, URL url, Set<Invoker> invokers, ExchangeClient client) {
         super(type, url);
