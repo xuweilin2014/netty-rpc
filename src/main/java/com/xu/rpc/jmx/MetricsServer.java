@@ -2,7 +2,8 @@ package com.xu.rpc.jmx;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.SemaphoreWrapper;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
+import com.xu.rpc.remoting.server.Server;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -18,7 +19,7 @@ import java.util.concurrent.Semaphore;
  * 拥有属性：ModuleMetricsVisitor
  * 拥有行为：addModuleMetricsVisitor
  */
-public class MetricsServer{
+public class MetricsServer {
 
     private static final Logger logger = Logger.getLogger(MetricsServer.class);
 

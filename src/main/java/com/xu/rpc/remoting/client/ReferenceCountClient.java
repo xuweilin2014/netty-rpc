@@ -1,8 +1,8 @@
 package com.xu.rpc.remoting.client;
 
-import com.xu.rpc.async.ResponseFuture;
+import com.xu.rpc.async.RpcFuture;
 import com.xu.rpc.exception.RemotingException;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,12 +47,17 @@ public class ReferenceCountClient implements ExchangeClient{
     }
 
     @Override
-    public ResponseFuture request(Object request, int timeout) throws RemotingException {
+    public boolean isConnected() {
+        return false;
+    }
+
+    @Override
+    public RpcFuture request(Object request, int timeout) throws RemotingException {
         return client.request(request, timeout);
     }
 
     @Override
-    public ResponseFuture request(Object request) throws RemotingException {
+    public RpcFuture request(Object request) throws RemotingException {
         return client.request(request);
     }
 }

@@ -15,27 +15,27 @@ public class RpcSerializeFrame implements SerializeFrame {
     public RpcSerializeFrame() {
     }
 
-    private static ClassToInstanceMap<NettyRpcInitializer> handler = MutableClassToInstanceMap.create();
+    private static ClassToInstanceMap<NettyRpcInitializer> initializers = MutableClassToInstanceMap.create();
 
     static {
-        handler.putInstance(JdkNativeInitializer.class, new JdkNativeInitializer());
-        handler.putInstance(KryoInitializer.class, new KryoInitializer());
-        handler.putInstance(HessianInitializer.class, new HessianInitializer());
+        initializers.putInstance(JdkNativeInitializer.class, new JdkNativeInitializer());
+        initializers.putInstance(KryoInitializer.class, new KryoInitializer());
+        initializers.putInstance(HessianInitializer.class, new HessianInitializer());
     }
 
     @Override
-    public void select(Serialization serialization, ChannelPipeline pipeline, ChannelDuplexHandler serverHandler) {
+    public void select(Serialization serialization, ChannelPipeline pipeline, ChannelDuplexHandler handler) {
         switch (serialization) {
             case JDKSERIALIZE: {
-                handler.getInstance(JdkNativeInitializer.class).handle(pipeline, serverHandler);
+                initializers.getInstance(JdkNativeInitializer.class).handle(pipeline, handler);
                 break;
             }
             case KRYOSERIALIZE: {
-                handler.getInstance(KryoInitializer.class).handle(pipeline, serverHandler);
+                initializers.getInstance(KryoInitializer.class).handle(pipeline, handler);
                 break;
             }
             case HESSIANSERIALIZE: {
-                handler.getInstance(HessianInitializer.class).handle(pipeline, serverHandler);
+                initializers.getInstance(HessianInitializer.class).handle(pipeline, handler);
                 break;
             }
             default: {

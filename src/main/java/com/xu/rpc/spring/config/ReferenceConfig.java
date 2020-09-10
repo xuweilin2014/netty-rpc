@@ -7,6 +7,7 @@ import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
+import com.xu.rpc.protocol.rpc.RpcProtocol;
 import com.xu.rpc.util.AdaptiveExtensionUtil;
 import com.xu.rpc.util.URL;
 import lombok.Getter;
@@ -23,33 +24,34 @@ import java.util.Map;
 public class ReferenceConfig<T> extends AbstractConfig {
 
     private static final Logger logger = Logger.getLogger(ReferenceConfig.class);
-
+    // 超时时间
     protected String timeout;
-
+    // 重试次数
     protected String retries;
-
+    // 负载均衡控制
     protected String loadbalance;
-
+    // 是否开启异步
     protected String async;
-
+    // 集群容错方式
     protected String cluster;
-
+    // 发送心跳包的时间间隔
     protected String heartbeat;
-
+    // 心跳超时时间
     protected String heartbeatTimeout;
-
+    // 桩
     protected String stub;
-
+    // 范围
     protected String scope;
-
+    // 过滤器
     protected String filter;
-
     // 进行服务直连
     protected String url;
 
     protected T ref;
-
+    // 指定协议，客户端只会调用指定协议的服务，其它协议忽略
     protected String protocol;
+    // 是否开启粘滞连接
+    protected String sticky;
 
     private List<URL> urls;
 
@@ -94,12 +96,15 @@ public class ReferenceConfig<T> extends AbstractConfig {
 
         // 进行本地引用
         if (isJvmRefer){
-
-        // 进行远程引用
+            URL injvmLocal = tmpUrl.setProtocol(RpcConfig.INJVM_PROTOCOL);
+            Protocol protocol = AdaptiveExtensionUtil.getProtocol(injvmLocal);
+            invoker = protocol.refer(injvmLocal, interfaceClass);
+            logger.info("using injvm service " + interfaceClass.getName());
+            // 进行远程引用
         }else{
             // url 不等于 null 的话，意味着进行服务直连
             if (url != null && url.length() != 0){
-
+                // TODO: 2020/9/2
             // 使用注册中心
             }else{
                 List<URL> us = getRegistries();
@@ -118,7 +123,6 @@ public class ReferenceConfig<T> extends AbstractConfig {
             if (urls.size() == 1){
                 URL url = urls.get(0);
                 invoker = AdaptiveExtensionUtil.getProtocol(url).refer(url, interfaceClass);
-
             // 有多个注册中心或者多个服务直连 url
             }else {
                 List<Invoker> invokers = new ArrayList<>();
@@ -133,7 +137,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
 
                 // 有多个注册中心，使用 AvailableCluster 和 StaticDirectory
                 if (registryURL != null){
-                    URL url = registryURL.addParameter(RpcConfig.CLUSTER, AvailableCluster.NAME);
+                    URL url = registryURL.addParameter(RpcConfig.CLUSTER_KEY, AvailableCluster.NAME);
                     Cluster cluster = AdaptiveExtensionUtil.getCluster(url);
                     invoker = cluster.join(new StaticDirectory(invokers, url));
 
@@ -142,7 +146,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
                     if (invokers.size() == 0){
                         throw new IllegalStateException("no invoker available.");
                     }
-                    URL url = invokers.get(0).getURL();
+                    URL url = invokers.get(0).getUrl();
                     Cluster cluster = AdaptiveExtensionUtil.getCluster(url);
                     invoker = cluster.join(new StaticDirectory(invokers, url));
                 }
@@ -153,14 +157,17 @@ public class ReferenceConfig<T> extends AbstractConfig {
             throw new IllegalStateException("no provider available for the service " + interfaceName);
         }
 
-        logger.info("refer service " + interfaceName + " from url " +invoker.getURL());
+        logger.info("refer service " + interfaceName + " from url " +invoker.getUrl());
 
         return (T) JDKProxyFactory.getProxy(invoker);
     }
 
-    private boolean isJvm(URL url) {
-        // TODO: 2020/8/19
-        return false;
+    private boolean isJvm(URL tmpUrl) {
+        // 如果指定使用 url 直连的方式调用服务，那么就不使用本地调用的方式
+        if (url != null && url.length() > 0)
+            return false;
+        // 如果用户指定使用本地的方法，就进行本地调用
+        return RpcConfig.SCOPE_LOCAL.equals(tmpUrl.getParameter(RpcConfig.SCOPE_KEY));
     }
 
     public synchronized void destroy(){

@@ -1,9 +1,8 @@
 package com.newlandframework.test;
 
-import com.xu.rpc.async.AsyncCallObject;
-import com.xu.rpc.async.AsyncCallback;
-import com.xu.rpc.async.AsyncInvoker;
-import com.xu.rpc.exception.AsyncCallException;
+import com.xu.rpc.oldasync.AsyncCallObject;
+import com.xu.rpc.oldasync.AsyncCallback;
+import com.xu.rpc.oldasync.AsyncInvoker;
 import com.xu.rpc.services.CostTimeCalculate;
 import com.xu.rpc.services.pojo.CostTime;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

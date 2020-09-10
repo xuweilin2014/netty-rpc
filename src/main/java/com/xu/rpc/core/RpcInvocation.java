@@ -12,6 +12,8 @@ public class RpcInvocation {
 
     private Class<?> serviceType;
 
+    private String token;
+
     public String getMethodName() {
         return methodName;
     }
@@ -48,5 +50,13 @@ public class RpcInvocation {
     public String key(){
         return new StringBuilder(serviceType.getName()).append(methodName)
                 .append(Arrays.toString(parameterTypes)).append(Arrays.toString(parameters)).toString();
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

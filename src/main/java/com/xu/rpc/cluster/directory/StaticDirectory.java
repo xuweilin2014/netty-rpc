@@ -1,7 +1,7 @@
 package com.xu.rpc.cluster.directory;
 
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 import java.util.List;
 

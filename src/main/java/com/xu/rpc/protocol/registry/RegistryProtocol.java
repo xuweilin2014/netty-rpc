@@ -10,8 +10,8 @@ import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.registry.Registry;
 import com.xu.rpc.registry.RegistryFactory;
-import com.xu.rpc.util.AdaptiveExtensionUtil;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.URL;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,17 +19,17 @@ import java.util.Map;
 public class RegistryProtocol extends AbstractProtocol {
 
     @Override
-    public Exporter export(Invoker invoker) throws RpcException {
+    public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (invoker == null)
             throw new IllegalArgumentException("invoker cannot be null.");
-        if (invoker.getURL() == null)
+        if (invoker.getUrl() == null)
             throw new IllegalArgumentException("url in invoker cannot be null.");
 
         // 1.获取 providerURL
         URL providerURL =  getProviderURL(invoker);
         // 2.使用 providerURL 进行真正的导出
         Protocol protocol = AdaptiveExtensionUtil.getProtocol(providerURL);
-        Exporter exporter = protocol.export(invoker);
+        Exporter<T> exporter = protocol.export(invoker);
         // 3.获取 registry 对象的类型
         Registry registry = getRegistry(invoker);
         // 4.将 providerURL 注册到 registryURL 上
@@ -39,17 +39,17 @@ public class RegistryProtocol extends AbstractProtocol {
 
     private Registry getRegistry(Invoker invoker) {
         // 在 invoker 的 registryURL 中的 registry 属性配置了要使用的注册中心的类型
-        RegistryFactory registryFactory = AdaptiveExtensionUtil.getRegistryFactory(invoker.getURL());
-        return registryFactory.getRegistry(invoker.getURL());
+        RegistryFactory registryFactory = AdaptiveExtensionUtil.getRegistryFactory(invoker.getUrl());
+        return registryFactory.getRegistry(invoker.getUrl());
     }
 
     private URL getProviderURL(Invoker invoker) {
-        String providerURL = invoker.getURL().getParameterAndDecoded(RpcConfig.EXPORT_KEY);
+        String providerURL = invoker.getUrl().getParameterAndDecoded(RpcConfig.EXPORT_KEY);
         return URL.valueOf(providerURL);
     }
 
     @Override
-    public Invoker refer(URL url, Class<?> type) throws RpcException {
+    public <T> Invoker<T> refer(URL url, Class<?> type) throws RpcException {
         url = url.setProtocol(url.getParameter(RpcConfig.REGISTRY_KEY, RpcConfig.DEFAULT_REGISTRY))
                 .removeParameter(RpcConfig.REGISTRY_KEY);
         RegistryFactory registryFactory = AdaptiveExtensionUtil.getRegistryFactory(url);
@@ -65,14 +65,5 @@ public class RegistryProtocol extends AbstractProtocol {
 
         Cluster cluster = AdaptiveExtensionUtil.getCluster(directory.getURL());
         return cluster.join(directory);
-    }
-
-    @Override
-    public void destroy() {
-        // TODO: 2020/8/9
-    }
-
-    public void subscribe(){
-        // TODO: 2020/8/9
     }
 }

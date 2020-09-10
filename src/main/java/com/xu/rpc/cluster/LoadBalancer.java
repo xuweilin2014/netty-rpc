@@ -5,7 +5,7 @@ import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.extension.Extension;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 import java.util.List;
 

@@ -6,7 +6,6 @@ import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.jmx.MetricsHtmlBuilder;
 import com.xu.rpc.jmx.MetricsServer;
-import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.protocol.AbstractProtocol;
 import com.xu.rpc.protocol.Exporter;
 import com.xu.rpc.protocol.Invoker;
@@ -16,8 +15,9 @@ import com.xu.rpc.remoting.exchanger.Exchangers;
 import com.xu.rpc.remoting.handler.ReplyHandler;
 import com.xu.rpc.remoting.echo.ApiEchoServer;
 import com.xu.rpc.remoting.server.HeaderExchangeServer;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.channel.Channel;
+import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -31,6 +31,8 @@ public class RpcProtocol extends AbstractProtocol {
     // ip:port -> server
     private final Map<String, HeaderExchangeServer> servers = new ConcurrentHashMap<>();
 
+    private static final Logger logger = Logger.getLogger(RpcProtocol.class);
+
     private MetricsServer metricsServer;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -39,26 +41,11 @@ public class RpcProtocol extends AbstractProtocol {
 
     private ApiEchoServer echoServer;
 
-    private Lock lock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();
+
+    private static final int DEFAULT_SHUTDOWN_WAIT_TIME = 10000;
 
     private ReplyHandler replyHandler = new ReplyHandler() {
-        @Override
-        public void sent(Channel channel, Object message) {
-        }
-
-        @Override
-        public void received(Channel channel, Object message) {
-            throw new UnsupportedOperationException("cannot execute received function in ReplyHandler.");
-        }
-
-        @Override
-        public void connected(Channel channel) {
-        }
-
-        @Override
-        public void disconnected(Channel channel) {
-        }
-
         @Override
         public Object reply(Object message, Channel channel) throws RemotingException {
             if (message instanceof RpcInvocation){
@@ -85,7 +72,7 @@ public class RpcProtocol extends AbstractProtocol {
     @Override
     public Exporter export(Invoker invoker) throws RpcException {
         // 1.从 invoker 中获取 url
-        URL url = invoker.getURL();
+        URL url = invoker.getUrl();
         // 2.根据 url 获取 ServiceKey, ServiceKey 由以下两个部分组成：服务名:端口号
         String serviceKey = getServiceKey(url);
         // 3.创建 RpcExporter
@@ -125,10 +112,12 @@ public class RpcProtocol extends AbstractProtocol {
 
         try{
             lock.lock();
-            metricsServer = new MetricsServer(url);
-            metricsServer.start();
-            MetricsHtmlBuilder.getInstance().setMetricsServer(metricsServer);
-        }finally {
+            if (metricsServer == null){
+                metricsServer = new MetricsServer(url);
+                metricsServer.start();
+                MetricsHtmlBuilder.getInstance().setMetricsServer(metricsServer);
+            }
+        } finally {
             lock.unlock();
         }
     }
@@ -155,7 +144,7 @@ public class RpcProtocol extends AbstractProtocol {
 
     // 这里的 url 为注册在注册中心上的 url，也就是 RpcInvoker 中的 url，而不是客户端自己的 url
     @Override
-    public Invoker refer(URL url, Class<?> type) throws RpcException {
+    public <T> Invoker<T> refer(URL url, Class<?> type) throws RpcException {
         RpcInvoker invoker = new RpcInvoker(type, url, invokers, getClient(url));
         invokers.add(invoker);
         return invoker;
@@ -190,10 +179,50 @@ public class RpcProtocol extends AbstractProtocol {
         }
     }
 
-
     @Override
     public void destroy() {
-        // TODO: 2020/8/16
+        // 关闭掉启动的 rpc 服务器
+        for (String key : servers.keySet()) {
+            HeaderExchangeServer server = servers.remove(key);
+            if (server != null){
+                try {
+                    // 等待一定时间，保证 rpc 服务器已经接收到的请求处理完成之后，才能够下线
+                    server.close(DEFAULT_SHUTDOWN_WAIT_TIME);
+                    logger.info("server " + key + " is closed.");
+                } catch (Exception e) {
+                    logger.warn("failed to close the server " + key + " in " + DEFAULT_SHUTDOWN_WAIT_TIME + " seconds.");
+                }
+            }
+        }
+
+        try {
+            // 关闭掉 jmx 服务器
+            metricsServer.stop();
+        } catch (Exception e) {
+            logger.warn("failed to close the metrics server.");
+        }
+
+        try {
+            // 关闭掉内置的 http 服务器
+            echoServer.stop();
+        } catch (Exception e) {
+            logger.warn("failed to stop the echo server.");
+        }
+
+        // 关闭掉客户端
+        for (String key : referenceCountClients.keySet()) {
+            ReferenceCountClient client = referenceCountClients.remove(key);
+            try {
+                // 等待一段时间之后再关闭掉客户端，等待已经发出的响应请求返回
+                client.close(DEFAULT_SHUTDOWN_WAIT_TIME);
+                logger.info("client " + key + " is closed.");
+            } catch (Exception e) {
+                logger.warn("failed to close the client " + key + " in " + DEFAULT_SHUTDOWN_WAIT_TIME + " seconds.");
+            }
+        }
+
+        // 销毁掉各种 invoker 和 exporter
+        super.destroy();
     }
 
     public String getServiceKey(URL url){

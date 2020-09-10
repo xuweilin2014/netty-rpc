@@ -1,9 +1,8 @@
 package com.xu.rpc.core.extension;
 
 
-import com.sun.codemodel.internal.JTryBlock;
 import com.xu.rpc.core.RpcConfig;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.log4j.Logger;
 
@@ -190,6 +189,10 @@ public final class ExtensionLoader<T> {
         }
     }
 
+    public List<T> getExtensions() {
+        return Collections.unmodifiableList((List<T>) extensions.values());
+    }
+
     public List<T> getActivateExtension(URL url, String key, String group){
         String value = url.getParameter(key);
         String[] values = null;
@@ -210,7 +213,7 @@ public final class ExtensionLoader<T> {
                 String name = entry.getKey();
                 Activate activate = entry.getValue();
                 if (isGroupMatch(group, activate.group())){
-                    if (!names.contains(RpcConfig.REMOVE_PREFIX + name)){
+                    if (!names.contains(RpcConfig.REMOVE_PREFIX + name) && isActive(url, activate)){
                         T ext = getExtension(name);
                         exts.add(ext);
                     }
@@ -218,8 +221,9 @@ public final class ExtensionLoader<T> {
             }
         }
 
-        // 3.对 exts 集合中的对象进行排序，比如 MonitorChainFilter 一定要在 TimeoutChainFilter 后面调用
-        Collections.sort(exts, ActivateComparator.COMPARATOR);
+        // 3.对 exts 集合中的对象进行排序，order 值越大，排序就
+        // 比如 MonitorChainFilter 一定要在 TimeoutChainFilter 后面调用
+        exts.sort(ActivateComparator.COMPARATOR);
 
         // 3.获取用户配置的自定义的扩展对象
         List<T> users = new CopyOnWriteArrayList<>();
@@ -254,6 +258,11 @@ public final class ExtensionLoader<T> {
             }
         }
 
+        return false;
+    }
+
+    private boolean isActive(URL url, Activate activate){
+        // TODO: 2020/9/4
         return false;
     }
 

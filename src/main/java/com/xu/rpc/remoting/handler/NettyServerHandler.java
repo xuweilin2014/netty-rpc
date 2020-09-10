@@ -1,6 +1,6 @@
 package com.xu.rpc.remoting.handler;
 
-import com.xu.rpc.util.NetUtil;
+import com.xu.rpc.commons.util.NetUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,9 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyServerHandler extends ChannelDuplexHandler{
 
-    private ChannelHandler handler;
+    private final ChannelHandler handler;
 
-    private Map<String, Channel> channels = new ConcurrentHashMap<>();
+    private final Map<String, Channel> channels = new ConcurrentHashMap<>();
 
     public NettyServerHandler(ChannelHandler handler){
         this.handler = handler;

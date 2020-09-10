@@ -1,10 +1,10 @@
 package com.xu.rpc.cluster;
 
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 
 public interface Node {
 
-    public URL getURL();
+    public URL getUrl();
 
     public boolean isAvailable();
 

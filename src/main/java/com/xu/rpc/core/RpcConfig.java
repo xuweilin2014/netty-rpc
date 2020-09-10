@@ -1,6 +1,6 @@
 package com.xu.rpc.core;
 
-import org.apache.commons.lang3.StringUtils;
+import io.netty.util.AttributeKey;
 
 /**
  * RPC服务器一些参数配置
@@ -10,16 +10,6 @@ public class RpcConfig {
     public static final String SYSTEM_PROPERTY_THREADPOOL_REJECTED_POLICY_ATTR = "nettyrpc.parallel.rejected.policy";
 
     public static final String SYSTEM_PROPERTY_THREADPOOL_QUEUE_NAME_ATTR = "nettyrpc.parallel.queue";
-
-    public static final long SYSTEM_PROPERTY_MESSAGE_CALLBACK_TIMEOUT = Long.getLong("nettyrpc.default.msg.timeout", 30 * 1000L);
-
-    public static final long SYSTEM_PROPERTY_ASYNC_MESSAGE_CALLBACK_TIMEOUT = Long.getLong("nettyrpc.default.asyncmsg.timeout", 60 * 1000L);
-
-    public static final int SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS = Integer.getInteger("nettyrpc.default.thread.nums", 16);
-
-    public static final int SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS = Integer.getInteger("nettyrpc.default.queue.nums", -1);
-
-    public static final int SYSTEM_PROPERTY_CLIENT_RECONNECT_DELAY = Integer.parseInt(System.getProperty("nettyrpc.default.client.reconnect.delay", "10"));
 
     public static final int SYSTEM_PROPERTY_PARALLEL = Math.max(2, Runtime.getRuntime().availableProcessors());
 
@@ -41,7 +31,7 @@ public class RpcConfig {
 
     public static final String SCOPE_REMOTE = "remote";
 
-    public static final String INJVM = "injvm";
+    public static final String INJVM_PROTOCOL = "injvm";
 
     public static final String EXPORT_KEY = "export";
 
@@ -109,7 +99,7 @@ public class RpcConfig {
 
     public static final String TIMEOUT_KEY = "timeout";
 
-    public static final int DEFAULT_TIMEOUT = 3000;
+    public static final int DEFAULT_TIMEOUT = 2000;
 
     public static final int RECONNECT_INTERVAL = 2000;
 
@@ -126,5 +116,53 @@ public class RpcConfig {
     public static final String WEIGHT_KEY = "weight";
 
     public static final int DEFAULT_WEIGHT = 100;
+
+    public static final String ASYNC_KEY = "async";
+
+    public static final String HEARTBEAT_KEY = "heartbeat";
+
+    public static final int DEFAULT_HEARTBEAT = 60000;
+
+    public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeat.timeout";
+
+    public static final AttributeKey<Long> LAST_READ_TIMESTAMP = AttributeKey.valueOf("lastReadTimestamp");
+
+    public static final AttributeKey<Long> LAST_WRITE_TIMESTAMP = AttributeKey.valueOf("lastWriteTimestamp");
+
+    public static final String STUB_KEY = "stub";
+
+    public static final String SCOPE_KEY = "scope";
+
+    public static final String LRU_CACHE = "lru";
+
+    public static final String THREADLOCAL_CACHE = "threadlocal";
+
+    public static final String CACHE_KEY = "cache";
+
+    public static final String CACHE_CAPACITY_KEY = "cache.capacity";
+
+    public static final String CACHE_KEY_SEPARATOR = ",";
+
+    public static final String FALSE = "false";
+
+    public static final String TRUE = "true";
+
+    public static final String TOKEN_KEY = "token";
+
+    public static final String MOCK_KEY = "mock";
+
+    public static final String MOCK_FAIL_KEY = "fail";
+
+    public static final String MOCK_FORCE_KEY = "force";
+
+    public static final String FILE_KEY = "file";
+
+    public static final String APPLICATION_KEY = "application";
+
+    public static final String RATE_KEY = "rate";
+
+    public static final int DEFAULT_RATE_LIMIT_PER_SECOND = Integer.MAX_VALUE;
+
+    public static final String LIMITER_KEY = "limiter";
 }
 

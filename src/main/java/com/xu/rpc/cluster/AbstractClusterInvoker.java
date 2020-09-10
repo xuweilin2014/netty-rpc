@@ -2,10 +2,11 @@ package com.xu.rpc.cluster;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.util.AdaptiveExtensionUtil;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -27,11 +28,11 @@ public abstract class AbstractClusterInvoker implements Invoker{
     }
 
     @Override
-    public Object invoke(RpcInvocation invocation) throws RpcException {
+    public RpcResult invoke(RpcInvocation invocation) throws RpcException {
         if (invocation == null)
             return null;
 
-        LoadBalancer loadBalancer = AdaptiveExtensionUtil.getLoadBalance(getURL());
+        LoadBalancer loadBalancer = AdaptiveExtensionUtil.getLoadBalance(getUrl());
         List<Invoker> invokers = list(invocation);
         return doInvoke(invocation, invokers, loadBalancer);
     }
@@ -45,7 +46,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
 
         // 如果线程走到当前代码处，说明没有开启 sticky 配置，或者前面的 stickyInvoker 为空，或者不可用。
         // 此时继续调用 doSelect ，进入真正的选择逻辑，选择 Invoker
-        boolean sticky = invokers.get(0).getURL().getParameter(RpcConfig.STICKY_KEY, false);
+        boolean sticky = invokers.get(0).getUrl().getParameter(RpcConfig.STICKY_KEY, false);
 
         // 检测 invokers 列表是否包含 stickyInvoker，如果不包含，说明 stickyInvoker 代表的服务提供者挂了，此时需要将其置空
         // 这里的 invokers 列表可以看作是存活着的服务提供者列表，如果这个列表不包含 stickyInvoker，那么自然而然地认为 stickyInvoker 挂了
@@ -88,7 +89,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
             return invokers.get(0);
 
         // 3.先使用负载均衡进行选择
-        Invoker invoker = loadBalance.select(invocation, invokers, getURL());
+        Invoker invoker = loadBalance.select(invocation, invokers, getUrl());
 
         // 4.判断选择的 invoker 是否经过可用性检查，并且是否包含在 selected 集合中 (包含则表明无法提供服务）。
         // 如果是的话，就进行重新选择，注意重新选择的 invoker 可能为 null（如果为 null 会打印错误日志）；如果不是的话，直接返回
@@ -120,7 +121,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
         }
         // 如果 reselectInvokers 集合不为空的话，使用负载均衡进行选择
         if (!reselectInvokers.isEmpty()){
-            return loadBalance.select(invocation, reselectInvokers, getURL());
+            return loadBalance.select(invocation, reselectInvokers, getUrl());
         }
 
         // 若线程走到此处，说明 reselectInvokers 集合为空，也就是说 selected 集合之外的 invoker 都不可用。
@@ -131,7 +132,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
                     reselectInvokers.add(invoker);
             }
             if (!reselectInvokers.isEmpty()){
-                return loadBalance.select(invocation, reselectInvokers, getURL());
+                return loadBalance.select(invocation, reselectInvokers, getUrl());
             }
         }
 
@@ -152,8 +153,8 @@ public abstract class AbstractClusterInvoker implements Invoker{
     }
 
     @Override
-    public URL getURL() {
-        return directory.getURL();
+    public URL getUrl() {
+        return directory.getUrl();
     }
 
     @Override
@@ -171,6 +172,6 @@ public abstract class AbstractClusterInvoker implements Invoker{
         return directory.getInvokers(invocation);
     }
 
-    public abstract Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException;
+    public abstract RpcResult doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException;
 
 }

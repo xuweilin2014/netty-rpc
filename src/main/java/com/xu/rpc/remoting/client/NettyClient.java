@@ -8,7 +8,7 @@ import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyClientHandler;
 import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -48,12 +48,6 @@ public class NettyClient implements Client {
 
     private volatile AtomicBoolean closed = new AtomicBoolean(false);
 
-    // 线程池中核心线程的数量，默认为16
-    private static int threadNums = RpcConfig.SYSTEM_PROPERTY_THREADPOOL_THREAD_NUMS;
-
-    // 线程池中任务队列的大小
-    private static int queueNums = RpcConfig.SYSTEM_PROPERTY_THREADPOOL_QUEUE_NUMS;
-
     protected URL url;
 
     protected ChannelHandler handler;
@@ -66,14 +60,11 @@ public class NettyClient implements Client {
 
     private long lastConnectedTime = System.currentTimeMillis();
 
-    private Lock lock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();
 
     public NettyClient(URL url, ChannelHandler handler) throws RemotingException {
         this.url = url;
         this.handler = ChannelHandlers.wrapHandler(handler);
-        this.timeout = url.getParameter(RpcConfig.TIMEOUT_KEY, RpcConfig.DEFAULT_TIMEOUT);
-        if (timeout < 0)
-            throw new IllegalArgumentException("timeout cannot be negative.");
 
         // 客户端发送数据的序列化协议，默认为JDK自带的序列化方法
         String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE);
@@ -109,12 +100,6 @@ public class NettyClient implements Client {
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .handler(new RpcChannelInitializer(serialization, clientHandler));
-
-        if (getTimeout() < 3000){
-            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
-        }else {
-            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout());
-        }
     }
 
     private void connect() throws RemotingException {
@@ -208,14 +193,38 @@ public class NettyClient implements Client {
         }
     }
 
-    protected boolean isClosed(){
+    @Override
+    public void send(Object message) throws RemotingException {
+        if (isClosed()){
+            logger.warn("client is closed, cannot send message.");
+        }
+
+        try {
+            // 将消息发出
+            channel.writeAndFlush(message);
+        } catch (Throwable e) {
+            throw new RemotingException("failed to send message, caused by " + e.getMessage());
+        }
+    }
+
+    public boolean isClosed(){
         return closed.get();
     }
 
-    public void close(){
+    @Override
+    public URL getUrl() {
+        return url;
+    }
+
+    @Override
+    public void close(int timeout){
         if (closed.get())
             return;
 
+        close();
+    }
+
+    private void close(){
         if (closed.compareAndSet(false, true)){
             try {
                 reconnectExecutor.shutdownNow();
@@ -225,6 +234,12 @@ public class NettyClient implements Client {
                 logger.warn(e.getMessage());
             }
         }
+    }
+
+    @Override
+    public void reconnect() throws RemotingException {
+        disconnect();
+        connect();
     }
 
     public void disconnect() {
@@ -260,8 +275,9 @@ public class NettyClient implements Client {
         return channel.remoteAddress();
     }
 
-    public int getTimeout() {
-        return timeout;
+    @Override
+    public Channel getChannel() {
+        return channel;
     }
 
     @Override

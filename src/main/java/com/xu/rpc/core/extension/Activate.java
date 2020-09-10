@@ -11,4 +11,6 @@ public @interface Activate {
 
     int order() default 0;
 
+    String value() default "";
+
 }

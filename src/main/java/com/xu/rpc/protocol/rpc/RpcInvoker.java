@@ -7,8 +7,6 @@ import com.xu.rpc.protocol.AbstractInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ExchangeClient;
 import com.xu.rpc.util.URL;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Set;
 
@@ -17,9 +15,11 @@ import java.util.Set;
  */
 public class RpcInvoker extends AbstractInvoker {
 
-    private Set<Invoker> invokers;
+    private final Set<Invoker> invokers;
 
-    private ExchangeClient client;
+    private final ExchangeClient client;
+
+    private final Lock lock = new ReentrantLock();
 
     public RpcInvoker(Class<?> type, URL url, Set<Invoker> invokers, ExchangeClient client) {
         super(type, url);
@@ -28,18 +28,60 @@ public class RpcInvoker extends AbstractInvoker {
     }
 
     @Override
-    public Object doInvoke(RpcInvocation invocation) throws RpcException {
-        return null;
+    public RpcResult doInvoke(RpcInvocation invocation) throws RpcException {
+        int timeout = getUrl().getParameter(RpcConfig.TIMEOUT_KEY, RpcConfig.DEFAULT_TIMEOUT);
+        boolean isAsync = getUrl().getParameter(RpcConfig.ASYNC_KEY, false);
+        String token = getUrl().getParameter(RpcConfig.TOKEN_KEY);
+
+        // 在向服务器发送请求之前，先检查服务器是否开启了 token 验证，如果开启了的话，就把 token 放入到
+        // RpcInvocation 中保存起来
+        if (token != null && token.length() != 0){
+            invocation.setToken(token);
+        }
+
+        try{
+            // 如果为异步调用的话
+            if (isAsync){
+                Future<?> future = new FutureWrapper(client.request(invocation, timeout));
+                RpcContext.getContext().setFuture(future);
+                // 返回一个空的结果
+                return new RpcResult();
+            // 如果为同步调用的话
+            }else {
+                RpcContext.getContext().setFuture(null);
+                Object result = client.request(invocation, timeout).get();
+                return new RpcResult(result);
+            }
+        }catch (RpcTimeoutException ex){
+            throw new RpcException("invoke method " + invocation.getMethodName() + " timeout, caused by " + ex.getMessage());
+        }catch (RemotingException ex){
+            throw new RpcException("failed to invoke the remote method " + invocation.getMethodName() + ", caused by " + ex.getMessage());
+        } catch (InterruptedException e) {
+            throw new RpcException("failed to invoke the remote method" + invocation.getMethodName() + " caused by interruption.");
+        }
     }
 
     @Override
     public boolean isAvailable() {
-        return false;
+        if (isDestroyed())
+            return false;
+        return client.isConnected();
     }
 
     @Override
     public void destroy() {
-        // TODO: 2020/8/29
+        if (isDestroyed())
+            return;
+        lock.lock();
+        try{
+            if (isDestroyed())
+                return;
+            super.destroy();
+            invokers.remove(this);
+            client.close();
+        }finally {
+            lock.unlock();
+        }
     }
 
     @Override

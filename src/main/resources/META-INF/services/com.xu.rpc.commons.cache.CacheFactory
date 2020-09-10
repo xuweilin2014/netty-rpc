@@ -1,0 +1,2 @@
+lru=com.xu.rpc.commons.cache.lru.LruCacheFactory
+threadlocal=com.xu.rpc.commons.cache.threadlocal.ThreadLocalFactory

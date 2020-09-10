@@ -7,17 +7,20 @@ import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyServerHandler;
 import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
-import com.xu.rpc.util.URL;
+import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * MessageRecvExecutor实现了 ApplicationContextAware 接口：
@@ -46,17 +49,21 @@ public class NettyServer implements Server{
     private static final int PARALLEL = RpcConfig.SYSTEM_PROPERTY_PARALLEL * 2;
 
     //在此类中用来创建Netty中的worker group中的线程，并且不是守护线程
-    private ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyWorkerThreadPool");
+    private ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyWorkerThread");
 
-    EventLoopGroup boss = new NioEventLoopGroup();
+    private EventLoopGroup boss = new NioEventLoopGroup();
 
-    EventLoopGroup worker = new NioEventLoopGroup(PARALLEL, threadRpcFactory);
+    private EventLoopGroup worker = new NioEventLoopGroup(PARALLEL, threadRpcFactory);
 
     protected ChannelHandler handler;
 
     protected URL url;
 
     private Map<String, Channel> channels = new ConcurrentHashMap<>();
+
+    private Channel channel;
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     @SuppressWarnings("ConstantConditions")
     public NettyServer(URL url, ChannelHandler handler) {
@@ -75,9 +82,12 @@ public class NettyServer implements Server{
         } catch (NumberFormatException e) {
             throw new IllegalStateException("port value is invalid");
         }
+
+        // 打开 rpc 服务器
+        open();
     }
 
-    public void doOpen() {
+    public void open() {
         try {
             NettyServerHandler serverHandler = new NettyServerHandler(handler);
             ServerBootstrap bootstrap = new ServerBootstrap();
@@ -92,6 +102,7 @@ public class NettyServer implements Server{
 
             channels = serverHandler.getChannels();
             future = bootstrap.bind(host, port).sync();
+            this.channel = future.channel();
             future.addListener(new ChannelFutureListener() {
                 /**
                  * 在RPC服务器启动时，指定其监听一个ip地址127.0.0.1:18887，客户端发送调用请求到这个客户端。
@@ -116,8 +127,50 @@ public class NettyServer implements Server{
         }
     }
 
-    public void doClose() {
-        // TODO: 2020/8/13
+    // 返回连接到这个服务器的所有客户端连接
+    @Override
+    public List<Channel> getChannels() {
+        return Collections.unmodifiableList((List<Channel>) channels.values());
     }
 
+    @Override
+    public void close(int timeout) {
+        if (!closed.compareAndSet(false, true))
+            return;
+
+        if (channel != null){
+            try {
+                channel.close();
+            } catch (Exception e) {
+                logger.warn("error occurs when trying to close the channel " + channel);
+            }
+        }
+
+        for (Channel channel : channels.values()) {
+            try {
+                channel.close();
+            } catch (Exception e) {
+                logger.warn("error occurs when trying to close the channel " + channel);
+            } finally {
+                channels.clear();
+            }
+        }
+
+        try {
+            worker.shutdownGracefully();
+            boss.shutdownGracefully();
+        } catch (Exception e) {
+            logger.warn("error occurs when trying to shutdown the event loop group.");
+        }
+    }
+
+    @Override
+    public boolean isClosed() {
+        return closed.get();
+    }
+
+    @Override
+    public URL getUrl() {
+        return url;
+    }
 }
