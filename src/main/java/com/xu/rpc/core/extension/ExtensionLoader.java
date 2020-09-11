@@ -262,7 +262,20 @@ public final class ExtensionLoader<T> {
     }
 
     private boolean isActive(URL url, Activate activate){
-        // TODO: 2020/9/4
+        String value = activate.value();
+        
+        if (value.length() == 0)
+            return false;
+
+        for (Map.Entry<String, String> entry : url.getParameters().entrySet()) {
+            String key = entry.getKey();
+            String val = entry.getValue();
+            if (value.equals(key) && val != null
+                    && val.length() != 0 && !RpcConfig.FALSE.equals(val)){
+                return true;
+            }
+        }
+        
         return false;
     }
 
