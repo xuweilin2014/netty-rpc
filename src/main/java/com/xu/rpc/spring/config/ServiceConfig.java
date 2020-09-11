@@ -26,22 +26,35 @@ import java.util.UUID;
 public class ServiceConfig<T> extends AbstractConfig{
 
     private static final Logger logger = Logger.getLogger(ServiceConfig.class);
-
+    // 服务使用哪种/哪些协议进行导出
     protected String protocol;
-
+    // 服务对象实现引用
     protected String ref;
-
+    // 过滤器
     protected String filter;
-
+    /*
+     * 服务导出的范围：remote/local/空值
+     * remote:只导出到远程
+     * local:只导出到本地
+     * 空值：既导出到远程，又导出到本地
+     */
     protected String scope;
-
+    // 服务是否开启监控
     protected String monitor;
 
     protected boolean exported;
-
+    // 服务验证，可接受的值为：true/false/密码, true表示开启服务验证，反之不开启，默认使用UUID生成密码，用户也可以直接配置指定
     protected String token;
+    // 限流器的种类：bucket、token、guava
+    private String limiter;
+    // 限流速率，也就是每一秒可以通过的流量
+    private String rate;
 
     private String path;
+    // 此服务提供者的权重
+    private String weight;
+    // 服务降级
+    private String mock;
 
     public ApplicationContext applicationContext;
 

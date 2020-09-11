@@ -15,7 +15,7 @@ import com.xu.rpc.protocol.Invoker;
  * 发布服务的时候会生成令牌，并且与服务一起注册到注册中心。消费者必须通过注册中心才能获取到token
  */
 @Activate(group = {RpcConfig.PROVIDER}, value = RpcConfig.TOKEN_KEY, order = 2)
-public class TokenFilter implements ChainFilter {
+public class TokenChainFilter implements ChainFilter {
 
     @Override
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) throws RpcException {

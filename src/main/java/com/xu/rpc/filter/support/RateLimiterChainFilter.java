@@ -13,7 +13,7 @@ import com.xu.rpc.filter.ChainFilter;
 import com.xu.rpc.protocol.Invoker;
 
 @Activate(group = {RpcConfig.PROVIDER}, value = RpcConfig.LIMITER_KEY, order = 2)
-public class RateLimiterFilter implements ChainFilter {
+public class RateLimiterChainFilter implements ChainFilter {
 
     @Override
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) throws RpcException {

@@ -1,7 +1,7 @@
 package com.xu.rpc.core;
 
 import com.xu.rpc.remoting.server.NettyServer;
-import com.xu.rpc.commons.ReflectionUtil;
+import com.xu.rpc.commons.util.ReflectionUtil;
 
 import java.util.Iterator;
 import java.util.Map;

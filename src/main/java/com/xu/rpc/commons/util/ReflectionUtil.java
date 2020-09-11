@@ -1,6 +1,7 @@
 package com.xu.rpc.commons.util;
 
 import com.google.common.collect.ImmutableMap;
+import com.xu.rpc.exception.RpcException;
 
 import java.io.Serializable;
 import java.lang.reflect.GenericArrayType;
@@ -93,11 +94,11 @@ public class ReflectionUtil {
             case 1:
                 Class<?> superclass = parent[0];
                 if (Modifier.isFinal(superclass.getModifiers())) {
-                    throw new CreateProxyException(
+                    throw new RpcException(
                             "proxy can't build " + superclass.getName() + " because it is final");
                 }
                 if (!existDefaultConstructor(superclass)) {
-                    throw new CreateProxyException(
+                    throw new RpcException(
                             "proxy can't build " + superclass.getName() + ", because it has no default constructor");
                 }
 
@@ -113,7 +114,7 @@ public class ReflectionUtil {
                 }
 
                 errorMessage.append("; multiple implement not allowed");
-                throw new CreateProxyException(errorMessage.toString());
+                throw new RpcException(errorMessage.toString());
         }
     }
 

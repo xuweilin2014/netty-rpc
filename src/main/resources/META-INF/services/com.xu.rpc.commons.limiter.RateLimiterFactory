@@ -1,0 +1,3 @@
+bucket=com.xu.rpc.commons.limiter.bucket.BucketFlowLimiterFactory
+token=com.xu.rpc.commons.limiter.token.TokenFlowLimiterFactory
+guava=com.xu.rpc.commons.limiter.guava.GuavaFlowLimiterFactory

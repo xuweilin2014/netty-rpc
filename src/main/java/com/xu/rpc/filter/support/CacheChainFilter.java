@@ -3,7 +3,6 @@ package com.xu.rpc.filter.support;
 import com.alibaba.fastjson.JSON;
 import com.xu.rpc.commons.cache.Cache;
 import com.xu.rpc.commons.cache.CacheFactory;
-import com.xu.rpc.commons.cache.lru.DefaultLruSegmentCache;
 import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
@@ -19,11 +18,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Activate(group = {RpcConfig.PROVIDER, RpcConfig.CONSUMER}, value = RpcConfig.CACHE_KEY, order = 2)
-public class CacheFilter implements ChainFilter {
+public class CacheChainFilter implements ChainFilter {
 
     private static final Map<String, Cache<Object, Object>> caches = new ConcurrentHashMap<>();
 
-    private static final Logger logger = Logger.getLogger(CacheFilter.class);
+    private static final Logger logger = Logger.getLogger(CacheChainFilter.class);
 
     @Override
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) throws RpcException {

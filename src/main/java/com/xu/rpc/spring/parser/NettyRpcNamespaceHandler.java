@@ -13,7 +13,7 @@ import java.io.Reader;
 
 public class NettyRpcNamespaceHandler extends NamespaceHandlerSupport {
     static {
-        Resource resource = new ClassPathResource("NettyRPC-logo.txt");
+        Resource resource = new ClassPathResource("netty-rpc-logo.txt");
         if (resource.exists()) {
             try {
                 Reader reader = new InputStreamReader(resource.getInputStream(), "UTF-8");
@@ -30,7 +30,7 @@ public class NettyRpcNamespaceHandler extends NamespaceHandlerSupport {
             System.out.println("| |\\ |||  \\    / \\   / \\   \\  / |  \\/||  \\/||  /  ");
             System.out.println("| | \\|||  /_   | |   | |   / /  |    /|  __/|  \\_ ");
             System.out.println("\\_/  \\|\\____\\  \\_/   \\_/  /_/   \\_/\\_\\\\_/   \\____/");
-            System.out.println("【NettyRPC 2.0,Build 20208/6】");
+            System.out.println("【netty-rpc 2.0,Build 2020/8/6】");
             System.out.println("");
         }
     }

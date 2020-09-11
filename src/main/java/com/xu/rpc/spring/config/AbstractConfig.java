@@ -3,23 +3,34 @@ package com.xu.rpc.spring.config;
 import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.registry.AbstractRegistryFactory;
+import com.xu.rpc.spring.bean.NettyRpcApplication;
 import com.xu.rpc.spring.bean.NettyRpcProtocol;
 import com.xu.rpc.commons.URL;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Getter
+@Setter
 public abstract class AbstractConfig {
 
     private static final Logger logger = Logger.getLogger(AbstractConfig.class);
 
     protected String id;
 
+    protected NettyRpcApplication application;
+    // 服务接口名
     protected String interfaceName;
-
+    // 使用的注册中心的id值，不指定则将服务注册在所有注册中心上，或者向所有的注册中心进行订阅
     protected String registry;
+    // 缓存种类：lru、cache
+    protected String cache;
+    // 缓存的大小容量
+    protected String capacity;
 
     private static final int WAIT_AFTER_REGISTRY = 5000;
 
@@ -63,6 +74,7 @@ public abstract class AbstractConfig {
             throw new IllegalStateException("in tag <nettyrpc:protocol/>, serialize attribute cannot be empty.");
     }
 
+    // 优雅停机
     public static void shutdownRpc(){
         if (destroyed.compareAndSet(false, true)){
             // 销毁 rpc 服务器和所有的注册中心的连接，以及取消注册在注册中心上的节点和监听器

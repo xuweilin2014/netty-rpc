@@ -14,42 +14,26 @@ import org.springframework.beans.factory.InitializingBean;
  * DisposableBean接口：
  * 在对象销毁的时候，会去调用DisposableBean的destroy方法。
  *
- * <nettyrpc:registry/>标签用来配置Rpc服务器启动所必需的一些信息，比如监听的IP地址和端口，服务能力开放的端口，传输数据所使用的
- * 序列化协议，最后会启动JMX服务器
+ * <nettyrpc:registry/>标签用来配置注册中心的信息
  */
 public class NettyRpcRegistry implements InitializingBean, DisposableBean {
 
+    // 注册中心的id
     private String id;
-
+    // 注册中心的地址：host:port
     private String address;
-
+    // 注册中心的名字
     private String name;
+    // 本地缓存文件的地址
+    private String file;
 
     @Override
     public void destroy() throws Exception {
-        if (RpcConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT) {
-            MetricsServer handler = MetricsServer.getInstance();
-            handler.stop();
-        }
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-//        MessageRecvExecutor ref = MessageRecvExecutor.getInstance();
-//        // 设置MessageRecvExecutor中的ip地址和端口，默认为 127.0.0.1:18887
-//        ref.setServerAddress(ipAddr);
-//        // 设置服务端服务能力展示开放的端口：默认为 18886
-//        ref.setEchoApiPort(Integer.parseInt(echoApiPort));
-//        // 设置序列化协议
-//        ref.setSerializeProtocol(Enum.valueOf(RpcSerializeProtocol.class, protocol));
-//        // 启动Rpc服务器，使其运行起来
-//        ref.start();
-//
-//        // 如果用户开启了对JMX监控的支持的话，那么就通过ModuleMetricsHandler启动JMX服务器
-//        if (RpcSystemConfig.SYSTEM_PROPERTY_JMX_METRICS_SUPPORT) {
-//            ModuleMetricsHandler handler = ModuleMetricsHandler.getInstance();
-//            handler.start();
-//        }
+
     }
 
     public String getId() {

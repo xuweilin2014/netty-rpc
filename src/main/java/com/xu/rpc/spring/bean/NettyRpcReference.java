@@ -1,10 +1,18 @@
 package com.xu.rpc.spring.bean;
 
+import com.sun.glass.ui.Application;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.spring.config.ReferenceConfig;
+import org.apache.log4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+
+import java.util.Map;
 
 /**
  * 这个自定义类实现了InitializingBean和FactoryBean两个接口。在Spring IoC容器中实例化了Bean之后，就会对Bean进行初始化操作，
@@ -17,49 +25,58 @@ import org.springframework.beans.factory.InitializingBean;
  * 方法时，真正调用的是实现了InvocationHandler的MessageSendProxy对象的invoke方法
  */
 
-public class NettyRpcReference extends ReferenceConfig implements FactoryBean, InitializingBean, DisposableBean {
+public class NettyRpcReference extends ReferenceConfig implements InitializingBean, FactoryBean, ApplicationContextAware {
 
-    @Override
-    public void destroy() throws RpcException {
-        // TODO: 2020/8/17
-    }
+    private static final Logger logger = Logger.getLogger(NettyRpcReference.class);
+
+    private ApplicationContext applicationContext;
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        /*
-         * 在客户端的Spring IoC容器启动的时候，每一个<nettyrpc:reference/>所定义的bean被初始化时，都会与服务器建立一个长连接。
-         * 比如interfaceName属性为addCalculate和multiCalculate接口的标签，被初始化的时候，就会分别向RPC服务器发起一次长连接。
-         *
-         * 不过这样会有一个问题，向A服务器发起请求，要调用addCalculate中的add方法，同时向B服务器发起请求，调用multiCalculate中的multi方法，
-         * 通过下面的setRpcServerLoader，最终会调用到MessageSendInitializeTask中的call方法，分别向服务器A、B建立长连接（每一个连接对应的pipeline中
-         * 都有自己的MessageSendHandler对象）。但是由于RpcServerLoader是单例的，导致其中的属性MessageSendHandler是唯一的。因此，最后设置的
-         * MessageSendHandler就是与A、B两台服务器连接中的一个handler。因此，发送的add方法请求和call方法请求都会通过这个handler发往同一台服务器。
-         * 达不到我们原来的目的
-         *
-         * 但是这个项目设计的只支持一个客户端与一个服务器端的通信。
-         */
-        /*MessageSendExecutor.getInstance().setRpcServerLoader(ipAddr, Serialization.valueOf(protocol));*/
+        if (getApplication() == null && applicationContext != null){
+            Map<String, NettyRpcApplication> applicationMap = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext,
+                    NettyRpcApplication.class, false, false);
+            if (applicationMap.size() > 1)
+                throw new IllegalStateException("there is only one application tag allowed in consumer or provider side.");
+            if (applicationMap.size() > 0) {
+                for (Map.Entry<String, NettyRpcApplication> entry : applicationMap.entrySet()) {
+                    setApplication(entry.getValue());
+                }
+            }
+        }
+
+
     }
 
     @Override
     public Object getObject() throws Exception {
-        return null;
+        return get();
     }
 
     @Override
     public Class<?> getObjectType() {
+        if (interfaceClass != null)
+            return interfaceClass;
+
         try {
-            //获取到interfaceName所指定的接口对应的类对象，比如：
-            //interfaceName为com.newlandframework.rpc.services.AddCalculate的话，就返回对应的Class对象
-            return this.getClass().getClassLoader().loadClass(interfaceName);
+            // 获取到 interfaceName 所指定的接口对应的类对象
+            // 由于要加载的 interfaceName 类，此框架的类加载器中不存在，所以必须使用 ContextClassLoader，其实也就是用户的系统类加载器
+            if (interfaceName != null && interfaceName.length() > 0)
+                interfaceClass = Thread.currentThread().getContextClassLoader().loadClass(interfaceName);
         } catch (ClassNotFoundException e) {
-            System.err.println("spring analyze fail!");
+            logger.error("spring analyze fail!");
         }
-        return null;
+
+        return interfaceClass;
     }
 
     @Override
     public boolean isSingleton() {
         return true;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 }

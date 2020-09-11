@@ -1,9 +1,9 @@
 package com.xu.rpc.core;
 
-import org.apache.commons.lang3.StringUtils;
+import io.netty.util.AttributeKey;
 
 /**
- * RPC服务器一些参数配置
+ * netty-rpc框架的一些配置参数
  */
 public class RpcConfig {
 
@@ -12,12 +12,6 @@ public class RpcConfig {
     public static final String SYSTEM_PROPERTY_THREADPOOL_QUEUE_NAME_ATTR = "nettyrpc.parallel.queue";
 
     public static final int SYSTEM_PROPERTY_PARALLEL = Math.max(2, Runtime.getRuntime().availableProcessors());
-
-    public static final String DELIMITER = ":";
-
-    public static final int IP_PORT_ARRAY_LENGTH = 2;
-
-    public static final String TIMEOUT_RESPONSE_MSG = "Timeout request,NettyRPC server request timeout!";
 
     public static final int SERIALIZE_POOL_MAX_TOTAL = 500;
 
@@ -164,5 +158,7 @@ public class RpcConfig {
     public static final int DEFAULT_RATE_LIMIT_PER_SECOND = Integer.MAX_VALUE;
 
     public static final String LIMITER_KEY = "limiter";
+
+    public static final String IP_ADDRESS = "ip";
 }
 

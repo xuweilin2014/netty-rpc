@@ -42,10 +42,10 @@ public class JDKProxyFactory {
             // stub 属性的值可以有两种：true/false 以及 stub 类的名字
             String stub = invoker.getUrl().getParameter(RpcConfig.STUB_KEY);
             if (stub != null && stub.length() != 0){
-                if ("false".equals(stub))
+                if (RpcConfig.FALSE.equals(stub))
                     return proxy;
 
-                if ("true".equals(stub)){
+                if (RpcConfig.TRUE.equals(stub)){
                     stub = invoker.getInterface().getName() + "Stub";
                 }
 
