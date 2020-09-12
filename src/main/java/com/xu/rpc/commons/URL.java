@@ -73,15 +73,15 @@ public final class URL {
 
         return value;
     }
-    
+
     public URL removeParameter(String key){
         if (StringUtils.isEmpty(key) || parameters == null
                 || !parameters.containsKey(key))
-           return this;
+            return this;
 
         Map<String, String> map = new HashMap<>(parameters);
         map.remove(key);
-        return new URL(protocol, host, port, map);
+        return new URL(protocol, host, port, path, map);
     }
 
     public URL setProtocol(String protocol){
@@ -89,11 +89,11 @@ public final class URL {
     }
 
     public String getAddress(){
-        return host + RpcConfig.ADDRESS_DELIMITER + port;
+        return host + ":" + port;
     }
 
     public String getServiceName() {
-        return getParameter(RpcConfig.INTERFACE_KEY, path);
+        return getParameter("interface", path);
     }
 
     public int getParameter(String key, int defaultValue){
@@ -118,7 +118,7 @@ public final class URL {
         if (!StringUtils.isEmpty(protocol))
             buf.append(protocol);
         else
-            buf.append(RpcConfig.EMPTY_PROTOCOL);
+            buf.append("empty");
         buf.append("://");
 
         Assert.notEmpty(host, " host == null.");
@@ -127,7 +127,7 @@ public final class URL {
 
         buf.append(host);
         if (port > 0)
-            buf.append(RpcConfig.ADDRESS_DELIMITER).append(port);
+            buf.append(":").append(port);
         buf.append("/");
         buf.append(path);
 
@@ -186,7 +186,7 @@ public final class URL {
 
         if ((i = header.indexOf("://")) != -1){
             protocol = header.substring(0, i);
-            String rest = header.substring(i + 1);
+            String rest = header.substring(i + 3);
 
             if ((i = rest.indexOf("/")) == -1) {
                 throw new IllegalStateException("url format is invalid, missing / in url " + url);
@@ -213,9 +213,14 @@ public final class URL {
                     throw new IllegalStateException("url format is invalid, missing = in url " + url);
                 }
             }
+
+            if (body.contains("=")){
+                int index = body.indexOf("=");
+                parameters.put(body.substring(0, index), body.substring(index + 1));
+            }
         }
 
-        return new URL(protocol, host, port, parameters);
+        return new URL(protocol, host, port, path, parameters);
     }
 
     public URL addParameter(String key, String value) {
