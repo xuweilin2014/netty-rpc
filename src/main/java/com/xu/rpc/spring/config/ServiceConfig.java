@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
 @Setter
@@ -68,7 +69,7 @@ public class ServiceConfig<T> extends AbstractConfig{
 
     private Class<?> interfaceClass;
     // 在 unexport 的过程中，对 exporters 中的每一个 exporter 都进行 unexport 操作
-    private List<Exporter> exporters;
+    private List<Exporter<?>> exporters = new CopyOnWriteArrayList<>();
 
     public synchronized void export(){
         // 如果已经导出过了直接返回
@@ -173,28 +174,27 @@ public class ServiceConfig<T> extends AbstractConfig{
         if (logger.isInfoEnabled())
             logger.info("export service " + interfaceName + " to " + url.toFullString());
 
-        for (URL registryURL : registries) {
-            Protocol regProtocol = AdaptiveExtensionUtils.getProtocol(registryURL);
+        for (URL registryUrl : registries) {
+            Protocol regProtocol = AdaptiveExtensionUtils.getProtocol(registryUrl);
             try {
                 Object proxy = interfaceClass.newInstance();
                 // 先导出 AbstractProxyInvoker 子类的对象，用于具体的执行客户端要调用的方法
                 // 将 url 和 registryURL 编码在一起，以便后面获取到 providerURL 和 registryURL
-                Invoker invoker = JDKProxyFactory.getInvoker(proxy, registryURL.addParameterAndEncoded(RpcConfig.EXPORT_KEY, url.toFullString()));
+                Invoker<T> invoker = JDKProxyFactory.getInvoker(proxy,
+                        registryUrl.addParameterAndEncoded(RpcConfig.EXPORT_KEY, url.toFullString()), interfaceClass);
 
-                // 将 invoker 导出成为 Exporter，其实就是封装到 Exporter 中。
-                // 导出操作在 RegistryProtocol 和 RpcProtocol 中完成。
-                // 在 RegistryProtocol 其实只完成 注册到注册中心的工作，而在 RpcProtocol 中，导出为 Exporter，并且启动服务器监听
-                Exporter exporter = regProtocol.export(invoker);
+                // 将 invoker 导出成为 Exporter，其实就是封装到 Exporter 中。导出操作在 RegistryProtocol 和 RpcProtocol 中完成。
+                // 在 RegistryProtocol 其实只完成注册到注册中心的工作，而在 RpcProtocol 中，导出为 Exporter，并且启动服务器监听
+                Exporter<?> exporter = regProtocol.export(invoker);
+                exporters.add(exporter);
             } catch (InstantiationException | IllegalAccessException e) {
                 throw new IllegalStateException("cannot instantiate " + interfaceClass.getName() + " object.");
             }
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void doExportLocal(NettyRpcProtocol protocol, URL url) {
-        // 导出服务到本地的时候，<nettyrpc:service/> 中配置的协议如果为 injvm，则不做处理，
-        // 如果为其它协议，则将其转换为 injvm 协议
+        // 导出服务到本地的时候，<nettyrpc:service/> 中配置的协议如果为 injvm，则不做处理，如果为其它协议，则将其转换为 injvm 协议
         URL localUrl = url;
         if (!RpcConfig.INJVM_PROTOCOL.equals(protocol.getName())){
             localUrl = URL.valueOf(url.toFullString()).setProtocol(RpcConfig.INJVM_PROTOCOL);
@@ -202,12 +202,25 @@ public class ServiceConfig<T> extends AbstractConfig{
 
         Protocol protocolLocal = AdaptiveExtensionUtils.getProtocol(localUrl);
         // 通过 JDKProxyFactory 生成一个 invoker，用来真正执行具体的方法，再调用 export 方法将其导出成为一个 exporter
-        Exporter exporter = protocolLocal.export(JDKProxyFactory.getInvoker(ref, localUrl));
+        Exporter<?> exporter = protocolLocal.export(JDKProxyFactory.getInvoker(ref, localUrl, interfaceClass));
         exporters.add(exporter);
     }
     
-    public void unexport(){
-        // TODO: 2020/8/9
+    public synchronized void unexport(){
+        if (!exported){
+            return;
+        }
+
+        if (exporters.size() > 0){
+            for (Exporter<?> exporter : exporters) {
+                try {
+                    exporter.unexport();
+                } catch (Throwable e) {
+                    logger.warn("error occurs when trying to unexport exporter " + exporter);
+                }
+            }
+            exporters.clear();
+        }
     }
 
 }

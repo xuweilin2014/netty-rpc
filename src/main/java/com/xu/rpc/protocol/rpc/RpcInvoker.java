@@ -1,16 +1,25 @@
 package com.xu.rpc.protocol.rpc;
 
+import com.xu.rpc.async.FutureWrapper;
+import com.xu.rpc.commons.URL;
+import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.RpcContext;
 import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
+import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.exception.RpcException;
+import com.xu.rpc.exception.RpcTimeoutException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.protocol.AbstractInvoker;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ExchangeClient;
-import com.xu.rpc.util.URL;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * RpcInvoker#invoke方法通过向服务器发起远程调用
@@ -20,6 +29,8 @@ public class RpcInvoker extends AbstractInvoker {
     private Set<Invoker> invokers;
 
     private ExchangeClient client;
+
+    private final Lock lock = new ReentrantLock();
 
     public RpcInvoker(Class<?> type, URL url, Set<Invoker> invokers, ExchangeClient client) {
         super(type, url);
@@ -78,7 +89,7 @@ public class RpcInvoker extends AbstractInvoker {
                 return;
             super.destroy();
             invokers.remove(this);
-            client.close();
+            client.close(RpcConfig.DEFAULT_TIMEOUT);
         }finally {
             lock.unlock();
         }
@@ -89,8 +100,7 @@ public class RpcInvoker extends AbstractInvoker {
         int result = invokers != null ? invokers.hashCode() : 0;
         result = 31 * result + (client != null ? client.hashCode() : 0);
         result = 31 * result + (getInterface() != null ? getInterface().hashCode() : 0);
-        result = 31 * result + (getURL() != null ? getURL().hashCode() : 0);
-        result = 31 * result + (getDestroyed() != null ? getDestroyed().hashCode() : 0);
+        result = 31 * result + (getUrl() != null ? getUrl().hashCode() : 0);
         return result;
     }
 }

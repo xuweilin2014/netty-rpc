@@ -9,7 +9,12 @@ import com.xu.rpc.protocol.Invoker;
 public class ClassLoaderChainFilter implements ChainFilter {
     @Override
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) throws RpcException {
-        // TODO: 2020/9/11
-        return null;
+        ClassLoader ccl = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(invoker.getInterface().getClassLoader());
+            return invoker.invoke(invocation);
+        } finally {
+            Thread.currentThread().setContextClassLoader(ccl);
+        }
     }
 }

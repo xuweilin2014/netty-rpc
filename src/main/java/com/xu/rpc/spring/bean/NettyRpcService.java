@@ -33,6 +33,11 @@ public class NettyRpcService extends ServiceConfig implements ApplicationListene
     }
 
     @Override
+    public void destroy() throws Exception {
+        unexport();
+    }
+
+    @Override
     public String toString() {
         return "NettyRpcService{" +
                 "id='" + id + '\'' +
@@ -42,11 +47,5 @@ public class NettyRpcService extends ServiceConfig implements ApplicationListene
                 ", scope='" + scope + '\'' +
                 ", registry='" + registry + '\'' +
                 '}';
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        // TODO: 2020/8/16
-        unexport();
     }
 }

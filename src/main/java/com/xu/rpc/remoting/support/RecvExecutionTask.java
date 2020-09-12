@@ -48,19 +48,19 @@ public class RecvExecutionTask implements Runnable {
         try {
             result = (RpcResult) handler.reply(request, channel);
 
-            if (result.getResult() != null) {
-                logger.info("rpc request " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
-                // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
-                invokeStatus = MethodInvokeStatus.DONE;
-                response.setResult(result.getResult());
-                response.setError(null);
-            }else if (result.getException() != null){
+            if (result.getException() != null){
                 logger.error("rpc server invoke error!\n" + result.getException().getMessage());
                 // 如果通过反射调用方法的过程中发生了异常，并且这个异常没有被捕获的话，就会在此被捕获，并且设置到MessageResponse的error属性中，并且打印出来。
                 invokeStatus = MethodInvokeStatus.EXCEPTIONAL;
                 response.setResult(null);
                 response.setError(result.getException());
-            }else{
+            } else if (result.getResult() != null) {
+                logger.info("rpc request " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
+                // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
+                invokeStatus = MethodInvokeStatus.DONE;
+                response.setResult(result.getResult());
+                response.setError(null);
+            } else{
                 //noinspection GrazieInspection
                 throw new IllegalStateException("invoke result error, result and exception is not configured.");
             }
@@ -69,7 +69,6 @@ public class RecvExecutionTask implements Runnable {
             response.setInvokeStatus(invokeStatus);
             channel.writeAndFlush(response);
         } catch (RemotingException e) {
-            // TODO: 2020/9/7  
             logger.error("error occurs when executing the method " + request.getMethodName() + " for service " + request.getInterfaceName());
         } finally {
             // 当执行完成之后（不一定是成功），则移除掉和请求对应的 channel

@@ -59,6 +59,8 @@ public class RpcConfig {
 
     public static final String REGISTRY_PROTOCOL = "registry";
 
+    public static final String EMPTY_PROTOCOL = "empty";
+
     public static final String FILTER = "filter";
 
     public static final String PROVIDER = "provider";
@@ -77,7 +79,7 @@ public class RpcConfig {
 
     public static final String MONITOR = "monitor";
 
-    public static final String REFER = "refer";
+    public static final String REFER_KEY = "refer";
 
     public static final String CLUSTER_KEY = "cluster";
 

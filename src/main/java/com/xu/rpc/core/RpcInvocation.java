@@ -1,5 +1,6 @@
 package com.xu.rpc.core;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class RpcInvocation {
@@ -13,6 +14,13 @@ public class RpcInvocation {
     private Class<?> serviceType;
 
     private String token;
+
+    public RpcInvocation(Method method, Object[] args){
+        this.methodName = method.getName();
+        this.parameterTypes = method.getParameterTypes();
+        this.serviceType = method.getDeclaringClass();
+        this.parameters = args;
+    }
 
     public String getMethodName() {
         return methodName;

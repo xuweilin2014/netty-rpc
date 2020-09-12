@@ -123,7 +123,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
             List<URL> us = getRegistries();
             if (us != null && us.size() > 0) {
                 for (URL u : us) {
-                    urls.add(u.addParameterAndEncoded(RpcConfig.REFER, URL.toQueryString(map)));
+                    urls.add(u.addParameterAndEncoded(RpcConfig.REFER_KEY, URL.toQueryString(map)));
                 }
             }
 

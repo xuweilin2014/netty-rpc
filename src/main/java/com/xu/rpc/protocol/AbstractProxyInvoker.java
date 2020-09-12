@@ -15,6 +15,8 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T>{
 
     private URL url;
 
+    private Class<?> type;
+
     public URL getUrl() {
         return url;
     }
@@ -23,9 +25,10 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T>{
         this.url = url;
     }
 
-    public AbstractProxyInvoker(Object serviceBean, URL url) {
+    public AbstractProxyInvoker(Object serviceBean, URL url, Class<?> type) {
         this.serviceBean = serviceBean;
         this.url = url;
+        this.type = type;
     }
 
     public Object getServiceBean() {
@@ -49,19 +52,17 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T>{
 
     @Override
     public void destroy() {
-        // TODO: 2020/8/19  
+        // do nothing
     }
 
     @Override
     public Class<?> getInterface() {
-        // TODO: 2020/8/19  
-        return null;
+        return type;
     }
 
     @Override
     public boolean isAvailable() {
-        // TODO: 2020/8/19  
-        return false;
+        return true;
     }
 
     protected abstract Object doInvoke(Object serviceBean, String methodName, Object[] parametersVal) throws Throwable;

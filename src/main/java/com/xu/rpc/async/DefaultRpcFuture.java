@@ -209,12 +209,16 @@ public class DefaultRpcFuture implements RpcFuture{
         if (response.getInvokeStatus().isCancelled())
             throw new RpcException("future is cancelled.");
 
+        if (response.getInvokeStatus().isExceptional())
+            throw new RpcException("exception occurs when rpc server executes the service " + request.getInterfaceName()
+                    + ", caused by " + response.getError().getMessage());
+
         if (response.getInvokeStatus().isDone()){
             return response.getResult();
         }
 
         // 这里也会抛出超时异常，是因为在 DefaultRpcFuture 的超时检测线程中，如果发现某个 future 超时，则会创建 response，并将
-        // 超时异常的 status 设置为 true
+        // response 的 status 设置为 Timeout
         if (response.getInvokeStatus().isTimeout()){
             throw new RpcTimeoutException("invoke method " + request.getMethodName() + " for service " + request.getInterfaceName()
                     + " timeout, cost " + (System.currentTimeMillis() - start) + ", time limit " + timeout);

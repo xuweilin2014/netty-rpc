@@ -74,14 +74,14 @@ public class MockClusterInvoker<T> implements Invoker<T> {
                 try {
                     Invoker<?> mockInvoker = mocks.get(mock);
                     if (mockInvoker == null){
-                        Class<?> mockClass = Class.forName(mock);
+                        Class<?> mockClass = Thread.currentThread().getContextClassLoader().loadClass(mock);
                         if (!invocation.getServiceType().isAssignableFrom(mockClass)){
                             throw new IllegalStateException("mock class " + mockClass.getName() + " did not implement interface "
                                     + invocation.getServiceType().getName());
                         }
 
                         T mockObject = (T) mockClass.getConstructor().newInstance();
-                        mockInvoker = JDKProxyFactory.getInvoker(mockObject, url);
+                        mockInvoker = JDKProxyFactory.getInvoker(mockObject, url, getInterface());
                         mocks.put(mock, mockInvoker);
                     }
 

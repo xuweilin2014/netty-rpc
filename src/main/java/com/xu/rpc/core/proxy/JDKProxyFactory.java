@@ -18,8 +18,8 @@ public class JDKProxyFactory {
         return StubProxyWrapper.createProxyStub(invoker);
     }
 
-    public static Invoker getInvoker(Object proxy, URL url) {
-        return new AbstractProxyInvoker(proxy, url) {
+    public static <T> Invoker<T> getInvoker(Object proxy, URL url, Class<?> type) {
+        return new AbstractProxyInvoker<T>(proxy, url, type) {
             @Override
             public Class<?> getInterface() {
                 return proxy.getClass();
@@ -38,7 +38,7 @@ public class JDKProxyFactory {
         @SuppressWarnings("unchecked")
         static <T> T createProxyStub(Invoker<T> invoker){
             T proxy = (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                    new Class<?>[]{invoker.getInterface()}, new ProxyWrapper());
+                    new Class<?>[]{invoker.getInterface()}, new ProxyWrapper(invoker));
             // stub 属性的值可以有两种：true/false 以及 stub 类的名字
             String stub = invoker.getUrl().getParameter(RpcConfig.STUB_KEY);
             if (stub != null && stub.length() != 0){
