@@ -67,7 +67,7 @@ public class RpcConfig {
 
     public static final String LOCALHOST = "localhost";
 
-    public static final String METRICS = "metrics";
+    public static final String METRICS_KEY = "metrics";
 
     public static final int ECHO_PORT = 18882;
 
@@ -135,7 +135,7 @@ public class RpcConfig {
 
     public static final String CACHE_CAPACITY_KEY = "cache.capacity";
 
-    public static final String CACHE_KEY_SEPARATOR = ",";
+    public static final String COMMA_SEPARATOR = ",";
 
     public static final String FALSE = "false";
 
@@ -160,5 +160,7 @@ public class RpcConfig {
     public static final String LIMITER_KEY = "limiter";
 
     public static final String IP_ADDRESS = "ip";
+
+    public static final String ADDRESS_DELIMITER = ":";
 }
 

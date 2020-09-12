@@ -1,6 +1,6 @@
 package com.xu.rpc.remoting.handler;
 
-import com.xu.rpc.commons.util.NetUtil;
+import com.xu.rpc.commons.util.RpcUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -36,14 +36,14 @@ public class NettyServerHandler extends ChannelDuplexHandler{
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
-        channels.put(NetUtil.toAddressString((InetSocketAddress) channel.remoteAddress()), channel);
+        channels.put(RpcUtils.toAddressString((InetSocketAddress) channel.remoteAddress()), channel);
         handler.connected(channel);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
-        channels.remove(NetUtil.toAddressString((InetSocketAddress) channel.remoteAddress()));
+        channels.remove(RpcUtils.toAddressString((InetSocketAddress) channel.remoteAddress()));
         handler.disconnected(channel);
     }
 

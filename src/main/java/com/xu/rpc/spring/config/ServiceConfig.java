@@ -1,6 +1,7 @@
 package com.xu.rpc.spring.config;
 
 import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.extension.Attribute;
 import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Exporter;
 import com.xu.rpc.protocol.Invoker;
@@ -26,11 +27,11 @@ import java.util.UUID;
 public class ServiceConfig<T> extends AbstractConfig{
 
     private static final Logger logger = Logger.getLogger(ServiceConfig.class);
-    // 服务使用哪种/哪些协议进行导出
-    protected String protocol;
     // 服务对象实现引用
+    @Attribute
     protected String ref;
     // 过滤器
+    @Attribute
     protected String filter;
     /*
      * 服务导出的范围：remote/local/空值
@@ -38,28 +39,34 @@ public class ServiceConfig<T> extends AbstractConfig{
      * local:只导出到本地
      * 空值：既导出到远程，又导出到本地
      */
+    @Attribute
     protected String scope;
     // 服务是否开启监控
+    @Attribute
     protected String monitor;
 
-    protected boolean exported;
+    protected volatile boolean exported;
     // 服务验证，可接受的值为：true/false/密码, true表示开启服务验证，反之不开启，默认使用UUID生成密码，用户也可以直接配置指定
+    @Attribute
     protected String token;
     // 限流器的种类：bucket、token、guava
+    @Attribute
     private String limiter;
     // 限流速率，也就是每一秒可以通过的流量
+    @Attribute
     private String rate;
 
     private String path;
     // 此服务提供者的权重
+    @Attribute
     private String weight;
     // 服务降级
+    @Attribute
     private String mock;
 
     public ApplicationContext applicationContext;
 
     private Class<?> interfaceClass;
-    
     // 在 unexport 的过程中，对 exporters 中的每一个 exporter 都进行 unexport 操作
     private List<Exporter> exporters;
 
@@ -73,7 +80,9 @@ public class ServiceConfig<T> extends AbstractConfig{
             throw new IllegalStateException("in tag <nettyrpc:service/> interfaceName cannot be null");
 
         try {
-            interfaceClass = Class.forName(interfaceName);
+            // 框架的类加载器加载不了 interfaceName 对应的接口，因此使用用户线程中的 ContextClassLoader（违反了双亲委派模型）
+            // 不过实际上使用到的是 AppClassLoader，也就是系统类加载器
+            interfaceClass = Thread.currentThread().getContextClassLoader().loadClass(interfaceName);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
@@ -88,49 +97,58 @@ public class ServiceConfig<T> extends AbstractConfig{
     private void doExportUrls() {
         // 获取注册中心的地址
         List<URL> registries = getRegistries();
-        String[] protocolIds = protocol.split(",");
+        List<NettyRpcProtocol> protocols = getProtocols();
 
-        for (String id : protocolIds) {
-            NettyRpcProtocol protocol = (NettyRpcProtocol) applicationContext.getBean(id);
+        for (NettyRpcProtocol protocol : protocols) {
             if (protocol == null)
                 throw new IllegalStateException("protocol with id " + id + " is not configured.");
+
             checkProtocol(protocol);
-            // 将这个服务使用某个协议注册到所有的注册中心上去
+            // 将这个服务使用某个协议注册到所有的或者用户配置的注册中心上去
             doExportUrlsFor1Protocol(protocol, registries);
         }
     }
 
     private void doExportUrlsFor1Protocol(NettyRpcProtocol protocol, List<URL> registries) {
         String name = protocol.getName();
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> parameters = new HashMap<>();
 
-        String[] methodNames = ReflectionUtil.getMethodNames(interfaceClass);
+        String[] methodNames = ReflectionUtils.getMethodNames(interfaceClass);
         if (methodNames.length == 0){
             logger.warn(interfaceName + " does not have any method.");
-            map.put("methods", "");
+            parameters.put(RpcConfig.METHODS_KEY, "");
         }else {
-            map.put("methods", StringUtils.join(methodNames, ','));
+            parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(methodNames, ','));
         }
 
         // 获取协议所使用的序列化方式
         String serialize = protocol.getSerialize();
-        map.put(RpcConfig.SERIALIZE, serialize);
+        parameters.put(RpcConfig.SERIALIZE, serialize);
 
-        if (token != null && token.length() != 0 && !RpcConfig.FALSE.equals(token)) {
+        if (!StringUtils.isEmpty(token) && !RpcConfig.FALSE.equals(token)) {
             // token 的值为 true 的话，使用随机 token 令牌，即使用 UUID 生成
             if (RpcConfig.TRUE.equals(token)){
-                map.put(RpcConfig.TOKEN_KEY, UUID.randomUUID().toString());
+                parameters.put(RpcConfig.TOKEN_KEY, UUID.randomUUID().toString());
             // token 不为 true 的话，即本身相当于密码
             }else{
-                map.put(RpcConfig.TOKEN_KEY, token);
+                parameters.put(RpcConfig.TOKEN_KEY, token);
             }
         }
 
-        String host = this.getHostAddress(protocol);
-        int port = Integer.parseInt(protocol.getPort());
-        URL url = new URL(name, host, port, path, map);
+        if (application != null){
+            if (!StringUtils.isEmpty(application.getMetrics())){
+                // 设置 application 中的 metrics 值，用于表明是否开启监控，不设置的话默认会开启
+                parameters.put(RpcConfig.METRICS_KEY, application.getMetrics());
+            }
+        }
 
-        String scope = url.getParameter("scope");
+        appendParameters(this, parameters);
+
+        String host = getHostAddress(protocol.getHost());
+        int port = Integer.parseInt(protocol.getPort());
+        URL url = new URL(name, host, port, path, parameters);
+
+        String scope = url.getParameter(RpcConfig.SCOPE_KEY);
 
         // 当 scope 为 remote 的时候，只导出到远程，不导出到本地
         // 当 scope 为 local 的时候，只导出到本地，不导出到远程
@@ -156,7 +174,7 @@ public class ServiceConfig<T> extends AbstractConfig{
             logger.info("export service " + interfaceName + " to " + url.toFullString());
 
         for (URL registryURL : registries) {
-            Protocol regProtocol = AdaptiveExtensionUtil.getProtocol(registryURL);
+            Protocol regProtocol = AdaptiveExtensionUtils.getProtocol(registryURL);
             try {
                 Object proxy = interfaceClass.newInstance();
                 // 先导出 AbstractProxyInvoker 子类的对象，用于具体的执行客户端要调用的方法
@@ -182,29 +200,10 @@ public class ServiceConfig<T> extends AbstractConfig{
             localUrl = URL.valueOf(url.toFullString()).setProtocol(RpcConfig.INJVM_PROTOCOL);
         }
 
-        Protocol protocolLocal = AdaptiveExtensionUtil.getProtocol(localUrl);
+        Protocol protocolLocal = AdaptiveExtensionUtils.getProtocol(localUrl);
         // 通过 JDKProxyFactory 生成一个 invoker，用来真正执行具体的方法，再调用 export 方法将其导出成为一个 exporter
         Exporter exporter = protocolLocal.export(JDKProxyFactory.getInvoker(ref, localUrl));
         exporters.add(exporter);
-    }
-
-    // 如果用户配置了合法的 IP 地址，则直接返回，否则，默认使用本机 IP 地址
-    public String getHostAddress(NettyRpcProtocol protocol){
-        String host = protocol.getHost();
-
-        if (host == null || host.length() == 0){
-            try {
-                return InetAddress.getLocalHost().toString();
-            } catch (UnknownHostException e) {
-                throw new IllegalStateException(e.getMessage(), e);
-            }
-        }else {
-            if (URL.IP_PATTER.matcher(host).matches()){
-                return host;
-            }else{
-                throw new IllegalStateException("host address " + host + " is invalid in tag <nettyrpc:protocol/>");
-            }
-        }
     }
     
     public void unexport(){

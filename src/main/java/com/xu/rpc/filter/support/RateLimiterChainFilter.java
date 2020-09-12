@@ -3,7 +3,7 @@ package com.xu.rpc.filter.support;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.commons.limiter.FlowLimiter;
 import com.xu.rpc.commons.limiter.RateLimiterFactory;
-import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
@@ -21,7 +21,7 @@ public class RateLimiterChainFilter implements ChainFilter {
         String limiter = url.getParameter(RpcConfig.LIMITER_KEY);
         // 如果用户开启了限流的话
         if (limiter != null && limiter.length() > 0){
-            RateLimiterFactory limiterFactory = AdaptiveExtensionUtil.getLimiterFactory(url);
+            RateLimiterFactory limiterFactory = AdaptiveExtensionUtils.getLimiterFactory(url);
             // 获取到对应的限流工具
             FlowLimiter rateLimiter = limiterFactory.getRateLimiter(url);
             // 如果 tryAcquire 返回 false，那么就表示此请求被限流

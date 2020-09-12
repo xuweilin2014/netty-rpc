@@ -3,7 +3,7 @@ package com.xu.rpc.filter.support;
 import com.alibaba.fastjson.JSON;
 import com.xu.rpc.commons.cache.Cache;
 import com.xu.rpc.commons.cache.CacheFactory;
-import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
@@ -34,7 +34,7 @@ public class CacheChainFilter implements ChainFilter {
                 Cache<Object, Object> segmentCache = caches.get(cache);
                 if (segmentCache == null){
                     // 根据 cache 的类型获取到对应的工厂类，从而创建缓存对象
-                    CacheFactory<Object, Object> cacheFactory = AdaptiveExtensionUtil.getCacheFactory(invoker.getUrl());
+                    CacheFactory<Object, Object> cacheFactory = AdaptiveExtensionUtils.getCacheFactory(invoker.getUrl());
                     caches.put(cache, cacheFactory.createCache(invoker.getUrl()));
                     segmentCache = caches.get(cache);
                 }
@@ -63,7 +63,7 @@ public class CacheChainFilter implements ChainFilter {
     private String genCacheKey(RpcInvocation invocation){
         StringBuilder prefix = new StringBuilder();
         // 添加接口名和方法名
-        prefix.append(invocation.getServiceType().getName()).append(RpcConfig.CACHE_KEY_SEPARATOR)
+        prefix.append(invocation.getServiceType().getName()).append(RpcConfig.COMMA_SEPARATOR)
                 .append(invocation.getMethodName());
         StringBuilder args = new StringBuilder();
         // 添加各参数的值

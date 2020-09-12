@@ -4,22 +4,21 @@ import com.xu.rpc.cluster.Cluster;
 import com.xu.rpc.cluster.directory.StaticDirectory;
 import com.xu.rpc.cluster.support.AvailableCluster;
 import com.xu.rpc.commons.URL;
-import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
-import com.xu.rpc.commons.util.ReflectionUtil;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
+import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.extension.Attribute;
 import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
-import javafx.application.Application;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-
-import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -27,30 +26,39 @@ public class ReferenceConfig<T> extends AbstractConfig {
 
     private static final Logger logger = Logger.getLogger(ReferenceConfig.class);
     // 超时时间
+    @Attribute
     protected String timeout;
     // 重试次数
+    @Attribute
     protected String retries;
     // 负载均衡控制
+    @Attribute
     protected String loadbalance;
-    // 是否开启异步
+    // 是否开启异步，默认值为 false
+    @Attribute
     protected String async;
     // 集群容错方式:failback, failover, failsafe, failfast
+    @Attribute
     protected String cluster;
     // 发送心跳包的时间间隔
+    @Attribute(defaultValue = "60000")
     protected String heartbeat;
     // 心跳超时时间
+    @Attribute
     protected String heartbeatTimeout;
     // 桩
+    @Attribute
     protected String stub;
     // 范围
+    @Attribute
     protected String scope;
     // 过滤器
+    @Attribute
     protected String filter;
 
     protected T ref;
-    // 指定协议，客户端只会调用指定协议的服务，其它协议忽略
-    protected String protocol;
     // 是否开启粘滞连接
+    @Attribute
     protected String sticky;
 
     private List<URL> urls;
@@ -73,22 +81,18 @@ public class ReferenceConfig<T> extends AbstractConfig {
     }
 
     public void init(){
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> parameters = new HashMap<>();
         // 添加 interface 的值
-        map.put(RpcConfig.INTERFACE_KEY, interfaceName);
+        parameters.put(RpcConfig.INTERFACE_KEY, interfaceName);
 
-        try {
-            String address = Arrays.toString(InetAddress.getLocalHost().getAddress());
-            // 添加 ip 的值，也就是本机的 ip 地址
-            map.put(RpcConfig.IP_ADDRESS, address);
-        } catch (UnknownHostException e) {
-            throw new IllegalStateException("cannot load the localhost address.");
-        }
+        // 添加 ip 的值，也就是本机的 ip 地址
+        parameters.put(RpcConfig.IP_ADDRESS, getHostAddress());
         // 添加 methods 的值，也就是 interfaceClass 这个类中所有的方法名（不包括父类），并且方法名之间使用逗号分隔
-        map.put(RpcConfig.METHODS_KEY, StringUtils.join(ReflectionUtil.getMethodNames(interfaceClass), ","));
+        parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(ReflectionUtils.getMethodNames(interfaceClass), ","));
         // 添加 application 的值，也就是应用名
-        map.put(RpcConfig.APPLICATION_KEY, application.getName());
-        map.put(RpcConfig.SCOPE_KEY, scope);
+        parameters.put(RpcConfig.APPLICATION_KEY, application.getName());
+        // 将此 ReferenceConfig 中的不为空的成员属性添加到 map 中
+        appendParameters(this, parameters);
 
         try {
             if (interfaceName != null && interfaceName.length() > 0)
@@ -97,7 +101,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
             throw new IllegalStateException("error occurs when loading " + interfaceName + ", caused by " + e.getMessage());
         }
 
-        ref = createProxy(map);
+        ref = createProxy(parameters);
     }
 
     @SuppressWarnings("unchecked")
@@ -110,7 +114,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
         // 进行本地引用
         if (isJvmRefer){
             URL injvmLocal = tmpUrl.setProtocol(RpcConfig.INJVM_PROTOCOL);
-            Protocol protocol = AdaptiveExtensionUtil.getProtocol(injvmLocal);
+            Protocol protocol = AdaptiveExtensionUtils.getProtocol(injvmLocal);
             invoker = protocol.refer(injvmLocal, interfaceClass);
             logger.info("using injvm service " + interfaceClass.getName());
 
@@ -130,13 +134,13 @@ public class ReferenceConfig<T> extends AbstractConfig {
             // 只有单个注册中心或者单个服务直连 url
             if (urls.size() == 1){
                 URL url = urls.get(0);
-                invoker = AdaptiveExtensionUtil.getProtocol(url).refer(url, interfaceClass);
+                invoker = AdaptiveExtensionUtils.getProtocol(url).refer(url, interfaceClass);
             // 有多个注册中心或者多个服务直连 url
             }else {
                 List<Invoker> invokers = new ArrayList<>();
                 URL registryURL = null;
                 for (URL u : urls) {
-                    Protocol protocol = AdaptiveExtensionUtil.getProtocol(u);
+                    Protocol protocol = AdaptiveExtensionUtils.getProtocol(u);
                     invokers.add(protocol.refer(u, interfaceClass));
                     if (RpcConfig.REGISTRY_PROTOCOL.equals(u.getProtocol())){
                         registryURL = u;
@@ -146,7 +150,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
                 // 有多个注册中心，使用 AvailableCluster 和 StaticDirectory
                 if (registryURL != null){
                     URL url = registryURL.addParameter(RpcConfig.CLUSTER_KEY, AvailableCluster.NAME);
-                    Cluster cluster = AdaptiveExtensionUtil.getCluster(url);
+                    Cluster cluster = AdaptiveExtensionUtils.getCluster(url);
                     invoker = cluster.join(new StaticDirectory(invokers, url));
 
                 // 有多个服务直连 url，使用 url 中指定的 Cluster，如果没有指定的话，使用 FailoverCluster，并且使用 StaticDirectory 保存 invokers
@@ -155,7 +159,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
                         throw new IllegalStateException("no invoker available.");
                     }
                     URL url = invokers.get(0).getUrl();
-                    Cluster cluster = AdaptiveExtensionUtil.getCluster(url);
+                    Cluster cluster = AdaptiveExtensionUtils.getCluster(url);
                     invoker = cluster.join(new StaticDirectory(invokers, url));
                 }
             }

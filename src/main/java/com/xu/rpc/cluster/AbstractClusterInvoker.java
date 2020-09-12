@@ -5,7 +5,7 @@ import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.commons.util.AdaptiveExtensionUtil;
+import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
 import com.xu.rpc.commons.URL;
 import org.apache.log4j.Logger;
 
@@ -32,7 +32,7 @@ public abstract class AbstractClusterInvoker implements Invoker{
         if (invocation == null)
             return null;
 
-        LoadBalancer loadBalancer = AdaptiveExtensionUtil.getLoadBalance(getUrl());
+        LoadBalancer loadBalancer = AdaptiveExtensionUtils.getLoadBalance(getUrl());
         List<Invoker> invokers = list(invocation);
         return doInvoke(invocation, invokers, loadBalancer);
     }

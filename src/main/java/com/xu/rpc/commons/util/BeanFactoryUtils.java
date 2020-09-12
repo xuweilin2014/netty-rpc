@@ -18,7 +18,7 @@ import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncl
 /**
  *
  */
-public class BeanFactoryUtil implements BeanFactoryAware {
+public class BeanFactoryUtils implements BeanFactoryAware {
     private static BeanFactory beanFactory;
 
     private static boolean isContains(String[] values, String value) {

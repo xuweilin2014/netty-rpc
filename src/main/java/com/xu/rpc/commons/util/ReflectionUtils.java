@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ReflectionUtil {
+public class ReflectionUtils {
     private static ImmutableMap.Builder<Class, Object> builder = ImmutableMap.builder();
     private StringBuilder provider = new StringBuilder();
 

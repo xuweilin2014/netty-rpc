@@ -29,11 +29,12 @@ public class NettyRpcRegistry implements InitializingBean, DisposableBean {
 
     @Override
     public void destroy() throws Exception {
+        // TODO: 2020/9/12  
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
+        // TODO: 2020/9/12  
     }
 
     public String getId() {

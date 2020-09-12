@@ -1,6 +1,7 @@
 package com.xu.rpc.spring.bean;
 
 import com.sun.glass.ui.Application;
+import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.spring.config.ReferenceConfig;
 import org.apache.log4j.Logger;
@@ -12,6 +13,9 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,28 +29,9 @@ import java.util.Map;
  * 方法时，真正调用的是实现了InvocationHandler的MessageSendProxy对象的invoke方法
  */
 
-public class NettyRpcReference extends ReferenceConfig implements InitializingBean, FactoryBean, ApplicationContextAware {
+public class NettyRpcReference extends ReferenceConfig implements FactoryBean, ApplicationContextAware {
 
     private static final Logger logger = Logger.getLogger(NettyRpcReference.class);
-
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        if (getApplication() == null && applicationContext != null){
-            Map<String, NettyRpcApplication> applicationMap = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext,
-                    NettyRpcApplication.class, false, false);
-            if (applicationMap.size() > 1)
-                throw new IllegalStateException("there is only one application tag allowed in consumer or provider side.");
-            if (applicationMap.size() > 0) {
-                for (Map.Entry<String, NettyRpcApplication> entry : applicationMap.entrySet()) {
-                    setApplication(entry.getValue());
-                }
-            }
-        }
-
-
-    }
 
     @Override
     public Object getObject() throws Exception {
@@ -77,6 +62,7 @@ public class NettyRpcReference extends ReferenceConfig implements InitializingBe
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+        setConsumerSide(true);
+        super.setApplicationContext(applicationContext);
     }
 }

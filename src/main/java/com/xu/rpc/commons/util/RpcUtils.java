@@ -4,7 +4,7 @@ import com.xu.rpc.commons.Assert;
 
 import java.net.InetSocketAddress;
 
-public class NetUtil {
+public class RpcUtils {
 
     public static String toAddressString(InetSocketAddress address){
         Assert.notNull(address, "address == null.");

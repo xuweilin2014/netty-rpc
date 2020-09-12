@@ -1,7 +1,7 @@
 package com.xu.rpc.core;
 
 import com.xu.rpc.remoting.server.NettyServer;
-import com.xu.rpc.commons.util.ReflectionUtil;
+import com.xu.rpc.commons.util.ReflectionUtils;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -46,7 +46,7 @@ public class AbilityDetailProvider implements AbilityDetail {
     public StringBuilder listAbilityDetail(boolean html) {
         Map<String, Object> map = NettyServer.getInstance().getHandlerMap();
 
-        ReflectionUtil utils = new ReflectionUtil();
+        ReflectionUtils utils = new ReflectionUtils();
 
         if (html) {
             utils.getProvider().append(STYLE).append(HEADER);

@@ -15,7 +15,7 @@ import com.xu.rpc.observer.InvokeFailObserver;
 import com.xu.rpc.observer.InvokeObserver;
 import com.xu.rpc.observer.InvokeSuccObserver;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.commons.util.ReflectionUtil;
+import com.xu.rpc.commons.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
 
@@ -69,11 +69,11 @@ public class MonitorChainFilter implements ChainFilter {
             throw new IllegalStateException(request.getInterfaceName() + " does not exist in rpc server.");
         }
 
-        ReflectionUtil utils = new ReflectionUtil();
+        ReflectionUtils utils = new ReflectionUtils();
 
         try {
             // 通过反射获取客户端要调用的方法
-            Method method = ReflectionUtil.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
+            Method method = ReflectionUtils.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
             // 通过反射获取方法的签名，保存到ReflectionUtils类的provider对象中
             utils.listMethod(method, false);
             // 获取客户端要调用的方法的方法签名的字符串

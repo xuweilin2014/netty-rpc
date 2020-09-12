@@ -10,7 +10,7 @@ import com.xu.rpc.core.extension.ExtensionLoader;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.registry.RegistryFactory;
 
-public class AdaptiveExtensionUtil {
+public class AdaptiveExtensionUtils {
 
     public static Protocol getProtocol(URL url){
         if (url == null)
