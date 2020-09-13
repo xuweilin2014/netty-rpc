@@ -14,16 +14,17 @@ public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
 
     public static final Logger logger = Logger.getLogger(NettyRpcBeanDefinitionParser.class);
 
-    private static final List<String> serviceAttributes = Arrays.asList("id", "interfaceName", "ref", "url", "scope", "registry", "protocol", "filter", "monitor");
+    private static final List<String> serviceAttributes = Arrays.asList("id", "interfaceName", "ref", "registry", "protocol", "scope",
+            "filter", "mock", "token", "cache", "capacity", "timeout", "monitor", "weight", "limiter", "rate");
 
-    private static final List<String> registryAttributes = Arrays.asList("id", "address", "name");
+    private static final List<String> registryAttributes = Arrays.asList("id", "address", "name", "file");
 
-    private static final List<String> referenceAttributes = Arrays.asList("id", "registry", "interfaceName", "timeout", "retries", "loadbalance", "async", "cluster",
-            "heartbeat", "heartbeat.timeout", "stub", "scope", "filter");
+    private static final List<String> referenceAttributes = Arrays.asList("id", "registry", "interfaceName", "timeout", "retries", "loadbalance",
+            "async", "cluster", "heartbeat", "heartbeatTimeout", "stub", "scope", "filter", "protocol", "cache", "sticky", "capacity");
 
     private static final List<String> protocolAttributes = Arrays.asList("id", "name", "port", "serialize", "host");
 
-    public static final List<String> applicationAttributes = Arrays.asList("name", "metrics");
+    private static final List<String> applicationAttributes = Arrays.asList("name", "metrics");
 
     private static final Map<String, List<String>> attrs = new HashMap<>();
 

@@ -20,12 +20,22 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
+					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="interfaceName" type="xsd:string" use="required"/>
 					<xsd:attribute name="ref" type="xsd:string" use="required"/>
 					<xsd:attribute name="registry" type="xsd:string" use="optional"/>
 					<xsd:attribute name="protocol" type="xsd:string" use="optional"/>
-					<xsd:attribute name="url" type="xsd:string" use="optional"/>
 					<xsd:attribute name="scope" type="xsd:string" use="optional"/>
+					<xsd:attribute name="filter" type="xsd:string" use="optional"/>
+					<xsd:attribute name="mock" type="xsd:string" use="optional"/>
+					<xsd:attribute name="token" type="xsd:string" use="optional"/>
+					<xsd:attribute name="cache" type="xsd:string" use="optional"/>
+					<xsd:attribute name="capacity" type="xsd:string" use="optional"/>
+					<xsd:attribute name="timeout" type="xsd:string" use="optional"/>
+					<xsd:attribute name="monitor" type="xsd:string" use="optional"/>
+					<xsd:attribute name="weight" type="xsd:string" use="optional"/>
+					<xsd:attribute name="limiter" type="xsd:string" use="optional"/>
+					<xsd:attribute name="rate" type="xsd:string" use="optional"/>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -34,8 +44,10 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
+					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="address" type="xsd:string" use="required"/>
 					<xsd:attribute name="name" type="xsd:string" use="required"/>
+					<xsd:attribute name="file" type="xsd:string" use="optional"/>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -44,6 +56,7 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
+					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="interfaceName" type="xsd:string" use="required"/>
 					<xsd:attribute name="registry" type="xsd:string" use="required"/>
 					<xsd:attribute name="timeout" type="xsd:string" use="optional"/>
@@ -52,9 +65,14 @@
 					<xsd:attribute name="async" type="xsd:string" use="optional"/>
 					<xsd:attribute name="cluster" type="xsd:string" use="optional"/>
 					<xsd:attribute name="heartbeat" type="xsd:string" use="optional"/>
-					<xsd:attribute name="heartbeat.timeout" type="xsd:string" use="optional"/>
+					<xsd:attribute name="heartbeatTimeout" type="xsd:string" use="optional"/>
 					<xsd:attribute name="stub" type="xsd:string" use="optional"/>
 					<xsd:attribute name="scope" type="xsd:string" use="optional"/>
+					<xsd:attribute name="filter" type="xsd:string" use="optional"/>
+					<xsd:attribute name="protocol" type="xsd:string" use="optional"/>
+					<xsd:attribute name="cache" type="xsd:string" use="optional"/>
+					<xsd:attribute name="sticky" type="xsd:string" use="optional"/>
+					<xsd:attribute name="capacity" type="xsd:string" use="optional"/>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
@@ -63,6 +81,7 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
+					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="name" type="xsd:string" use="required"/>
 					<xsd:attribute name="port" type="xsd:string" use="required"/>
 					<xsd:attribute name="serialize" type="xsd:string" use="required"/>
