@@ -30,7 +30,7 @@ public class ReferenceCountClient implements ExchangeClient{
     public void close(int timeout){
         if (referenceCount.decrementAndGet() <= 0){
             if (timeout == 0){
-                client.close();
+                client.close(0);
             }else {
                 client.close(timeout);
             }

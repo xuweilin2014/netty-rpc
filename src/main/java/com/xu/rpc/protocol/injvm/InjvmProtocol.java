@@ -5,8 +5,11 @@ import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.AbstractProtocol;
 import com.xu.rpc.protocol.Exporter;
 import com.xu.rpc.protocol.Invoker;
+import sun.security.provider.PolicySpiFile;
 
 public class InjvmProtocol extends AbstractProtocol {
+
+    public static final String NAME = "injvm";
 
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
@@ -18,4 +21,8 @@ public class InjvmProtocol extends AbstractProtocol {
         return new InjvmInvoker<T>(type, url, exporters);
     }
 
+    @Override
+    public String doGetName() {
+        return NAME;
+    }
 }

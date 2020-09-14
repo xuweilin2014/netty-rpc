@@ -22,7 +22,7 @@ public class TimeoutChainFilter implements ChainFilter {
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) {
         sw.reset();
         sw.start();
-        RpcResult result = (RpcResult) invoker.invoke(invocation);
+        RpcResult result = invoker.invoke(invocation);
         sw.stop();
         long elapsed = sw.getTime();
         if (invoker.getUrl() != null

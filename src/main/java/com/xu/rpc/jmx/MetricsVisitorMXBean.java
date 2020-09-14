@@ -10,7 +10,7 @@ import java.util.List;
  *
  * 2.MXBean的接口与Class的命名没有约束条件
  */
-public interface ModuleMetricsVisitorMXBean {
+public interface MetricsVisitorMXBean {
 
     //此方法表明ModuleMetricsHandler中的有属性ModuleMetricsVisitor，当通过
     //getAttribute(name, "ModuleMetricsVisitor")来从名为name的object中获取ModuleMetricsVisitor属性时，就会调用这个方法。

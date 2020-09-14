@@ -1,7 +1,9 @@
 package com.xu.rpc.remoting.echo;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.AbilityDetailProvider;
 import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.jmx.MetricsHtmlBuilder;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -34,7 +36,10 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
 
     private static final String METRICS_ERR_MSG = "NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!";
 
-    public ApiEchoHandler() {
+    private final URL url;
+
+    public ApiEchoHandler(URL url) {
+        this.url = url;
     }
 
     @Override
@@ -65,22 +70,22 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
         byte[] content = null;
 
         // http请求的uri中是否包括metrics，即是否表明要获取NettyRPC模块调用情况
-        boolean metrics = req.getUri().contains(RpcConfig.METRICS);
-
+        boolean metrics = req.getUri().contains(RpcConfig.METRICS_KEY);
+        String isMetricsOpen = url.getParameter(RpcConfig.METRICS_KEY, RpcConfig.TRUE);
         /*
          * 1.如果系统支持JMX，并且metrics为true的话（也就是用户请求获取NettyRPC模块调用情况），就会构造调用信息，并且传递给content。
          * 2.如果系统不支持JMX，并且metrics为true的话，就会直接返回"NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
          * 3.如果metrics为false的话，表明用户只是想知道NettyRPC服务器端可以提供的能力，即可以调用的接口信息
          */
 
-        if (SYSTEM_PROPERTY_JMX_METRICS_SUPPORT && metrics) {
+        if (RpcConfig.TRUE.equals(isMetricsOpen) && metrics) {
             try {
                 // 返回构造的content，用来在网页上显示RPC服务器中每个方法的调用具体信息，比如：调用次数、调用成功次数、调用失败次数等等
                 content = MetricsHtmlBuilder.getInstance().buildMetrics().getBytes("GBK");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-        } else if (!SYSTEM_PROPERTY_JMX_METRICS_SUPPORT && metrics) {
+        } else if (RpcConfig.FALSE.equals(isMetricsOpen) && metrics) {
             logger.error(METRICS_ERR_MSG);
             content = METRICS_ERR_MSG.getBytes();
         } else {

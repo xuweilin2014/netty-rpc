@@ -7,6 +7,7 @@ import com.xu.rpc.registry.KeeperStateListener;
 import com.xu.rpc.registry.NotifyListener;
 import com.xu.rpc.commons.URL;
 import org.I0Itec.zkclient.IZkChildListener;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ZookeeperRegistry extends FailbackRegistry {
+
+    private static final Logger logger = Logger.getLogger(ZookeeperRegistry.class);
 
     // 使用 ZkClient 作为客户端
     private ZkClientWrapper zookeeperClient;
@@ -49,6 +52,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             // 其中，/rpc 和 /rpc/com.xxx.ServiceName 都是永久节点，而 /rpc/com.xxx.ServiceName/url 则是临时节点
             // 因此，在创建的过程中，如果创建的节点是临时节点和永久节点必须要分情况讨论
             create(toRegistryPath(url), true);
+            logger.info("register successfully to zookeeper " + url.getAddress() + ", url " + url);
         }catch (Throwable t){
             throw new RpcException("failed to register " + url.toFullString() + " to zookeeper "
                     + url.getAddress() +" , please check.", t);
@@ -61,6 +65,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             return;
         try{
             zookeeperClient.delete(toRegistryPath(url));
+            logger.info("unregister successfully to zookeeper " + url.getAddress() + ", url " + url);
         }catch (Throwable t){
             throw new RpcException("failed to delete " + url.toFullString() + " , please check.", t);
         }
@@ -88,6 +93,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
 
         List<String> childs = zookeeperClient.subscribeChildChanges(toRegistryDir(url), zkChildListener);
+        logger.info("subscribe successfully to zookeeper " + url.getAddress() + ", url " + url);
         notify(url, listener, toURLs(childs));
     }
 
@@ -101,6 +107,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             throw new IllegalStateException("listener haven't been registered on the zookeeper, cannot unsubscribe it.");
         }
         zookeeperClient.unsubscribeChildChanges(toRegistryDir(url), zkChildListener);
+        logger.info("unsubscribe successfully to zookeeper " + url.getAddress() + ", url " + url);
     }
 
     // rpc/com.xxx.ServiceName/url 中前面两个都是永久节点，而后面的 url 则是临时节点
@@ -125,7 +132,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     private String toRegistryPath(URL url) {
-        return toRegistryDir(url) + RpcConfig.DIR_SEPARATOR + url.toFullString();
+        return toRegistryDir(url) + RpcConfig.DIR_SEPARATOR + URL.encode(url.toFullString());
     }
 
     private List<URL> toURLs(List<String> childs){

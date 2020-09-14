@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
  * 拥有属性：ModuleMetricsVisitor
  * 拥有行为：addModuleMetricsVisitor
  */
-public class MetricsServer {
+public class MetricsServer extends NotificationBroadcasterSupport implements MetricsServerMXBean{
 
     private static final Logger logger = Logger.getLogger(MetricsServer.class);
 

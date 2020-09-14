@@ -44,7 +44,7 @@ public class MonitorChainFilter implements ChainFilter {
         this.request = request;
         RpcResult result = (RpcResult) invoker.invoke(invocation);
 
-        if (invoker.getUrl().getParameter(RpcConfig.METRICS, true)
+        if (invoker.getUrl().getParameter(RpcConfig.METRICS_KEY, true)
                 && invoker.getUrl().getParameter(RpcConfig.MONITOR, true)){
             // 增加方法的调用次数
             injectInvoke();

@@ -153,7 +153,8 @@ public class DefaultRpcFuture implements RpcFuture{
             } catch (Exception e) {
                 logger.error("error occurs when call back the done method of listener with result " + res.getResult());
             }
-            // 调用超时的时候，回调 listener 的 caught 方法
+
+        // 调用超时的时候，回调 listener 的 caught 方法
         }else if (res.getInvokeStatus().isTimeout()){
             try {
                 RpcTimeoutException ex = new RpcTimeoutException(res.getError().getMessage());
@@ -161,7 +162,8 @@ public class DefaultRpcFuture implements RpcFuture{
             }catch (Exception e){
                 logger.error("error occurs when call back the caught method of listener with error " + res.getError().getMessage());
             }
-            // 调用发生了其它异常时，回调 listener 的 caught 方法
+
+        // 调用发生了其它异常时，回调 listener 的 caught 方法
         }else {
             try {
                 RpcException ex = new RpcException(res.getError().getMessage());

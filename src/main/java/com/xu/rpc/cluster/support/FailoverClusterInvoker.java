@@ -28,7 +28,7 @@ public class FailoverClusterInvoker extends AbstractClusterInvoker {
         // 获取到重试次数（第一次不算在内）
         // 如果用户没有配置重试次数，那么获取到的就是默认的次数 3 次，第一次 + 两次重试
         // 如果用户配置了重试次数，那么会将其加上一，也就是加上第一次调用，所以说用户配置的重试次数，第一次不算在内
-        int retries = getURL().getParameter(RpcConfig.RETRIES_KEY, RpcConfig.DEFAULT_RETRIES) + 1;
+        int retries = getUrl().getParameter(RpcConfig.RETRIES_KEY, RpcConfig.DEFAULT_RETRIES) + 1;
         List<Invoker> copyInvokers = invokers;
         List<Invoker> selected = new ArrayList<>();
         Throwable lastException = null;

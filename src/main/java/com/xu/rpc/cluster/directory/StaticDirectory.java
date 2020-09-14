@@ -1,5 +1,6 @@
 package com.xu.rpc.cluster.directory;
 
+import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.commons.URL;
 
@@ -14,11 +15,6 @@ public class StaticDirectory extends AbstractDirectory {
         if (invokers == null || invokers.size() == 0)
             throw new IllegalArgumentException("no invokers.");
         this.invokers = invokers;
-    }
-
-    @Override
-    public List<Invoker> doGetInvokers(String method) {
-        return invokers;
     }
 
     @Override
@@ -48,5 +44,10 @@ public class StaticDirectory extends AbstractDirectory {
             invoker.destroy();
         }
         invokers.clear();
+    }
+
+    @Override
+    public List<Invoker> doGetInvokers(RpcInvocation invocation) {
+        return invokers;
     }
 }

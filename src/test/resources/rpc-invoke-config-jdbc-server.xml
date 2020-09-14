@@ -36,7 +36,7 @@
     <bean id="costTimeCalculateService" class="com.xu.rpc.services.impl.CostTimeCalculateImpl"></bean>
     <bean id="cacheService" class="com.xu.rpc.services.impl.CacheImpl"></bean>
     <bean id="storeService" class="com.xu.rpc.services.impl.StoreImpl"></bean>
-    <bean id="simpleFilter" class="com.newlandframework.rpc.filter.support.SimpleFilter"></bean>
+    <bean id="simpleFilter" class="com.xu.rpc.filter.support.SimpleFilter"></bean>
 
 
     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">

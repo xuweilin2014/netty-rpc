@@ -31,6 +31,8 @@ public class RpcProtocol extends AbstractProtocol {
     // ip:port -> server
     private final Map<String, HeaderExchangeServer> servers = new ConcurrentHashMap<>();
 
+    public static final String NAME = "rpc";
+
     private static final Logger logger = Logger.getLogger(RpcProtocol.class);
 
     private MetricsServer metricsServer;
@@ -105,7 +107,7 @@ public class RpcProtocol extends AbstractProtocol {
             return;
         }
 
-        boolean metrics = url.getParameter(RpcConfig.METRICS, true);
+        boolean metrics = url.getParameter(RpcConfig.METRICS_KEY, true);
         // 如果用户在 <nettyrpc:monitor/> 中配置了 metrics 为 false，就不开启 jmx 服务器，关闭掉监控功能
         if (!metrics)
             return;
@@ -227,5 +229,10 @@ public class RpcProtocol extends AbstractProtocol {
 
     public String getServiceKey(URL url){
         return super.getServiceKey(url.getServiceName(), url.getPort());
+    }
+
+    @Override
+    public String doGetName() {
+        return NAME;
     }
 }

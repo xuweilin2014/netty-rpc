@@ -73,12 +73,12 @@ public class NettyServer implements Server{
         String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE);
         this.serialization = Enum.valueOf(Serialization.class, serialize);
 
-        this.host = url.getParameter(RpcConfig.HOST);
+        this.host = url.getHost();
         if (host == null || host.length() == 0)
             throw new IllegalStateException("the netty server cannot open with host being empty.");
 
         try {
-            this.port = Integer.parseInt(url.getParameter(RpcConfig.PORT));
+            this.port = url.getPort();
         } catch (NumberFormatException e) {
             throw new IllegalStateException("port value is invalid");
         }
@@ -116,7 +116,7 @@ public class NettyServer implements Server{
                 public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                     if (channelFuture.isSuccess()) {
                         logger.info("netty rpc Server start success! ip: " + host + " port:" + port +
-                                " start-time: " + new Date() + " jmx-invoke-metrics: " + (url.getParameter(RpcConfig.METRICS, true) ?
+                                " start-time: " + new Date() + " jmx-invoke-metrics: " + (url.getParameter(RpcConfig.METRICS_KEY, true) ?
                                 "open" : "close"));
                     }
                 }

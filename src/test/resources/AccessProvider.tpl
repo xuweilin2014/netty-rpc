@@ -1,4 +1,4 @@
-package com.newlandframework.test;
+package com.xu.test;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

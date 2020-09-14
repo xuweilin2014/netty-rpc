@@ -20,7 +20,6 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
-					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="interfaceName" type="xsd:string" use="required"/>
 					<xsd:attribute name="ref" type="xsd:string" use="required"/>
 					<xsd:attribute name="registry" type="xsd:string" use="optional"/>
@@ -44,7 +43,6 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
-					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="address" type="xsd:string" use="required"/>
 					<xsd:attribute name="name" type="xsd:string" use="required"/>
 					<xsd:attribute name="file" type="xsd:string" use="optional"/>
@@ -56,7 +54,6 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
-					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="interfaceName" type="xsd:string" use="required"/>
 					<xsd:attribute name="registry" type="xsd:string" use="required"/>
 					<xsd:attribute name="timeout" type="xsd:string" use="optional"/>
@@ -81,7 +78,6 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
-					<xsd:attribute name="id" type="xsd:string" use="required"/>
 					<xsd:attribute name="name" type="xsd:string" use="required"/>
 					<xsd:attribute name="port" type="xsd:string" use="required"/>
 					<xsd:attribute name="serialize" type="xsd:string" use="required"/>

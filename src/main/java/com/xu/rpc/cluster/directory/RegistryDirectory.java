@@ -1,5 +1,6 @@
 package com.xu.rpc.cluster.directory;
 
+import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.extension.ExtensionLoader;
@@ -8,7 +9,6 @@ import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.registry.NotifyListener;
 import com.xu.rpc.registry.Registry;
-import com.xu.rpc.commons.AdaptiveExtensionUtil;
 import com.xu.rpc.commons.URL;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +44,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
     @Override
     public List<Invoker> doGetInvokers(RpcInvocation invocation) {
         if (isDestroyed()){
-            logger.error("registry directory for [" + getURL() + "already destroyed.");
+            logger.error("registry directory for [" + getUrl() + "already destroyed.");
             return new ArrayList<>(0);
         }
 
@@ -64,6 +64,11 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
     @Override
     public Class<?> getInterface() {
         return type;
+    }
+
+    @Override
+    public URL getUrl() {
+        return super.getUrl();
     }
 
     @Override
@@ -116,7 +121,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
                 try {
                     invoker.destroy();
                 } catch (Exception e) {
-                    logger.error("failed to destroy the invoker for " + invoker.getURL());
+                    logger.error("failed to destroy the invoker for " + invoker.getUrl());
                 }
             }
         }
@@ -175,9 +180,9 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
             if (invoker != null){
                 try {
                     invoker.destroy();
-                    logger.debug("destroy the invoker [" + invoker.getURL() + "] successfully.");
+                    logger.debug("destroy the invoker [" + invoker.getUrl() + "] successfully.");
                 } catch (Exception e) {
-                    logger.error("destroy the invoker [" + invoker.getURL() + "] fail.");
+                    logger.error("destroy the invoker [" + invoker.getUrl() + "] fail.");
                 }
             }
         }
@@ -189,7 +194,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
         Map<String, List<Invoker>> newMethodToInvokers = new HashMap<>();
         if (urlToInvokers != null && urlToInvokers.size() > 0){
             for (Invoker invoker : urlToInvokers.values()) {
-                String methodsKey = invoker.getURL().getParameter(RpcConfig.METHODS_KEY);
+                String methodsKey = invoker.getUrl().getParameter(RpcConfig.METHODS_KEY);
                 if (methodsKey == null || methodsKey.length() == 0){
                     throw new IllegalStateException("methods attribute is null.");
                 }
@@ -243,7 +248,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
 
             // 缓存没有命中
             if (invoker == null){
-                Protocol protocol = AdaptiveExtensionUtil.getProtocol(providerUrl);
+                Protocol protocol = AdaptiveExtensionUtils.getProtocol(providerUrl);
                 invoker = protocol.refer(providerUrl, this.type);
             }
 

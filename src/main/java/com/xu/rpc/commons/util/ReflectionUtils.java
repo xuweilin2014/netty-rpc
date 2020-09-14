@@ -236,9 +236,7 @@ public class ReflectionUtils {
     }
 
     public void listRpcProviderDetail(Class<?> c, boolean html) {
-        if (!c.isInterface()) {
-            return;
-        } else {
+        if (c.isInterface()) {
             provider.append(Modifier.toString(c.getModifiers()) + " " + c.getName());
             provider.append(html ? " {<br>" : " {\n");
 

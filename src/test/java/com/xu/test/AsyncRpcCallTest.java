@@ -1,8 +1,5 @@
-package com.newlandframework.test;
+package com.xu.test;
 
-import com.xu.rpc.async.AsyncCallObject;
-import com.xu.rpc.async.AsyncCallback;
-import com.xu.rpc.async.AsyncInvoker;
 import com.xu.rpc.services.CostTimeCalculate;
 import com.xu.rpc.services.pojo.CostTime;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -38,7 +35,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class AsyncRpcCallTest {
     public static void main(String[] args) {
-        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
+/*        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
         final CostTimeCalculate calculate = (CostTimeCalculate) context.getBean("costTime");
 
@@ -68,8 +65,10 @@ public class AsyncRpcCallTest {
             }
         });
 
-        elapse0.setDetail("傅友德");
-        System.out.println(elapse0);
+        elapse0.setDetail("傅友德");;
+        elapse0.getElapse();
+        AsyncCallObject asyncObj = (AsyncCallObject) elapse0;
+        asyncObj._getStatus();
         System.out.println("1 async nettyrpc call:[" + "result:" + elapse0 + ", status:[" + ((AsyncCallObject) elapse0)._getStatus() + "]");
         System.out.println("2 async nettyrpc call:[" + "result:" + elapse1 + ", status:[" + ((AsyncCallObject) elapse1)._getStatus() + "]");
         System.out.println("3 async nettyrpc call:[" + "result:" + elapse2 + ", status:[" + ((AsyncCallObject) elapse2)._getStatus() + "]");
@@ -79,7 +78,7 @@ public class AsyncRpcCallTest {
 
         System.out.println("nettyrpc async calculate time:" + (end - start));
 
-        context.destroy();
+        context.destroy();*/
     }
 }
 

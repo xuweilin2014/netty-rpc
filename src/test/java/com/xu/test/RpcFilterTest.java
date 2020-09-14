@@ -1,4 +1,4 @@
-package com.newlandframework.test;
+package com.xu.test;
 
 import com.xu.rpc.services.Cache;
 import com.xu.rpc.services.Store;
@@ -9,7 +9,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class RpcFilterTest {
     public static void main(String[] args) {
-        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
+/*        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
         Cache cache = (Cache) context.getBean("cache");
 
@@ -42,7 +42,7 @@ public class RpcFilterTest {
                 System.out.println("trace:" + ex.getMessage());
             }
         }
-        context.destroy();
+        context.destroy();*/
     }
 }
 

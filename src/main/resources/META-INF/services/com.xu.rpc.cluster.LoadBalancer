@@ -1,0 +1,3 @@
+random=com.xu.rpc.cluster.loadbalance.RandomLoadBalancer
+hash=com.xu.rpc.cluster.loadbalance.ConsistentHashLoadBalancer
+roundrobin=com.xu.rpc.cluster.loadbalance.RoundRobinLoadBalancer

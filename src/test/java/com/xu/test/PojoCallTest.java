@@ -1,4 +1,4 @@
-package com.newlandframework.test;
+package com.xu.test;
 
 import com.xu.rpc.services.PersonManage;
 import com.xu.rpc.services.pojo.Person;

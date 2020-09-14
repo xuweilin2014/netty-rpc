@@ -1,4 +1,4 @@
-package com.newlandframework.test;
+package com.xu.test;
 
 import com.xu.rpc.exception.InvokeTimeoutException;
 import com.xu.rpc.services.AddCalculate;

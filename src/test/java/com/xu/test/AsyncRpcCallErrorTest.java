@@ -1,8 +1,5 @@
-package com.newlandframework.test;
+package com.xu.test;
 
-import com.xu.rpc.oldasync.AsyncCallObject;
-import com.xu.rpc.oldasync.AsyncCallback;
-import com.xu.rpc.oldasync.AsyncInvoker;
 import com.xu.rpc.services.CostTimeCalculate;
 import com.xu.rpc.services.pojo.CostTime;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -10,7 +7,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class AsyncRpcCallErrorTest {
     public static void main(String[] args) {
-        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
+/*        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
         final CostTimeCalculate calculate = (CostTimeCalculate) context.getBean("costTime");
 
@@ -31,6 +28,6 @@ public class AsyncRpcCallErrorTest {
             return;
         }
 
-        context.destroy();
+        context.destroy();*/
     }
 }

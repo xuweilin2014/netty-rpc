@@ -13,16 +13,16 @@
 
     <nettyrpc:application name="application-provider" metrics="true"/>
 
-    <nettyrpc:protocol id="rpc" name="nettyrpc" port="10886" serialize="JDKSERIALIZE"/>
+    <nettyrpc:protocol id="rpc" name="rpc" port="10886" serialize="JDKSERIALIZE"/>
     <nettyrpc:protocol id="injvm" name="injvm" port="10887" serialize="JDKSERIALIZE"/>
 
-    <nettyrpc:service id="demoAddService" registry="zk" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService" protocol="rpc,injvm"/>
-    <nettyrpc:service id="demoMultiService" registry="zk" interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService" protocol="rpc"/>
-    <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.xu.rpc.services.PersonManage" ref="personManageService" protocol="rpc"/>
-    <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.xu.rpc.services.CostTimeCalculate" ref="costTimeCalculateService" protocol="rpc"/>
-    <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.xu.rpc.services.Cache" ref="cacheService" protocol="rpc"/>
-    <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.xu.rpc.services.Store" ref="storeService" protocol="rpc"/>
-    <nettyrpc:service id="demoAbility" registry="zk" interfaceName="com.xu.rpc.core.AbilityDetail" ref="abilityProvider" protocol="rpc"/>
+    <nettyrpc:service id="demoAddService" registry="zk" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService"/>
+    <nettyrpc:service id="demoMultiService" registry="zk" interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService"/>
+    <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.xu.rpc.services.PersonManage" ref="personManageService"/>
+    <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.xu.rpc.services.CostTimeCalculate" ref="costTimeCalculateService"/>
+    <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.xu.rpc.services.Cache" ref="cacheService"/>
+    <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.xu.rpc.services.Store" ref="storeService"/>
+    <nettyrpc:service id="demoAbility" registry="zk" interfaceName="com.xu.rpc.core.AbilityDetail" ref="abilityProvider"/>
 
     <!-- registry用来注册Rpc服务器，其中ipAddr为RPC服务器ip地址及端口(客户端连接这个地址），而echoApiPort为Rpc服务端服务能力展示开放端口
     (可以通过浏览器访问这个端口，获取服务端的信息) -->

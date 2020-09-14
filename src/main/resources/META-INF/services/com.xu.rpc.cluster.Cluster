@@ -1,0 +1,6 @@
+failback=com.xu.rpc.cluster.support.FailbackCluster
+failover=com.xu.rpc.cluster.support.FailoverCluster
+failsafe=com.xu.rpc.cluster.support.FailsafeCluster
+failfast=com.xu.rpc.cluster.support.FailfastCluster
+available=com.xu.rpc.cluster.support.AvailableCluster
+mock=com.xu.rpc.cluster.support.wrapper.MockClusterWrapper

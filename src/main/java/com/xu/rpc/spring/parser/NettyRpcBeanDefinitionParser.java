@@ -1,5 +1,8 @@
 package com.xu.rpc.spring.parser;
 
+import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.extension.Attribute;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -7,34 +10,12 @@ import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
 
-
-    public static final Logger logger = Logger.getLogger(NettyRpcBeanDefinitionParser.class);
-
-    private static final List<String> serviceAttributes = Arrays.asList("id", "interfaceName", "ref", "registry", "protocol", "scope",
-            "filter", "mock", "token", "cache", "capacity", "timeout", "monitor", "weight", "limiter", "rate");
-
-    private static final List<String> registryAttributes = Arrays.asList("id", "address", "name", "file");
-
-    private static final List<String> referenceAttributes = Arrays.asList("id", "registry", "interfaceName", "timeout", "retries", "loadbalance",
-            "async", "cluster", "heartbeat", "heartbeatTimeout", "stub", "scope", "filter", "protocol", "cache", "sticky", "capacity");
-
-    private static final List<String> protocolAttributes = Arrays.asList("id", "name", "port", "serialize", "host");
-
-    private static final List<String> applicationAttributes = Arrays.asList("name", "metrics");
-
-    private static final Map<String, List<String>> attrs = new HashMap<>();
-
-    static{
-        attrs.put("service", serviceAttributes);
-        attrs.put("registry", registryAttributes);
-        attrs.put("reference", referenceAttributes);
-        attrs.put("protocol", protocolAttributes);
-        attrs.put("application", applicationAttributes);
-    }
+    private static final String PREFIX = "NettyRpc";
 
     private Class<?> beanClass;
 
@@ -46,28 +27,28 @@ public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
         if (beanDefClass == null)
             throw new IllegalArgumentException("bean definition class should not be null");
 
-        String tagName = beanDefClass.getSimpleName().substring(8).toLowerCase();
-        List<String> attributes = attrs.get(tagName);
-
-        if (attributes == null || attributes.size() == 0){
-            logger.warn("tag " + tagName + " doesn't have any attributes");
-            throw new IllegalStateException("tag " + tagName + " doesn't have any attributes");
-        }
-
+        String tagName = beanDefClass.getSimpleName().substring(PREFIX.length()).toLowerCase();
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
         beanDefinition.setBeanClass(beanClass);
         beanDefinition.setLazyInit(false);
 
         String id = null;
-        for (String name : attributes) {
-            String value = element.getAttribute(name);
-            beanDefinition.getPropertyValues().addPropertyValue(name, value);
-            if ("id".equals(name)){
-                id = value;
+        while (beanDefClass!= Object.class){
+            Field[] fields = beanDefClass.getDeclaredFields();
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(Attribute.class)){
+                    String name = field.getName();
+                    String value = element.getAttribute(name);
+                    beanDefinition.getPropertyValues().addPropertyValue(name, value);
+                    if ("id".equals(name)){
+                        id = value;
+                    }
+                }
             }
+            beanDefClass = beanDefClass.getSuperclass();
         }
 
-        parserContext.getRegistry().registerBeanDefinition(id, beanDefinition);
+        parserContext.getRegistry().registerBeanDefinition(StringUtils.isEmpty(id) ? tagName : id, beanDefinition);
 
         return beanDefinition;
     }

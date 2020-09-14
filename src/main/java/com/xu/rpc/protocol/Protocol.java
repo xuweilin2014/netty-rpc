@@ -12,4 +12,5 @@ public interface Protocol {
     public <T> Invoker<T> refer(URL url, Class<?> type) throws RpcException;
 
     public void destroy();
+
 }

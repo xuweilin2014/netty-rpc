@@ -38,10 +38,9 @@ public abstract class AbstractDirectory implements Directory {
     }
 
     @Override
-    public URL getURL() {
+    public URL getUrl() {
         return url;
     }
-
 
     @Override
     public void destroy() {

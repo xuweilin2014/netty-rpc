@@ -1,10 +1,10 @@
 package com.xu.rpc.cluster.loadbalance;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.util.URL;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class RandomLoadBalancer extends AbstractLoadBalancer {
 
         for (Invoker invoker : invokers) {
             try {
-                int weight = invoker.getURL().getParameter(RpcConfig.WEIGHT_KEY, RpcConfig.DEFAULT_WEIGHT);
+                int weight = invoker.getUrl().getParameter(RpcConfig.WEIGHT_KEY, RpcConfig.DEFAULT_WEIGHT);
                 invokerToWeight.put(invoker, weight);
                 weightSum += weight;
             } catch (Exception e) {

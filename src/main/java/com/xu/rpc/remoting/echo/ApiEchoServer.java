@@ -58,13 +58,13 @@ public class ApiEchoServer{
                      * channel对应的pipeline中，然后当此channel最终注册到某个NioEventLoop上时，回调这个ApiEchoInitializer
                      * 中的handlerAdded方法，最终调用到其中的initChannel方法，初始化新连接，往其中添加各种handler
                      */
-                    .childHandler(new ApiEchoInitializer(sslCtx));
+                    .childHandler(new ApiEchoInitializer(sslCtx, url));
 
             this.channel = b.bind(host, RpcConfig.ECHO_PORT).sync().channel();
 
-            logger.info("netty-rpc server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html");
-            if (url.getParameter(RpcConfig.METRICS, true)){
-                logger.info("netty-rpc server metrics:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html/metrics");
+            logger.info("echo server starts successfully! netty-rpc server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html");
+            if (url.getParameter(RpcConfig.METRICS_KEY, true)){
+                logger.info("echo server starts successfully! netty-rpc server metrics:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html/metrics");
             }
 
         } catch (Throwable e) {

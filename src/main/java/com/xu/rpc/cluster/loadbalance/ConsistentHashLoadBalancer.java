@@ -1,9 +1,9 @@
 package com.xu.rpc.cluster.loadbalance;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.util.URL;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class ConsistentHashLoadBalancer extends AbstractLoadBalancer{
     @Override
     public Invoker doSelect(RpcInvocation invocation, List<Invoker> invokers, URL url) throws RpcException {
         // key的值一般为 服务全类名.方法名，比如：com.dubbo.simple.common.DemoService.sayHello
-        String key = invokers.get(0).getURL().getServiceName() + "." + invocation.getMethodName();
+        String key = invokers.get(0).getUrl().getServiceName() + "." + invocation.getMethodName();
 
         // 当满足两个条件之一时，会创建或者说重新创建 selector
         // 1.与 key 相对应的 selector 还没有被创建过，selector == null
@@ -53,7 +53,7 @@ public class ConsistentHashLoadBalancer extends AbstractLoadBalancer{
             // 为每个 invoker 生成 160 个虚拟节点
             for (Invoker invoker : invokers) {
                 for (int i = 0; i < REPLICA_NUMBER; i++) {
-                    String address = invoker.getURL().getAddress();
+                    String address = invoker.getUrl().getAddress();
                     long key = FNVHash(address + i);
                     virtualNodes.put(key, invoker);
                 }

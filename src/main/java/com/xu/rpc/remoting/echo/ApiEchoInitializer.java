@@ -1,5 +1,6 @@
 package com.xu.rpc.remoting.echo;
 
+import com.xu.rpc.commons.URL;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -11,8 +12,11 @@ public class ApiEchoInitializer extends ChannelInitializer<SocketChannel> {
 
     private final SslContext sslCtx;
 
-    public ApiEchoInitializer(SslContext sslCtx) {
+    private final URL url;
+
+    public ApiEchoInitializer(SslContext sslCtx, URL url) {
         this.sslCtx = sslCtx;
+        this.url = url;
     }
 
     @Override
@@ -22,7 +26,7 @@ public class ApiEchoInitializer extends ChannelInitializer<SocketChannel> {
             p.addLast(sslCtx.newHandler(ch.alloc()));
         }
         p.addLast(new HttpServerCodec());
-        p.addLast(new ApiEchoHandler());
+        p.addLast(new ApiEchoHandler(url));
     }
 }
 

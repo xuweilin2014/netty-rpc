@@ -16,7 +16,7 @@
                         protocol="PROTOSTUFFSERIALIZE" ipAddr="${rpc.server.addr}"/>
     <nettyrpc:reference id="costTime" interfaceName="com.xu.rpc.services.CostTimeCalculate"
                         protocol="PROTOSTUFFSERIALIZE" ipAddr="${rpc.server.addr}"/>
-    <nettyrpc:reference id="access" interfaceName="com.newlandframework.rpc.compiler.AccessAdaptive"
+    <nettyrpc:reference id="access" interfaceName="com.xu.rpc.compiler.AccessAdaptive"
                         protocol="PROTOSTUFFSERIALIZE" ipAddr="${rpc.server.addr}"/>
     <nettyrpc:reference id="ability" interfaceName="com.xu.rpc.core.AbilityDetail"
                         protocol="PROTOSTUFFSERIALIZE" ipAddr="${rpc.server.addr}"/>

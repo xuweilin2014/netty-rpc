@@ -1,4 +1,4 @@
-package com.newlandframework.test;
+package com.xu.test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

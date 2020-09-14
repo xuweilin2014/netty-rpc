@@ -65,7 +65,7 @@ public class ServiceConfig<T> extends AbstractConfig{
     @Attribute
     private String mock;
 
-    public ApplicationContext applicationContext;
+    protected T bean;
 
     private Class<?> interfaceClass;
     // 在 unexport 的过程中，对 exporters 中的每一个 exporter 都进行 unexport 操作
@@ -167,7 +167,6 @@ public class ServiceConfig<T> extends AbstractConfig{
             throw new IllegalStateException("protocol name cannot be null");
         // 导出服务到远程的时候，<nettyrpc:service/> 中配置的协议里面不能包含 injvm 协议
         if (RpcConfig.INJVM_PROTOCOL.equals(protocol.getName())) {
-            logger.error("cannot configure injvm protocol when scope attribute is " + scope + ", in " + id + " <nettyrpc:service/>");
             return;
         }
 
@@ -177,18 +176,17 @@ public class ServiceConfig<T> extends AbstractConfig{
         for (URL registryUrl : registries) {
             Protocol regProtocol = AdaptiveExtensionUtils.getProtocol(registryUrl);
             try {
-                Object proxy = interfaceClass.newInstance();
                 // 先导出 AbstractProxyInvoker 子类的对象，用于具体的执行客户端要调用的方法
                 // 将 url 和 registryURL 编码在一起，以便后面获取到 providerURL 和 registryURL
-                Invoker<T> invoker = JDKProxyFactory.getInvoker(proxy,
+                Invoker<T> invoker = JDKProxyFactory.getInvoker(bean,
                         registryUrl.addParameterAndEncoded(RpcConfig.EXPORT_KEY, url.toFullString()), interfaceClass);
 
                 // 将 invoker 导出成为 Exporter，其实就是封装到 Exporter 中。导出操作在 RegistryProtocol 和 RpcProtocol 中完成。
                 // 在 RegistryProtocol 其实只完成注册到注册中心的工作，而在 RpcProtocol 中，导出为 Exporter，并且启动服务器监听
                 Exporter<?> exporter = regProtocol.export(invoker);
                 exporters.add(exporter);
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new IllegalStateException("cannot instantiate " + interfaceClass.getName() + " object.");
+            } catch (Throwable t) {
+                throw new IllegalStateException("cannot instantiate " + interfaceClass.getName() + " object, caused by " + t.getMessage());
             }
         }
     }
@@ -203,6 +201,8 @@ public class ServiceConfig<T> extends AbstractConfig{
         Protocol protocolLocal = AdaptiveExtensionUtils.getProtocol(localUrl);
         // 通过 JDKProxyFactory 生成一个 invoker，用来真正执行具体的方法，再调用 export 方法将其导出成为一个 exporter
         Exporter<?> exporter = protocolLocal.export(JDKProxyFactory.getInvoker(ref, localUrl, interfaceClass));
+
+        logger.info("export service " + interfaceName + " to " + localUrl);
         exporters.add(exporter);
     }
     

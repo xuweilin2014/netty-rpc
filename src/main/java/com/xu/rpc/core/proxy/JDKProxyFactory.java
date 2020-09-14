@@ -21,11 +21,6 @@ public class JDKProxyFactory {
     public static <T> Invoker<T> getInvoker(Object proxy, URL url, Class<?> type) {
         return new AbstractProxyInvoker<T>(proxy, url, type) {
             @Override
-            public Class<?> getInterface() {
-                return proxy.getClass();
-            }
-
-            @Override
             public Object doInvoke(Object serviceBean, String methodName, Object[] parameters)
                     throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
                 return MethodUtils.invokeMethod(serviceBean, methodName, parameters);

@@ -3,6 +3,8 @@ package com.xu.rpc.protocol.registry;
 import com.xu.rpc.cluster.Cluster;
 import com.xu.rpc.cluster.directory.RegistryDirectory;
 import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.AbstractProtocol;
 import com.xu.rpc.protocol.Exporter;
@@ -18,6 +20,8 @@ import java.util.Map;
 
 public class RegistryProtocol extends AbstractProtocol {
 
+    public static final String NAME = "registry";
+
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         if (invoker == null)
@@ -26,14 +30,14 @@ public class RegistryProtocol extends AbstractProtocol {
             throw new IllegalArgumentException("url in invoker cannot be null.");
 
         // 1.获取 providerURL
-        URL providerURL =  getProviderURL(invoker);
+        URL providerUrl =  getProviderURL(invoker);
         // 2.使用 providerURL 进行真正的导出
-        Protocol protocol = AdaptiveExtensionUtils.getProtocol(providerURL);
-        Exporter<T> exporter = protocol.export(invoker);
+        Protocol protocol = AdaptiveExtensionUtils.getProtocol(providerUrl);
+        Exporter<T> exporter = protocol.export(new InvokerWrapper<>(invoker, providerUrl));
         // 3.获取 registry 对象的类型
         Registry registry = getRegistry(invoker);
         // 4.将 providerURL 注册到 registryURL 上
-        registry.register(providerURL);
+        registry.register(providerUrl);
         return exporter;
     }
 
@@ -58,12 +62,54 @@ public class RegistryProtocol extends AbstractProtocol {
         // RegistryDirectory 本身既可以看成是 invoker 的集合，同时也可以看成是一个监听器，用于从注册中心获取信息
         RegistryDirectory directory = new RegistryDirectory(type, url, registry);
         // 重新生成一个 consumer 端使用的 url
-        Map<String, String> map = new HashMap<>(directory.getURL().getParameters());
+        Map<String, String> map = new HashMap<>(directory.getUrl().getParameters());
         URL consumerURL = new URL(RpcConfig.CONSUMER, map.get(RpcConfig.CONSUMER_HOST), 0, type.getName(), map);
 
         directory.subscribe(consumerURL);
 
-        Cluster cluster = AdaptiveExtensionUtils.getCluster(directory.getURL());
+        Cluster cluster = AdaptiveExtensionUtils.getCluster(directory.getUrl());
         return cluster.join(directory);
+    }
+
+    static class InvokerWrapper<T> implements Invoker<T>{
+
+        private final Invoker<T> invoker;
+
+        private final URL url;
+
+        public InvokerWrapper(Invoker<T> invoker, URL url){
+            this.invoker = invoker;
+            this.url = url;
+        }
+
+        @Override
+        public Class<?> getInterface() {
+            return invoker.getInterface();
+        }
+
+        @Override
+        public RpcResult invoke(RpcInvocation invocation) throws RpcException {
+            return invoker.invoke(invocation);
+        }
+
+        @Override
+        public URL getUrl() {
+            return url;
+        }
+
+        @Override
+        public boolean isAvailable() {
+            return invoker.isAvailable();
+        }
+
+        @Override
+        public void destroy() {
+            invoker.destroy();
+        }
+    }
+
+    @Override
+    public String doGetName() {
+        return NAME;
     }
 }

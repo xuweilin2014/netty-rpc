@@ -17,15 +17,15 @@ public final class ExtensionLoader<T> {
 
     private static final Logger logger = Logger.getLogger(ExtensionLoader.class);
 
-    private static final Map<String, Class<?>> extensionClasses = new ConcurrentHashMap<>();
+    private final Map<String, Class<?>> extensionClasses = new ConcurrentHashMap<>();
 
     private static final Map<Class<?>, ExtensionLoader<?>> extensionLoaders = new ConcurrentHashMap<>();
 
-    private static final Map<String, Object> extensions = new HashMap<>();
+    private final Map<String, T> extensions = new HashMap<>();
 
-    private Map<String, Activate> cachedActivates = new ConcurrentHashMap<>();
+    private final Map<String, Activate> cachedActivates = new ConcurrentHashMap<>();
 
-    private Set<Class<?>> cachedWrapperClasses = new ConcurrentSet<>();
+    private final Set<Class<?>> cachedWrapperClasses = new ConcurrentSet<>();
 
     private String defaultName;
 
@@ -101,7 +101,8 @@ public final class ExtensionLoader<T> {
                 } catch (InstantiationException
                         | IllegalAccessException
                         | InvocationTargetException | NoSuchMethodException e) {
-                    throw new IllegalStateException("cannot instantiate with wrapper class " + wrapper.getName());
+                    throw new IllegalStateException("cannot instantiate with wrapper class " + wrapper.getName() +
+                            " , name of the instance " + name + " ,instance is " + instance);
                 }
             }
         }
@@ -114,6 +115,7 @@ public final class ExtensionLoader<T> {
         loadFile(RpcConfig.RPC_INTERNAL_DIRECTORY);
     }
 
+    @SuppressWarnings("unchecked")
     public void loadFile(String dir){
         if (dir == null || "".equals(dir)){
             logger.warn(dir + " is empty path, cannot load extensions from it");
@@ -125,7 +127,7 @@ public final class ExtensionLoader<T> {
 
         if (is == null){
             logger.warn(dir + " is invalid path, cannot load extensions from it");
-            throw new IllegalArgumentException(dir + " is invalid path, cannot load extensions from it");
+            return;
         }
 
         BufferedReader resource = new BufferedReader(new InputStreamReader(is));
@@ -161,7 +163,7 @@ public final class ExtensionLoader<T> {
                     if (activate != null){
                         cachedActivates.put(key, activate);
                     }
-                    Object ext = extClass.newInstance();
+                    T ext = (T) extClass.newInstance();
                     extensions.put(key, ext);
                     extensionClasses.put(key, extClass);
                 }
@@ -190,7 +192,7 @@ public final class ExtensionLoader<T> {
     }
 
     public List<T> getExtensions() {
-        return Collections.unmodifiableList((List<T>) extensions.values());
+        return new ArrayList<>(extensions.values());
     }
 
     public List<T> getActivateExtension(URL url, String key, String group){

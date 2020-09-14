@@ -16,7 +16,7 @@ public class KryoInitializer implements NettyRpcInitializer {
         KryoCodecUtil util = new KryoCodecUtil(KryoPoolFactory.getKryoPoolInstance());
         pipeline.addLast(new KryoEncoder(util));
         pipeline.addLast(new KryoDecoder(util));
-        pipeline.addLast(new NettyClientHandler());
+        pipeline.addLast(handler);
     }
 
 }

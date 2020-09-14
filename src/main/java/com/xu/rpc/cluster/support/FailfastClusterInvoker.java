@@ -4,6 +4,7 @@ import com.xu.rpc.cluster.AbstractClusterInvoker;
 import com.xu.rpc.cluster.Directory;
 import com.xu.rpc.cluster.LoadBalancer;
 import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
 
@@ -17,7 +18,7 @@ public class FailfastClusterInvoker extends AbstractClusterInvoker {
     }
 
     @Override
-    public Object doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException{
+    public RpcResult doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException{
         if (invokers == null || invokers.isEmpty())
             throw new RpcException("there is no invoker to invoke.");
 

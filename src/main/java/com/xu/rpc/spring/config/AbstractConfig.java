@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class AbstractConfig implements InitializingBean {
 
     private static final Logger logger = Logger.getLogger(AbstractConfig.class);
-
+    @Attribute
     protected String id;
     // 服务接口名
     @Attribute
@@ -49,6 +49,9 @@ public abstract class AbstractConfig implements InitializingBean {
     // 在消费者端：消费者只会调用指定协议的服务，其它协议忽略
     @Attribute
     protected String protocol;
+    // 超时时间
+    @Attribute
+    protected String timeout;
 
     protected List<NettyRpcRegistry> registries;
 
@@ -67,6 +70,7 @@ public abstract class AbstractConfig implements InitializingBean {
     private static final AtomicBoolean destroyed = new AtomicBoolean(false);
 
     static {
+        // graceful shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -147,6 +151,7 @@ public abstract class AbstractConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet(){
+        // 根据 <nettyrpc:application/> 设置 application
         if (getApplication() == null && applicationContext != null){
             Map<String, NettyRpcApplication> applicationMap = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext,
                     NettyRpcApplication.class, false, false);
@@ -160,7 +165,8 @@ public abstract class AbstractConfig implements InitializingBean {
         }
 
         // 设置服务端或者消费者端的注册中心集合
-        if (getRegistries() == null && applicationContext != null){
+        if ((getRegistries() == null || getRegistries().size() == 0)
+                && applicationContext != null){
             Map<String, NettyRpcRegistry> registryMap = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext,
                     NettyRpcRegistry.class, false, false);
             boolean isRegistryConfigured = false;
@@ -192,7 +198,8 @@ public abstract class AbstractConfig implements InitializingBean {
 
         // 对于服务提供者端，如果在 <nettyrpc:service/> 中配置了 protocol 属性，那么就会使用其中指定协议进行服务导出操作
         // 如果没有配置 protocol 属性，则默认使用所有配置的协议进行服务导出操作
-        if (providerSide && getProtocols() == null && applicationContext != null){
+        if (providerSide && (getProtocols() == null || getProtocols().size() == 0)
+                && applicationContext != null){
             Map<String, NettyRpcProtocol> protocolMap = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext,
                     NettyRpcProtocol.class, false, false);
 
@@ -218,6 +225,8 @@ public abstract class AbstractConfig implements InitializingBean {
 
             setProtocols(protocols);
         }
+
+
     }
 
     public String getHostAddress(){
@@ -228,7 +237,7 @@ public abstract class AbstractConfig implements InitializingBean {
     public String getHostAddress(String host){
         if (StringUtils.isEmpty(host)){
             try {
-                return InetAddress.getLocalHost().toString();
+                return InetAddress.getLocalHost().getHostAddress();
             } catch (UnknownHostException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }

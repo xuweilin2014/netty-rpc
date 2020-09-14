@@ -31,6 +31,8 @@ public final class URL {
 
     private Map<String, String> parameters;
 
+    private String string;
+
     public URL() {
         protocol = null;
         host = null;
@@ -68,7 +70,7 @@ public final class URL {
 
     public String getParameter(String key, String defaultValue){
         String value = getParameter(key);
-        if (value == null || value.length() > 0)
+        if (StringUtils.isEmpty(value))
             return defaultValue;
 
         return value;
@@ -147,14 +149,16 @@ public final class URL {
         if (StringUtils.isEmpty(value)){
             throw new IllegalArgumentException("value is empty.");
         }
+        value = encode(value);
+        return addParameter(key, value);
+    }
 
+    public static String encode(String value){
         try {
-            value = URLEncoder.encode(value, "UTF-8");
+            return URLEncoder.encode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException(e.getMessage());
         }
-
-        return addParameter(key, value);
     }
 
     public String getParameterAndDecoded(String key){
@@ -261,4 +265,11 @@ public final class URL {
         return IP_PATTER;
     }
 
+    @Override
+    public String toString() {
+        if (string != null)
+            return string;
+        string = this.toFullString();
+        return string;
+    }
 }

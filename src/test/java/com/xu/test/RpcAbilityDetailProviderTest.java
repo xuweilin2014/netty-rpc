@@ -1,4 +1,4 @@
-package com.newlandframework.test;
+package com.xu.test;
 
 import com.xu.rpc.core.AbilityDetail;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

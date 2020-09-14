@@ -14,15 +14,15 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 
 
-public class MetricsVisitorHandler extends NotificationBroadcasterSupport implements ModuleMetricsVisitorMXBean {
+public class MetricsVisitorHandler extends NotificationBroadcasterSupport implements MetricsVisitorMXBean {
 
-    protected List<MetricsVisitor> visitorList = new CopyOnWriteArrayList<>();
+    private List<MetricsVisitor> visitorList = new CopyOnWriteArrayList<>();
 
-    protected static String startTime;
+    private static String startTime;
 
     private final Queue<Thread> waiters = new ConcurrentLinkedQueue<>();
 
-    public static final MetricsVisitorHandler INSTANCE = new MetricsVisitorHandler();
+    private static final MetricsVisitorHandler INSTANCE = new MetricsVisitorHandler();
 
     public MetricsVisitorHandler() {
     }
@@ -42,7 +42,7 @@ public class MetricsVisitorHandler extends NotificationBroadcasterSupport implem
         }
     }
 
-    protected MetricsVisitor visitCriticalSection(String className, String methodName) {
+    private MetricsVisitor visitCriticalSection(String className, String methodName) {
         final String method = methodName.trim();
         final String cls = className.trim();
 

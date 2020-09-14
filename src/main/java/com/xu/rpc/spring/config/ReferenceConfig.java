@@ -25,9 +25,6 @@ import java.util.Map;
 public class ReferenceConfig<T> extends AbstractConfig {
 
     private static final Logger logger = Logger.getLogger(ReferenceConfig.class);
-    // 超时时间
-    @Attribute
-    protected String timeout;
     // 重试次数
     @Attribute
     protected String retries;

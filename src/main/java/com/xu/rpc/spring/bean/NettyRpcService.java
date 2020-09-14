@@ -12,7 +12,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import java.util.Date;
 
 
-public class NettyRpcService extends ServiceConfig implements ApplicationListener<ContextRefreshedEvent>, DisposableBean, ApplicationContextAware {
+public class NettyRpcService extends ServiceConfig implements ApplicationListener<ContextRefreshedEvent>, DisposableBean, ApplicationContextAware, InitializingBean {
 
     private static final Logger logger = Logger.getLogger(NettyRpcService.class);
 
@@ -30,6 +30,17 @@ public class NettyRpcService extends ServiceConfig implements ApplicationListene
 
         if (!exported)
             export();
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
+        if (ref == null)
+            throw new IllegalStateException("ref should not be null " + this);
+
+        if (bean == null){
+            bean = getApplicationContext().getBean(ref);
+        }
     }
 
     @Override

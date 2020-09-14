@@ -3,6 +3,7 @@ package com.xu.rpc.protocol;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.log4j.Logger;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,4 +42,18 @@ public abstract class AbstractProtocol implements Protocol {
             }
         }
     }
+
+    public String getName(){
+        return doGetName();
+    }
+
+    public Set<Invoker> getInvokers() {
+        return Collections.unmodifiableSet(invokers);
+    }
+
+    public Map<String, Exporter<?>> getExporters() {
+        return Collections.unmodifiableMap(exporters);
+    }
+
+    public abstract String doGetName();
 }

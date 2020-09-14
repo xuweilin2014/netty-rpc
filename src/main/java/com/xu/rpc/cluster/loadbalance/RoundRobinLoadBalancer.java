@@ -32,7 +32,7 @@ public class RoundRobinLoadBalancer extends AbstractLoadBalancer{
 
         for (Invoker invoker : invokers) {
             try {
-                int weight = invoker.getURL().getParameter(RpcConfig.WEIGHT_KEY, RpcConfig.DEFAULT_WEIGHT);
+                int weight = invoker.getUrl().getParameter(RpcConfig.WEIGHT_KEY, RpcConfig.DEFAULT_WEIGHT);
                 weightSum += weight;
                 maxWeight = Math.max(maxWeight, weight);
                 invokerToWeight.put(invoker, new IntegerWrapper(weight));
