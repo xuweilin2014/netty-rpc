@@ -191,7 +191,7 @@ public class ReflectionUtils {
         }
     }
 
-    private String modifiers(int m) {
+    private static String modifiers(int m) {
         return m != 0 ? Modifier.toString(m) + " " : "";
     }
 
@@ -342,7 +342,6 @@ public class ReflectionUtils {
                     signatureMethod.append(" throws ");
                 }
                 listTypes(exceptions);
-                signatureMethod.append(";");
                 list.add(signatureMethod.toString());
                 signatureMethod.delete(0, signatureMethod.length());
             }

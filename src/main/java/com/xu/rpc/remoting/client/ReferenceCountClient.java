@@ -48,7 +48,7 @@ public class ReferenceCountClient implements ExchangeClient{
 
     @Override
     public boolean isConnected() {
-        return false;
+        return client.isConnected();
     }
 
     @Override

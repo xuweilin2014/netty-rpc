@@ -92,8 +92,9 @@ public class ZookeeperRegistry extends FailbackRegistry {
             listeners.put(listener, zkChildListener);
         }
 
-        List<String> childs = zookeeperClient.subscribeChildChanges(toRegistryDir(url), zkChildListener);
-        logger.info("subscribe successfully to zookeeper " + url.getAddress() + ", url " + url);
+        String directoryPath = toRegistryDir(url);
+        List<String> childs = zookeeperClient.subscribeChildChanges(directoryPath, zkChildListener);
+        logger.info("subscribe successfully to zookeeper " + url.getAddress() + ", directory " + directoryPath + ", url " + url);
         notify(url, listener, toURLs(childs));
     }
 
@@ -138,7 +139,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     private List<URL> toURLs(List<String> childs){
         List<URL> urls = new ArrayList<>();
         for (String child : childs) {
-            urls.add(URL.valueOf(child));
+            urls.add(URL.valueOf(URL.decode(child)));
         }
         return urls;
     }

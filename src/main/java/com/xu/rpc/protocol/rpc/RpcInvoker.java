@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * RpcInvoker#invoke方法通过向服务器发起远程调用
  */
-public class RpcInvoker extends AbstractInvoker {
+public class RpcInvoker<T> extends AbstractInvoker<T> {
 
     private Set<Invoker> invokers;
 

@@ -49,7 +49,7 @@ public class NettyRpcReference extends ReferenceConfig implements FactoryBean, A
             if (interfaceName != null && interfaceName.length() > 0)
                 interfaceClass = Thread.currentThread().getContextClassLoader().loadClass(interfaceName);
         } catch (ClassNotFoundException e) {
-            logger.error("spring analyze fail!");
+            logger.error("spring analyze fail, cannot load class " + interfaceName);
         }
 
         return interfaceClass;

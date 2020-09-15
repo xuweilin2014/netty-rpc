@@ -30,7 +30,7 @@ public class RegistryProtocol extends AbstractProtocol {
             throw new IllegalArgumentException("url in invoker cannot be null.");
 
         // 1.获取 providerURL
-        URL providerUrl =  getProviderURL(invoker);
+        URL providerUrl =  getProviderUrl(invoker);
         // 2.使用 providerURL 进行真正的导出
         Protocol protocol = AdaptiveExtensionUtils.getProtocol(providerUrl);
         Exporter<T> exporter = protocol.export(new InvokerWrapper<>(invoker, providerUrl));
@@ -47,11 +47,12 @@ public class RegistryProtocol extends AbstractProtocol {
         return registryFactory.getRegistry(invoker.getUrl());
     }
 
-    private URL getProviderURL(Invoker invoker) {
-        String providerURL = invoker.getUrl().getParameterAndDecoded(RpcConfig.EXPORT_KEY);
-        return URL.valueOf(providerURL);
+    private URL getProviderUrl(Invoker invoker) {
+        String providerUrl = invoker.getUrl().getParameterAndDecoded(RpcConfig.EXPORT_KEY);
+        return URL.valueOf(providerUrl);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> Invoker<T> refer(URL url, Class<?> type) throws RpcException {
         url = url.setProtocol(url.getParameter(RpcConfig.REGISTRY_KEY, RpcConfig.DEFAULT_REGISTRY))
@@ -59,13 +60,14 @@ public class RegistryProtocol extends AbstractProtocol {
         RegistryFactory registryFactory = AdaptiveExtensionUtils.getRegistryFactory(url);
         Registry registry = registryFactory.getRegistry(url);
 
+        // 重新生成一个 consumer 端使用的 url，上面的 url 为注册中心的 url
+        Map<String, String> queryMap = URL.parseQueryString(url.getParameterAndDecoded(RpcConfig.REFER_KEY));
+        URL consumerUrl = new URL(RpcConfig.CONSUMER, queryMap.remove(RpcConfig.IP_ADDRESS), 0, type.getName(), queryMap);
+
         // RegistryDirectory 本身既可以看成是 invoker 的集合，同时也可以看成是一个监听器，用于从注册中心获取信息
         RegistryDirectory directory = new RegistryDirectory(type, url, registry);
-        // 重新生成一个 consumer 端使用的 url
-        Map<String, String> map = new HashMap<>(directory.getUrl().getParameters());
-        URL consumerURL = new URL(RpcConfig.CONSUMER, map.get(RpcConfig.CONSUMER_HOST), 0, type.getName(), map);
 
-        directory.subscribe(consumerURL);
+        directory.subscribe(consumerUrl);
 
         Cluster cluster = AdaptiveExtensionUtils.getCluster(directory.getUrl());
         return cluster.join(directory);

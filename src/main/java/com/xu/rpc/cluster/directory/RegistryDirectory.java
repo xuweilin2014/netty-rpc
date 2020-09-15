@@ -36,7 +36,6 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
     public RegistryDirectory(Class<?> type, URL url, Registry registry){
         super(url);
         this.registry = registry;
-        this.parameters = url.getParameters();
         this.type = type;
     }
 
@@ -148,7 +147,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
             return;
 
         Map<String, Invoker> newUrltoInvokers = toInvokers(invokerUrls);
-        Map<String, List<Invoker>> newMethodToInvokers = toMethodInvokers(urlToInvokers);
+        Map<String, List<Invoker>> newMethodToInvokers = toMethodInvokers(newUrltoInvokers);
 
         this.urlToInvokers = newUrltoInvokers;
         this.methodToInvokers = newMethodToInvokers;
@@ -198,7 +197,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
                 if (methodsKey == null || methodsKey.length() == 0){
                     throw new IllegalStateException("methods attribute is null.");
                 }
-                String[] methods = methodsKey.split(",");
+                String[] methods = methodsKey.split(RpcConfig.METHOD_SEPARATOR);
                 for (String method : methods) {
                     List<Invoker> invokers = newMethodToInvokers.get(method);
                     if (invokers == null){
@@ -238,7 +237,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
                     continue;
             }
 
-            if (ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())){
+            if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())){
                 logger.error("consumer doesn't support " + providerUrl.getProtocol() + " protocol.");
                 continue;
             }
@@ -264,8 +263,8 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
         // AbstractDirectory 保存了两个属性：url 和 consumerUrl，分别表示注册中心的 url 和 消费端的 url
         // 注册中心 url：zookeeper://host:port/registryService?key1=value1&key2=value2
         // 消费者 consumerUrl：consumer://host:port/UserServiceName?key1=value1&key2=value2
-        // 可以看到，在
         setConsumerUrl(url);
+        this.parameters = url.getParameters();
         registry.subscribe(url, this);
     }
 }

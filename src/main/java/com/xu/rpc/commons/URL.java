@@ -124,7 +124,6 @@ public final class URL {
         buf.append("://");
 
         Assert.notEmpty(host, " host == null.");
-        Assert.notNull(port, "port == null.");
         Assert.notEmpty(path, "path == null.");
 
         buf.append(host);
@@ -132,7 +131,6 @@ public final class URL {
             buf.append(":").append(port);
         buf.append("/");
         buf.append(path);
-
 
         if (parameters.size() > 0){
             buf.append("?");
@@ -161,6 +159,14 @@ public final class URL {
         }
     }
 
+    public static String decode(String value){
+        try{
+            return URLDecoder.decode(value, "UTF-8");
+        }catch (UnsupportedEncodingException e){
+            throw new IllegalStateException(e.getMessage());
+        }
+    }
+
     public String getParameterAndDecoded(String key){
         return getParameterAndDecoded(key, null);
     }
@@ -170,11 +176,7 @@ public final class URL {
         if (StringUtils.isEmpty(value))
             value = defaultValue;
 
-        try {
-            return URLDecoder.decode(value, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e.getMessage());
-        }
+        return decode(value);
     }
 
     public static URL valueOf(String url){
@@ -245,6 +247,25 @@ public final class URL {
         appendParameters(buf, map);
 
         return buf.toString();
+    }
+
+    public static Map<String, String> parseQueryString(String value){
+        String[] kvs = value.split("&");
+        Map<String, String> parameters = new HashMap<>();
+        for (String kv : kvs) {
+            if (kv.contains("=")){
+                String[] s = kv.split("=");
+                if (s.length == 2){
+                    parameters.put(s[0], s[1]);
+                }else {
+                    throw new IllegalStateException("invalid key value pairs.");
+                }
+            }else {
+                throw new IllegalStateException("invalid key value pairs.");
+            }
+        }
+
+        return parameters;
     }
 
     private static void appendParameters(StringBuilder buf, Map<String, String> parameters){

@@ -84,8 +84,7 @@ public abstract class AbstractConfig implements InitializingBean {
     public List<URL> getRegistries(){
         List<URL> registryUrls = new ArrayList<>();
         if (registries != null && registries.size() > 0){
-            // registries 要么是所有的注册中心，要么是用户在 <nettyrpc:service/> 或者 <nettyrpc:reference/> 中 registry 属性中
-            // 指明的注册中心
+            // registries 要么是所有的注册中心，要么是用户在 <nettyrpc:service/> 或者 <nettyrpc:reference/> 中 registry 属性中指明的注册中心
             for (NettyRpcRegistry registry : registries) {
                 Map<String, String> map = new HashMap<>();
                 // 获取到注册中心的名称，比如：zookeeper、nacos
@@ -171,7 +170,7 @@ public abstract class AbstractConfig implements InitializingBean {
                     NettyRpcRegistry.class, false, false);
             boolean isRegistryConfigured = false;
             List<String> userRegistries = null;
-            // registry 是 <nettyrpc:reference/> 标签中的成员值，可以用来指定从哪些注册中心上订阅服务，registry 的值为各个注册中心的 id 值，并且用逗号分隔
+            // registry 是 <nettyrpc:reference/> 标签中的成员值，可以用来指定从哪些注册中心上订阅或者注册服务，registry 的值为各个注册中心的 id 值，并且用逗号分隔
             // 若用户没有配置，那么就表明从所有的注册中心上订阅服务，也就是所有的 <nettyrpc:registry/> 标签
             if (registry != null && registry.length() > 0) {
                 isRegistryConfigured = true;
@@ -182,9 +181,9 @@ public abstract class AbstractConfig implements InitializingBean {
                 List<NettyRpcRegistry> registries = new ArrayList<>();
                 for (Map.Entry<String, NettyRpcRegistry> entry : registryMap.entrySet()) {
                     String key = entry.getKey();
-                    // 如果用户配置了 registry
+                    // 如果用户配置了 registry 属性
                     if (isRegistryConfigured){
-                        // 只会去从 registry 中指明了的注册中心订阅服务
+                        // 只会去从 registry 中指明了的注册中心订阅或者注册服务
                         if (userRegistries.contains(key)){
                             registries.add(entry.getValue());
                         }

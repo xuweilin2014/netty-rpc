@@ -58,7 +58,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
     @Attribute
     protected String sticky;
 
-    private List<URL> urls;
+    private List<URL> urls = new ArrayList<>();
 
     protected volatile boolean destroyed;
 
@@ -85,7 +85,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
         // 添加 ip 的值，也就是本机的 ip 地址
         parameters.put(RpcConfig.IP_ADDRESS, getHostAddress());
         // 添加 methods 的值，也就是 interfaceClass 这个类中所有的方法名（不包括父类），并且方法名之间使用逗号分隔
-        parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(ReflectionUtils.getMethodNames(interfaceClass), ","));
+        parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(new ReflectionUtils().getClassMethodSignature(interfaceClass), RpcConfig.METHOD_SEPARATOR));
         // 添加 application 的值，也就是应用名
         parameters.put(RpcConfig.APPLICATION_KEY, application.getName());
         // 将此 ReferenceConfig 中的不为空的成员属性添加到 map 中
@@ -104,7 +104,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
     @SuppressWarnings("unchecked")
     public T createProxy(Map<String, String> map){
         // 暂时起作用的协议，只是用来判断是否进行本地引用
-        URL tmpUrl = new URL("temp", RpcConfig.LOCALHOST, 0, map);
+        URL tmpUrl = new URL("temp", RpcConfig.LOCALHOST, 0, map.get(RpcConfig.INTERFACE_KEY),map);
         // 判断是否进行本地引用 do local reference
         boolean isJvmRefer = isJvm(tmpUrl);
 

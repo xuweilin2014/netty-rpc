@@ -147,7 +147,7 @@ public class RpcProtocol extends AbstractProtocol {
     // 这里的 url 为注册在注册中心上的 url，也就是 RpcInvoker 中的 url，而不是客户端自己的 url
     @Override
     public <T> Invoker<T> refer(URL url, Class<?> type) throws RpcException {
-        RpcInvoker invoker = new RpcInvoker(type, url, invokers, getClient(url));
+        RpcInvoker<T> invoker = new RpcInvoker<T>(type, url, invokers, getClient(url));
         invokers.add(invoker);
         return invoker;
     }

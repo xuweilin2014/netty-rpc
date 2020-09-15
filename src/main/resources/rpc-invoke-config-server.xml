@@ -16,8 +16,8 @@
     <nettyrpc:protocol id="rpc" name="rpc" port="10886" serialize="JDKSERIALIZE"/>
     <nettyrpc:protocol id="injvm" name="injvm" port="10887" serialize="JDKSERIALIZE"/>
 
-    <nettyrpc:service id="demoAddService" registry="zk" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService"/>
-    <nettyrpc:service id="demoMultiService" registry="zk" interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService"/>
+    <nettyrpc:service id="demoAddService" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService"/>
+    <nettyrpc:service id="demoMultiService"  interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService"/>
     <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.xu.rpc.services.PersonManage" ref="personManageService"/>
     <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.xu.rpc.services.CostTimeCalculate" ref="costTimeCalculateService"/>
     <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.xu.rpc.services.Cache" ref="cacheService"/>

@@ -57,9 +57,9 @@ public class AdaptiveExtensionUtils {
         String loadbalance = url.getParameter(RpcConfig.LOADBALANCE_KEY);
         ExtensionLoader<LoadBalancer> loader = ExtensionLoader.getExtensionLoader(LoadBalancer.class);
         if (loadbalance == null || loadbalance.length() == 0)
-            return loader.getExtension(loadbalance);
-        else
             return loader.getDefaultExtension();
+        else
+            return loader.getExtension(loadbalance);
     }
 
     public static <K,V> CacheFactory<K,V> getCacheFactory(URL url){

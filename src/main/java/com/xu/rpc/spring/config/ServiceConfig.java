@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 @Getter
 @Setter
@@ -114,12 +115,12 @@ public class ServiceConfig<T> extends AbstractConfig{
         String name = protocol.getName();
         Map<String, String> parameters = new HashMap<>();
 
-        String[] methodNames = ReflectionUtils.getMethodNames(interfaceClass);
-        if (methodNames.length == 0){
+        List<String> methodNames = new ReflectionUtils().getClassMethodSignature(interfaceClass);
+        if (methodNames.size() == 0){
             logger.warn(interfaceName + " does not have any method.");
             parameters.put(RpcConfig.METHODS_KEY, "");
         }else {
-            parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(methodNames, ','));
+            parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(methodNames, RpcConfig.METHOD_SEPARATOR));
         }
 
         // 获取协议所使用的序列化方式

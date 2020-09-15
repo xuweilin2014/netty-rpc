@@ -78,6 +78,7 @@ public class NettyClient implements Client {
 
         try {
             open();
+            logger.info("netty client opens successfully, and it will start to listen to address " + host + ":" + port);
         } catch (Throwable t) {
             close();
             // 客户端启动不了可以算做是比较严重的错误，所以必须抛出异常
@@ -108,8 +109,7 @@ public class NettyClient implements Client {
             if (isConnected())
                 return;
 
-            // 开启连接检测线程，每隔固定时间检测连接是否有效
-            // 如果连接有效，直接返回；否则，尝试重新连接，并且超过一定时间连接不上打印错误日志
+            // 开启连接检测线程，每隔固定时间检测连接是否有效,如果连接有效，直接返回；否则，尝试重新连接，并且超过一定时间连接不上打印错误日志
             startReconnectThread();
             doConnect();
 

@@ -33,7 +33,7 @@ public class RpcConfig {
 
     public static final int ZOOKEEPER_TIMEOUT = 3000;
 
-    public static final String INTERFACE_KEY = "interface";
+    public static final String INTERFACE_KEY = "interfaceName";
 
     public static final String ROOT_DIR = "/rpc";
 
@@ -86,8 +86,6 @@ public class RpcConfig {
     public static final String DEFAULT_REGISTRY = "zookeeper";
 
     public static final String REGISTRY_KEY = "registry";
-
-    public static final String CONSUMER_HOST = "consumer.host";
 
     public static final String PROTOCOL_KEY = "protocol";
 
@@ -164,5 +162,7 @@ public class RpcConfig {
     public static final String IP_ADDRESS = "ip";
 
     public static final String ADDRESS_DELIMITER = ":";
+
+    public static final String METHOD_SEPARATOR = ";";
 }
 

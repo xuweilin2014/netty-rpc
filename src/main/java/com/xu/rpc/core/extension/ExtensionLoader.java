@@ -92,22 +92,27 @@ public final class ExtensionLoader<T> {
 
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
-        loadResource();
-        Object instance = extensions.get(name);
-        if (cachedWrapperClasses.size() > 0){
-            for (Class<?> wrapper : cachedWrapperClasses) {
-                try {
-                    instance = wrapper.getConstructor(type).newInstance(instance);
-                } catch (InstantiationException
-                        | IllegalAccessException
-                        | InvocationTargetException | NoSuchMethodException e) {
-                    throw new IllegalStateException("cannot instantiate with wrapper class " + wrapper.getName() +
-                            " , name of the instance " + name + " ,instance is " + instance);
+        if (extensionClasses.get(name) == null) {
+            loadResource();
+        }
+        try {
+            T instance = (T) extensionClasses.get(name).newInstance();
+            if (cachedWrapperClasses.size() > 0){
+                for (Class<?> wrapper : cachedWrapperClasses) {
+                    try {
+                        instance = (T) wrapper.getConstructor(type).newInstance(instance);
+                    } catch (InstantiationException
+                            | IllegalAccessException
+                            | InvocationTargetException | NoSuchMethodException e) {
+                        throw new IllegalStateException("cannot instantiate with wrapper class " + wrapper.getName() +
+                                " , name of the instance " + name + " ,instance is " + instance);
+                    }
                 }
             }
+            return (T) instance;
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new IllegalStateException(e.getMessage());
         }
-
-        return (T) instance;
     }
 
     public void loadResource(){
@@ -163,8 +168,6 @@ public final class ExtensionLoader<T> {
                     if (activate != null){
                         cachedActivates.put(key, activate);
                     }
-                    T ext = (T) extClass.newInstance();
-                    extensions.put(key, ext);
                     extensionClasses.put(key, extClass);
                 }
 
@@ -174,8 +177,6 @@ public final class ExtensionLoader<T> {
             logger.warn("load extensions failed, error occurs when reading extension file");
         }catch (ClassNotFoundException ex){
             logger.warn("extension class : " + copyValue + " is not found");
-        } catch (IllegalAccessException | InstantiationException e) {
-            logger.warn("load extensions failed, cannot instantiate extension");
         }
 
     }

@@ -55,7 +55,7 @@
 			<xsd:complexContent>
 				<xsd:extension base="beans:identifiedType">
 					<xsd:attribute name="interfaceName" type="xsd:string" use="required"/>
-					<xsd:attribute name="registry" type="xsd:string" use="required"/>
+					<xsd:attribute name="registry" type="xsd:string" use="optional"/>
 					<xsd:attribute name="timeout" type="xsd:string" use="optional"/>
 					<xsd:attribute name="retries" type="xsd:string" use="optional"/>
 					<xsd:attribute name="loadbalance" type="xsd:string" use="optional"/>
