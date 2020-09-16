@@ -1,6 +1,7 @@
 package com.xu.rpc.remoting.client;
 
 import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.protocol.Invoker;
 
 import java.lang.reflect.InvocationHandler;
@@ -32,7 +33,10 @@ public class ProxyWrapper implements InvocationHandler {
             return invoker.equals(args[0]);
         }
 
-        return invoker.invoke(new RpcInvocation(method, args));
+        RpcResult result = invoker.invoke(new RpcInvocation(method, args));
+        if (result.getException() != null)
+            throw result.getException();
+        return result.getResult();
     }
 
 }

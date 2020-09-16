@@ -196,9 +196,9 @@ public class ReflectionUtils {
     }
 
     private String getType(Class<?> t) {
-        String brackets = "";
+        StringBuilder brackets = new StringBuilder();
         while (t.isArray()) {
-            brackets += "[]";
+            brackets.append("[]");
             t = t.getComponentType();
         }
         return t.getName() + brackets;
@@ -347,6 +347,35 @@ public class ReflectionUtils {
             }
         }
         return list;
+    }
+
+    public String getMethodSignature(Method method){
+
+        StringBuilder signatureMethod = new StringBuilder();
+
+        int modifiers = method.getModifiers();
+        if (Modifier.isAbstract(modifiers) && Modifier.isPublic(modifiers)) {
+            signatureMethod.append(modifiers(Modifier.PUBLIC));
+            if (Modifier.isFinal(modifiers)) {
+                signatureMethod.append(modifiers(Modifier.FINAL));
+            }
+        } else {
+            signatureMethod.append(modifiers);
+        }
+
+        signatureMethod.append(getType(((Method) method).getReturnType())).append(" ");
+        signatureMethod.append(method.getName()).append("(");
+        signatureMethod.append(getClassType(method.getParameterTypes()));
+        signatureMethod.append(")");
+
+        Class<?>[] exceptions = method.getExceptionTypes();
+        if (exceptions.length > 0) {
+            signatureMethod.append(" throws ");
+        }
+
+        listTypes(exceptions);
+
+        return signatureMethod.toString();
     }
 }
 

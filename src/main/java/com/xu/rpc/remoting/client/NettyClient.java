@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -44,7 +45,11 @@ public class NettyClient implements Client {
     // 客户端NioEventLoopGroup中NioEventLoop的数量大小
     private static final int PARALLEL = RpcConfig.SYSTEM_PROPERTY_PARALLEL * 2;
 
-    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup(PARALLEL);
+    // 使用 NamedThreadFactory 来创建Netty中的worker group中的线程，并且是守护线程。这么做事因为，当程序退出 main 方法之后（main线程是用户线程），
+    // JVM 还会继续等待所有的非守护线程（用户线程）执行完毕，所以必须设置为守护线程，否则无法进入优雅停机逻辑
+    private ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyWorkerThread", true);
+
+    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup(PARALLEL, threadRpcFactory);
 
     private volatile AtomicBoolean closed = new AtomicBoolean(false);
 

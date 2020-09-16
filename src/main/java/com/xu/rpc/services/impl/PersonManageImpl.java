@@ -16,12 +16,7 @@ public class PersonManageImpl implements PersonManage {
     @Override
     public void query(Person p) {
         //your business logic code here!
-        try {
-            TimeUnit.SECONDS.sleep(1);
-            System.out.println("person data[" + p + "] has query!");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        System.out.println("person data[" + p + "] has query!");
     }
 
     @Override

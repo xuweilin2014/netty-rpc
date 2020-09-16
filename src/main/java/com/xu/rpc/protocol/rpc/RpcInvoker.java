@@ -97,7 +97,7 @@ public class RpcInvoker<T> extends AbstractInvoker<T> {
 
     @Override
     public int hashCode() {
-        int result = invokers != null ? invokers.hashCode() : 0;
+        int result = 0;
         result = 31 * result + (client != null ? client.hashCode() : 0);
         result = 31 * result + (getInterface() != null ? getInterface().hashCode() : 0);
         result = 31 * result + (getUrl() != null ? getUrl().hashCode() : 0);

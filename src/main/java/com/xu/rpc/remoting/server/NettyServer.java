@@ -48,8 +48,8 @@ public class NettyServer implements Server{
     //SYSTEM_PROPERTY_PARALLEL的值为处理器的数量
     private static final int PARALLEL = RpcConfig.SYSTEM_PROPERTY_PARALLEL * 2;
 
-    //在此类中用来创建Netty中的worker group中的线程，并且不是守护线程
-    private ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyWorkerThread");
+    //在此类中用来创建Netty中的worker group中的线程，并且是守护线程
+    private ThreadFactory threadRpcFactory = new NamedThreadFactory("NettyWorkerThread", true);
 
     private EventLoopGroup boss = new NioEventLoopGroup();
 

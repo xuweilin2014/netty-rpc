@@ -49,28 +49,25 @@ public class DefaultRpcFuture implements RpcFuture{
 
     static {
         // 开启一个定时任务，用来检测 futures 集合中的 future 是否超时，如果发生超时的话，就创建一个 response 对象，然后调用 doReceived 方法让其返回
-        timeoutExecutor.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                if (futures.size() != 0) {
-                    try{
-                        for (DefaultRpcFuture future : futures.values()) {
-                            if (future == null || future.isDone() || future.isCancelled()) {
-                                continue;
-                            }
-
-                            if (System.currentTimeMillis() - future.start >= future.timeout) {
-                                MessageResponse response = new MessageResponse();
-                                response.setInvokeStatus(MethodInvokeStatus.TIMEOUT);
-                                response.setError(new RpcTimeoutException("future for invoking method exceeds time limit."));
-                                response.setMessageId(future.getId());
-
-                                future.doReceived(response);
-                            }
+        timeoutExecutor.scheduleWithFixedDelay(() -> {
+            if (futures.size() != 0) {
+                try{
+                    for (DefaultRpcFuture future : futures.values()) {
+                        if (future == null || future.isDone() || future.isCancelled()) {
+                            continue;
                         }
-                    }catch (Throwable t){
-                        logger.error("error occurs when scanning the future, caused by " + t.getMessage());
+
+                        if (System.currentTimeMillis() - future.start >= future.timeout) {
+                            MessageResponse response = new MessageResponse();
+                            response.setInvokeStatus(MethodInvokeStatus.TIMEOUT);
+                            response.setError(new RpcTimeoutException("future for invoking method exceeds time limit."));
+                            response.setMessageId(future.getId());
+
+                            future.doReceived(response);
+                        }
                     }
+                }catch (Throwable t){
+                    logger.error("error occurs when scanning the future, caused by " + t.getMessage());
                 }
             }
         }, TIMEOUT_SCAN_INTERVAL, TIMEOUT_SCAN_INTERVAL, TimeUnit.MILLISECONDS);
@@ -264,6 +261,8 @@ public class DefaultRpcFuture implements RpcFuture{
 
     @Override
     public boolean isCancelled() {
+        if (response == null)
+            return false;
         return response.getInvokeStatus().isCancelled();
     }
 

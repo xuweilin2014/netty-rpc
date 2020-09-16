@@ -131,7 +131,6 @@ public final class ExtensionLoader<T> {
         InputStream is = ExtensionLoader.class.getClassLoader().getResourceAsStream(dirPath);
 
         if (is == null){
-            logger.warn(dir + " is invalid path, cannot load extensions from it");
             return;
         }
 

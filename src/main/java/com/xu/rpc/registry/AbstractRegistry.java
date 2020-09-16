@@ -26,7 +26,7 @@ public abstract class AbstractRegistry implements Registry {
 
     private final Map<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<>();
 
-    private static final ExecutorService cacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("RegistrySaveCacheThread"));
+    private static final ExecutorService cacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("RegistrySaveCacheThread", true));
 
     private static final int MAX_SAVE_CACHE_RETRY_TIMES = 3;
 

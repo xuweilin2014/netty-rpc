@@ -54,15 +54,12 @@ public class RecvExecutionTask implements Runnable {
                 invokeStatus = MethodInvokeStatus.EXCEPTIONAL;
                 response.setResult(null);
                 response.setError(result.getException());
-            } else if (result.getResult() != null) {
+            } else {
                 logger.info("rpc request " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
                 // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
                 invokeStatus = MethodInvokeStatus.DONE;
                 response.setResult(result.getResult());
                 response.setError(null);
-            } else{
-                //noinspection GrazieInspection
-                throw new IllegalStateException("invoke result error, result and exception is not configured.");
             }
 
             // 设置方法调用的结果，以供客户端进行对应判断与处理

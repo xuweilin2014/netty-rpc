@@ -1,11 +1,13 @@
 package com.xu.rpc.protocol.rpc;
 
+import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.jmx.MetricsHtmlBuilder;
 import com.xu.rpc.jmx.MetricsServer;
+import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.protocol.AbstractProtocol;
 import com.xu.rpc.protocol.Exporter;
 import com.xu.rpc.protocol.Invoker;
@@ -17,8 +19,10 @@ import com.xu.rpc.remoting.echo.ApiEchoServer;
 import com.xu.rpc.remoting.server.HeaderExchangeServer;
 import com.xu.rpc.commons.URL;
 import io.netty.channel.Channel;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,36 +39,42 @@ public class RpcProtocol extends AbstractProtocol {
 
     private static final Logger logger = Logger.getLogger(RpcProtocol.class);
 
-    private MetricsServer metricsServer;
+    private static MetricsServer metricsServer;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     private final Map<String, ReferenceCountClient> referenceCountClients = new ConcurrentHashMap<>();
 
-    private ApiEchoServer echoServer;
+    private static ApiEchoServer echoServer;
 
     private final Lock lock = new ReentrantLock();
 
-    private static final int DEFAULT_SHUTDOWN_WAIT_TIME = 10000;
+    private static final int DEFAULT_SHUTDOWN_WAIT_TIME = 5000;
 
     private ReplyHandler replyHandler = new ReplyHandler() {
         @Override
         public Object reply(Object message, Channel channel) throws RemotingException {
-            if (message instanceof RpcInvocation){
-                RpcInvocation invocation = (RpcInvocation) message;
+            if (message instanceof MessageRequest){
+                MessageRequest request = (MessageRequest) message;
 
                 InetSocketAddress socketAddress = (InetSocketAddress) channel.localAddress();
                 int port = socketAddress.getPort();
 
                 // service key 为 ServiceName:Port
-                String serviceKey = getServiceKey(invocation.getServiceType().getName(), port);
+                String serviceKey = getServiceKey(request.getInterfaceName(), port);
                 Exporter exporter = exporters.get(serviceKey);
 
                 try {
-                    return  exporter.getInvoker().invoke(invocation);
+                    if (!StringUtils.isEmpty(request.getInterfaceName())){
+                        Class<?> cls = Thread.currentThread().getContextClassLoader().loadClass(request.getInterfaceName());
+                        Method method = ReflectionUtils.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
+                        return exporter.getInvoker().invoke(new RpcInvocation(method, request.getParametersVal()));
+                    }
                 } catch (Throwable throwable) {
                     throw new RpcException("errors occur when executing method : " + throwable.getMessage(), throwable);
                 }
+
+                throw new RpcException("cannot invoke method " + request.getMethodName());
             }
             throw new RemotingException("unsupported message type :" + message.getClass().getName() + " , consumer address :"
                     + channel.remoteAddress());
@@ -72,7 +82,7 @@ public class RpcProtocol extends AbstractProtocol {
     };
 
     @Override
-    public Exporter export(Invoker invoker) throws RpcException {
+    public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         // 1.从 invoker 中获取 url
         URL url = invoker.getUrl();
         // 2.根据 url 获取 ServiceKey, ServiceKey 由以下两个部分组成：服务名:端口号
@@ -174,6 +184,7 @@ public class RpcProtocol extends AbstractProtocol {
             try {
                 exchangeClient = Exchangers.connect(url, replyHandler);
                 client = new ReferenceCountClient(url, exchangeClient);
+                referenceCountClients.put(address, client);
                 return client;
             } catch (RemotingException e) {
                 throw new RpcException("failed to connect to server " + address, e);
@@ -199,14 +210,20 @@ public class RpcProtocol extends AbstractProtocol {
 
         try {
             // 关闭掉 jmx 服务器
-            metricsServer.stop();
+            if (metricsServer != null) {
+                metricsServer.stop();
+                logger.info("metrics server host " + metricsServer.getHost() + " port " + metricsServer.getPort() + " is closed.");
+            }
         } catch (Exception e) {
             logger.warn("failed to close the metrics server.");
         }
 
         try {
             // 关闭掉内置的 http 服务器
-            echoServer.stop();
+            if (echoServer != null) {
+                echoServer.stop();
+                logger.info("echo server host " + echoServer.getHost() + " port " + echoServer.getPort() + " is closed.");
+            }
         } catch (Exception e) {
             logger.warn("failed to stop the echo server.");
         }

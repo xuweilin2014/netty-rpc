@@ -93,7 +93,7 @@ public class RpcConfig {
 
     public static final String TIMEOUT_KEY = "timeout";
 
-    public static final int DEFAULT_TIMEOUT = 2000;
+    public static final int DEFAULT_TIMEOUT = 5000;
 
     public static final int RECONNECT_INTERVAL = 2000;
 

@@ -86,5 +86,13 @@ public class ApiEchoServer{
             logger.warn("failed to shutdown the event loop group.");
         }
     }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort(){
+        return RpcConfig.ECHO_PORT;
+    }
 }
 

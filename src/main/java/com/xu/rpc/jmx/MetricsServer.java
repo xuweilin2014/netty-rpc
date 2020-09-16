@@ -4,6 +4,7 @@ import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.SemaphoreWrapper;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.remoting.server.Server;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -35,8 +36,10 @@ public class MetricsServer extends NotificationBroadcasterSupport implements Met
 
     private final MetricsListener listener = new MetricsListener();
 
+    @Getter
     private String host;
 
+    @Getter
     private int port;
 
     public MetricsServer(URL url) {

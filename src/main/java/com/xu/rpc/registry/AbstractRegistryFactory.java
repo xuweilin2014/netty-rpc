@@ -47,7 +47,6 @@ public abstract class AbstractRegistryFactory implements RegistryFactory{
 
     public static void destroyAll(){
         try{
-            logger.info("begin to destroy registries.");
             for (Registry registry : registries.values()) {
                 // 取消已经注册的节点和监听器
                 registry.destroy();

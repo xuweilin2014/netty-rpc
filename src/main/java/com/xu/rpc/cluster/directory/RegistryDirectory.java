@@ -1,6 +1,7 @@
 package com.xu.rpc.cluster.directory;
 
 import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
+import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.extension.ExtensionLoader;
@@ -47,7 +48,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
             return new ArrayList<>(0);
         }
 
-        String methodName = invocation.getMethodName();
+        String methodName = new ReflectionUtils().getMethodSignature(invocation.getMethod());
         if (methodName == null || methodName.length() == 0)
             throw new IllegalStateException("method name must be configured.");
 

@@ -2,6 +2,7 @@ package com.xu.test;
 
 import com.xu.rpc.services.PersonManage;
 import com.xu.rpc.services.pojo.Person;
+import com.xu.rpc.spring.config.AbstractConfig;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 
@@ -21,8 +22,6 @@ public class PojoCallTest {
         manage.query(p);
 
         System.out.println("call pojo rpc result:" + result);
-
-        context.destroy();
     }
 }
 
