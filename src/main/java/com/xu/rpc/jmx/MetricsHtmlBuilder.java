@@ -124,7 +124,14 @@ public class MetricsHtmlBuilder {
                 metrics.append(TD_BEGIN).append(invokeSuccCount).append(TD_END);
                 metrics.append(TD_BEGIN).append(invokeFailCount).append(TD_END);
                 metrics.append(TD_BEGIN).append(invokeFilterCount).append(TD_END);
-                metrics.append(TD_BEGIN).append((double) (accumulateTimespan / invokeSuccCount)).append(TD_END);
+
+                double avg;
+                if (invokeSuccCount == 0)
+                    avg = 0;
+                else
+                    avg = ((double) accumulateTimespan / invokeSuccCount);
+
+                metrics.append(TD_BEGIN).append(avg).append(TD_END);
                 metrics.append(TD_BEGIN).append(invokeMaxTimespan).append(TD_END);
                 metrics.append(TD_BEGIN).append(invokeMinTimespan).append(TD_END);
                 metrics.append(TD_BEGIN).append(lastErrorTime != null ? lastErrorTime : "").append(TD_END);

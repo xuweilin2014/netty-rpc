@@ -7,6 +7,7 @@ import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.remoting.server.NettyServer;
 import com.xu.rpc.commons.util.ReflectionUtils;
+import com.xu.rpc.spring.config.AbstractConfig;
 import org.apache.log4j.Logger;
 
 import java.util.Iterator;
@@ -67,27 +68,29 @@ public class AbilityDetailProvider implements AbilityDetail {
         }
 
         for (Protocol ext : exts) {
-            AbstractProtocol protocol = (AbstractProtocol) ext;
-            Map<String, Exporter<?>> exporters = protocol.getExporters();
+            if (ext instanceof AbstractProtocol){
+                AbstractProtocol protocol = (AbstractProtocol) ext;
+                Map<String, Exporter<?>> exporters = protocol.getExporters();
 
-            if (exporters != null && exporters.size() > 0){
-                // 显示使用哪种类型的协议导出服务
-                utils.getProvider().append(CEIL_BEGIN_WITH_STYLE);
-                utils.getProvider().append("export to " + protocol.getName() + " service");
-                for (Map.Entry<String, Exporter<?>> entry : protocol.getExporters().entrySet()) {
-                    Exporter<?> exporter = entry.getValue();
-                    if (exporter != null){
-                        // 显示服务接口中的所有方法
-                        if (html) {
-                            utils.getProvider().append(CELL_BEGIN);
-                            utils.listRpcProviderDetail(exporter.getInvoker().getInterface(), html);
-                            utils.getProvider().append(CELL_END);
-                        } else {
-                            utils.listRpcProviderDetail(exporter.getInvoker().getInterface(), html);
+                if (exporters != null && exporters.size() > 0){
+                    // 显示使用哪种类型的协议导出服务
+                    utils.getProvider().append(CEIL_BEGIN_WITH_STYLE);
+                    utils.getProvider().append("export to " + protocol.getName() + " service");
+                    for (Map.Entry<String, Exporter<?>> entry : protocol.getExporters().entrySet()) {
+                        Exporter<?> exporter = entry.getValue();
+                        if (exporter != null){
+                            // 显示服务接口中的所有方法
+                            if (html) {
+                                utils.getProvider().append(CELL_BEGIN);
+                                utils.listRpcProviderDetail(exporter.getInvoker().getInterface(), html);
+                                utils.getProvider().append(CELL_END);
+                            } else {
+                                utils.listRpcProviderDetail(exporter.getInvoker().getInterface(), html);
+                            }
                         }
                     }
+                    utils.getProvider().append(CELL_END);
                 }
-                utils.getProvider().append(CELL_END);
             }
         }
 

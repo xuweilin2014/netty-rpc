@@ -21,7 +21,7 @@ public class InvokeMaxTimeSpanEvent extends AbstractInvokeEvent {
     @Override
     public Notification buildNotification(Object oldValue, Object newValue) {
         return new AttributeChangeNotification(this, sequenceInvokeMaxTimeSpanNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.visitor.getClassName(), super.visitor.getMethodName(), ModuleEvent.INVOKE_MAX_TIMESPAN_EVENT.toString(),
+                super.visitor.getClassName(), super.visitor.getMethodName(), MonitorEvent.INVOKE_MAX_TIMESPAN_EVENT.toString(),
                 oldValue, newValue);
     }
 }

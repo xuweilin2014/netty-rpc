@@ -71,6 +71,7 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
 
         // http请求的uri中是否包括metrics，即是否表明要获取NettyRPC模块调用情况
         boolean metrics = req.getUri().contains(RpcConfig.METRICS_KEY);
+        boolean ability = req.getUri().contains(RpcConfig.ABILITY_KEY);
         String isMetricsOpen = url.getParameter(RpcConfig.METRICS_KEY, RpcConfig.TRUE);
         /*
          * 1.如果系统支持JMX，并且metrics为true的话（也就是用户请求获取NettyRPC模块调用情况），就会构造调用信息，并且传递给content。
@@ -93,6 +94,7 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
             // 返回的content表明NettyRPC服务器端可以被调用的接口信息
             content = provider.listAbilityDetail(true).toString().getBytes();
         }
+
         return content;
     }
 

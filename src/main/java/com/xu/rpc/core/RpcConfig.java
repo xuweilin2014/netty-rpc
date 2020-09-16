@@ -31,7 +31,7 @@ public class RpcConfig {
 
     public static final String REGISTRY_FACTORY = "registry";
 
-    public static final int ZOOKEEPER_TIMEOUT = 3000;
+    public static final int ZOOKEEPER_TIMEOUT = 1000;
 
     public static final String INTERFACE_KEY = "interfaceName";
 
@@ -77,7 +77,7 @@ public class RpcConfig {
 
     public static final String METRICS_PORT_KEY = "metrics.port";
 
-    public static final String MONITOR = "monitor";
+    public static final String MONITOR_KEY = "monitor";
 
     public static final String REFER_KEY = "refer";
 
@@ -93,7 +93,7 @@ public class RpcConfig {
 
     public static final String TIMEOUT_KEY = "timeout";
 
-    public static final int DEFAULT_TIMEOUT = 5000;
+    public static final int DEFAULT_TIMEOUT = 1000000;
 
     public static final int RECONNECT_INTERVAL = 2000;
 
@@ -164,5 +164,7 @@ public class RpcConfig {
     public static final String ADDRESS_DELIMITER = ":";
 
     public static final String METHOD_SEPARATOR = ";";
+
+    public static final CharSequence ABILITY_KEY = "ability";
 }
 

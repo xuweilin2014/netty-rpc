@@ -1,7 +1,7 @@
 package com.xu.rpc.observer;
 
 import com.xu.rpc.event.InvokeEventFacade;
-import com.xu.rpc.event.ModuleEvent;
+import com.xu.rpc.event.MonitorEvent;
 import com.xu.rpc.jmx.MetricsVisitor;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,27 +17,25 @@ public class InvokeSuccObserver extends AbstractInvokeObserver {
 
     private long invokeTimespan;
 
-    public InvokeSuccObserver(InvokeEventFacade facade, MetricsVisitor visitor, long invokeTimespan) {
-        super(facade, visitor);
+    public InvokeSuccObserver(InvokeEventFacade facade, MetricsVisitor visitor, long invokeTimespan, MonitorEvent event) {
+        super(facade, visitor, event);
         this.invokeTimespan = invokeTimespan;
     }
 
 
     @Override
-    public void update(Observable o, Object arg) {
-        if (arg == ModuleEvent.INVOKE_SUCC_EVENT) {
-            // 更新调用成功的次数
-            super.getFacade().fetchEvent(ModuleEvent.INVOKE_SUCC_EVENT)
-                    .notify(super.getFacade(), null);
-            // 更新方法调用总的耗时，也就是此方法所有调用时间之和，这个数据被用来计算方法调用的平均时间
-            super.getFacade().fetchEvent(ModuleEvent.INVOKE_TIMESPAN_EVENT)
-                    .notify(super.getFacade(), invokeTimespan);
-            // 更新方法调用最大耗时
-            super.getFacade().fetchEvent(ModuleEvent.INVOKE_MAX_TIMESPAN_EVENT)
-                    .notify(super.getFacade(), invokeTimespan);
-            // 更新方法调用最小耗时
-            super.getFacade().fetchEvent(ModuleEvent.INVOKE_MIN_TIMESPAN_EVENT)
-                    .notify(super.getFacade(), invokeTimespan);
-        }
+    public void doUpdate() {
+        // 更新调用成功的次数
+        super.getFacade().fetchEvent(MonitorEvent.INVOKE_SUCC_EVENT)
+                .notify(super.getFacade(), null);
+        // 更新方法调用总的耗时，也就是此方法所有调用时间之和，这个数据被用来计算方法调用的平均时间
+        super.getFacade().fetchEvent(MonitorEvent.INVOKE_TIMESPAN_EVENT)
+                .notify(super.getFacade(), invokeTimespan);
+        // 更新方法调用最大耗时
+        super.getFacade().fetchEvent(MonitorEvent.INVOKE_MAX_TIMESPAN_EVENT)
+                .notify(super.getFacade(), invokeTimespan);
+        // 更新方法调用最小耗时
+        super.getFacade().fetchEvent(MonitorEvent.INVOKE_MIN_TIMESPAN_EVENT)
+                .notify(super.getFacade(), invokeTimespan);
     }
 }

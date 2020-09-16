@@ -118,7 +118,7 @@ public class RpcProtocol extends AbstractProtocol {
         }
 
         boolean metrics = url.getParameter(RpcConfig.METRICS_KEY, true);
-        // 如果用户在 <nettyrpc:monitor/> 中配置了 metrics 为 false，就不开启 jmx 服务器，关闭掉监控功能
+        // 如果用户在 <nettyrpc:application/> 中配置了 metrics 为 false，就不开启 jmx 服务器，关闭掉监控功能
         if (!metrics)
             return;
 

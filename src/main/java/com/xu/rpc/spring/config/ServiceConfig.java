@@ -144,6 +144,12 @@ public class ServiceConfig<T> extends AbstractConfig{
             }
         }
 
+        // 如果用户没有配置 monitor，就默认设置 monitor 为 true
+        if (StringUtils.isEmpty(monitor)) {
+            monitor = RpcConfig.TRUE;
+        }
+        parameters.put(RpcConfig.MONITOR_KEY, monitor);
+
         appendParameters(this, parameters);
 
         String host = getHostAddress(protocol.getHost());

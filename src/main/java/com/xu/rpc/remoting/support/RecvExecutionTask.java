@@ -44,7 +44,7 @@ public class RecvExecutionTask implements Runnable {
         response = new MessageResponse();
         response.setMessageId(request.getMessageId());
 
-        RpcResult result = null;
+        RpcResult result;
         try {
             result = (RpcResult) handler.reply(request, channel);
 

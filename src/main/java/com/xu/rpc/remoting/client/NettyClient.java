@@ -2,6 +2,7 @@ package com.xu.rpc.remoting.client;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RemotingException;
+import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;

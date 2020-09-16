@@ -62,9 +62,9 @@ public class ApiEchoServer{
 
             this.channel = b.bind(host, RpcConfig.ECHO_PORT).sync().channel();
 
-            logger.info("echo server starts successfully! netty-rpc server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html");
+            logger.info("echo server starts successfully! netty-rpc server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/ability");
             if (url.getParameter(RpcConfig.METRICS_KEY, true)){
-                logger.info("echo server starts successfully! netty-rpc server metrics:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc.html/metrics");
+                logger.info("echo server starts successfully! netty-rpc server metrics:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/metrics");
             }
 
         } catch (Throwable e) {

@@ -20,7 +20,7 @@ public class InvokeFailEvent extends AbstractInvokeEvent {
     @Override
     public Notification buildNotification(Object oldValue, Object newValue) {
         return new AttributeChangeNotification(this, sequenceInvokeFailNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.visitor.getClassName(), super.visitor.getMethodName(), ModuleEvent.INVOKE_FAIL_EVENT.toString(),
+                super.visitor.getClassName(), super.visitor.getMethodName(), MonitorEvent.INVOKE_FAIL_EVENT.toString(),
                 oldValue, newValue);
     }
 }

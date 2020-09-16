@@ -15,16 +15,11 @@ import java.lang.management.ManagementFactory;
 import java.rmi.registry.LocateRegistry;
 import java.util.concurrent.Semaphore;
 
-/**
- * ModuleMetricsHandler是一个MXBean，或者说一个管理构件，用来代表一个被管理的资源实例。
- * 拥有属性：ModuleMetricsVisitor
- * 拥有行为：addModuleMetricsVisitor
- */
-public class MetricsServer extends NotificationBroadcasterSupport implements MetricsServerMXBean{
+public class MetricsServer{
 
     private static final Logger logger = Logger.getLogger(MetricsServer.class);
 
-    public final static String MBEAN_NAME = "com.newlandframework.rpc:type=MetricsServer";
+    public final static String MBEAN_NAME = "com.xu.rpc:type=MetricsVisitorHandler";
 
     private String moduleMetricsJmxUrl = "";
 
@@ -67,7 +62,7 @@ public class MetricsServer extends NotificationBroadcasterSupport implements Met
             ObjectName name = new ObjectName(MBEAN_NAME);
 
             // 表达式OuterClass.this表示外围类的引用
-            mbs.registerMBean(MetricsServer.this, name);
+            mbs.registerMBean(MetricsVisitorHandler.getINSTANCE(), name);
 
             // 在此ModuleMetricsHandler上注册一个NotificationListener，用来处理发生的事件。
             mbs.addNotificationListener(name, listener, null, null);
@@ -75,7 +70,7 @@ public class MetricsServer extends NotificationBroadcasterSupport implements Met
             jmxServer.start();
             semaphoreWrapper.release();
 
-            logger.info("netty-rpc jmx server starts successfully! jmx-url : %s" + moduleMetricsJmxUrl);
+            logger.info("netty-rpc jmx server starts successfully! jmx-url: " + moduleMetricsJmxUrl);
         } catch (IOException | MalformedObjectNameException | InstanceNotFoundException
                 | InstanceAlreadyExistsException | NotCompliantMBeanException
                 | MBeanRegistrationException e) {

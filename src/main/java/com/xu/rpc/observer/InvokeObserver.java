@@ -2,7 +2,7 @@ package com.xu.rpc.observer;
 
 import com.xu.rpc.event.AbstractInvokeEvent;
 import com.xu.rpc.event.InvokeEventFacade;
-import com.xu.rpc.event.ModuleEvent;
+import com.xu.rpc.event.MonitorEvent;
 import com.xu.rpc.jmx.MetricsVisitor;
 
 import java.util.Observable;
@@ -19,16 +19,14 @@ import java.util.Observable;
  */
 public class InvokeObserver extends AbstractInvokeObserver {
 
-    public InvokeObserver(InvokeEventFacade facade, MetricsVisitor visitor) {
-        super(facade, visitor);
+    public InvokeObserver(InvokeEventFacade facade, MetricsVisitor visitor,MonitorEvent event) {
+        super(facade, visitor, event);
     }
 
     @Override
-    public void update(Observable o, Object arg) {
-        if (arg == ModuleEvent.INVOKE_EVENT) {
-            AbstractInvokeEvent event = super.getFacade().fetchEvent(ModuleEvent.INVOKE_EVENT);
-            event.notify(super.getFacade(), null);
-        }
+    public void doUpdate() {
+        AbstractInvokeEvent event = super.getFacade().fetchEvent(MonitorEvent.INVOKE_EVENT);
+        event.notify(super.getFacade(), null);
     }
 }
 

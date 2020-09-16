@@ -20,7 +20,7 @@ public class InvokeTimeSpanEvent extends AbstractInvokeEvent {
     @Override
     public Notification buildNotification(Object oldValue, Object newValue) {
         return new AttributeChangeNotification(this, sequenceInvokeTimeSpanNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.visitor.getClassName(), super.visitor.getClassName(), ModuleEvent.INVOKE_TIMESPAN_EVENT.toString(),
+                super.visitor.getClassName(), super.visitor.getClassName(), MonitorEvent.INVOKE_TIMESPAN_EVENT.toString(),
                 oldValue, newValue);
     }
 }

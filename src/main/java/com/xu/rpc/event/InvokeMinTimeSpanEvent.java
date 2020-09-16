@@ -20,7 +20,7 @@ public class InvokeMinTimeSpanEvent extends AbstractInvokeEvent {
     @Override
     public Notification buildNotification(Object oldValue, Object newValue) {
         return new AttributeChangeNotification(this, sequenceInvokeMinTimeSpanNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.visitor.getClassName(), super.visitor.getMethodName(), ModuleEvent.INVOKE_MIN_TIMESPAN_EVENT.toString(),
+                super.visitor.getClassName(), super.visitor.getMethodName(), MonitorEvent.INVOKE_MIN_TIMESPAN_EVENT.toString(),
                 oldValue, newValue);
     }
 }

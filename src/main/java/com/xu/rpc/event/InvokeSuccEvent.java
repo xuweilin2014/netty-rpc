@@ -21,7 +21,7 @@ public class InvokeSuccEvent extends AbstractInvokeEvent {
     @Override
     public Notification buildNotification(Object oldValue, Object newValue) {
         return new AttributeChangeNotification(this, sequenceInvokeSuccNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.visitor.getClassName(), super.visitor.getMethodName(), ModuleEvent.INVOKE_SUCC_EVENT.toString(),
+                super.visitor.getClassName(), super.visitor.getMethodName(), MonitorEvent.INVOKE_SUCC_EVENT.toString(),
                 oldValue, newValue);
     }
 }

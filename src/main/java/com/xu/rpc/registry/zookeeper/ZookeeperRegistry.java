@@ -51,7 +51,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
             // 创建的节点目录结构为 /rpc/com.xxx.ServiceName/url
             // 其中，/rpc 和 /rpc/com.xxx.ServiceName 都是永久节点，而 /rpc/com.xxx.ServiceName/url 则是临时节点
             // 因此，在创建的过程中，如果创建的节点是临时节点和永久节点必须要分情况讨论
-            create(toRegistryPath(url), true);
+            // TODO: 2020/9/17  
+            create(toRegistryPath(url), false);
             logger.info("register successfully to zookeeper " + url.getAddress() + ", url " + url);
         }catch (Throwable t){
             throw new RpcException("failed to register " + url.toFullString() + " to zookeeper "

@@ -1,7 +1,7 @@
 package com.xu.rpc.jmx;
 
 import com.xu.rpc.event.InvokeEventFacade;
-import com.xu.rpc.event.ModuleEvent;
+import com.xu.rpc.event.MonitorEvent;
 
 import javax.management.AttributeChangeNotification;
 import javax.management.Notification;
@@ -16,7 +16,7 @@ public class MetricsListener implements NotificationListener {
 
         AttributeChangeNotification acn = (AttributeChangeNotification) notification;
         //acn.getAttributeType获取到的是事件类型的字符串，比如ModuleEvent.INVOKE_EVENT
-        ModuleEvent event = Enum.valueOf(ModuleEvent.class, acn.getAttributeType());
+        MonitorEvent event = Enum.valueOf(MonitorEvent.class, acn.getAttributeType());
         //acn.getOldValue获取到的是InvokeEventFacade类型的对象，然后根据事件的类型来取得对应的visitor
         MetricsVisitor visitor = ((InvokeEventFacade) acn.getOldValue()).fetchEvent(event).getVisitor();
 

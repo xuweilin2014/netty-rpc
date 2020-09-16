@@ -199,7 +199,7 @@ public final class ExtensionLoader<T> {
         String value = url.getParameter(key);
         String[] values = null;
         if (value != null && value.length() != 0){
-            values = value.split(",");
+            values = value.split(RpcConfig.COMMA_SEPARATOR);
         }
         return getActivateExtension(url, values, group);
     }
@@ -208,6 +208,8 @@ public final class ExtensionLoader<T> {
         // 1.获取到 url 中参数的值，比如 url 中 filter 关键字的值
         List<String> names = values == null ? new ArrayList<>(0) : Arrays.asList(values);
         List<T> exts = new CopyOnWriteArrayList<>();
+        // 加载默认激活的 Filter
+        loadResource();
 
         // 2.获取含有 Activate 注释的扩展类对象
         if (!names.contains(RpcConfig.REMOVE_PREFIX + RpcConfig.RPC_DEFAULT)){
@@ -267,7 +269,7 @@ public final class ExtensionLoader<T> {
         String value = activate.value();
         
         if (value.length() == 0)
-            return false;
+            return true;
 
         for (Map.Entry<String, String> entry : url.getParameters().entrySet()) {
             String key = entry.getKey();

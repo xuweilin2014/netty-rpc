@@ -8,17 +8,17 @@ import java.util.Map;
 
 
 public class InvokeEventFacade {
-    private static Map<ModuleEvent, AbstractInvokeEvent> enumMap = new EnumMap<>(ModuleEvent.class);
+
+    private static Map<MonitorEvent, AbstractInvokeEvent> enumMap = new EnumMap<>(MonitorEvent.class);
 
     static {
-        enumMap.put(ModuleEvent.INVOKE_EVENT, new InvokeEvent());
-        enumMap.put(ModuleEvent.INVOKE_SUCC_EVENT, new InvokeSuccEvent());
-        enumMap.put(ModuleEvent.INVOKE_FAIL_EVENT, new InvokeFailEvent());
-        enumMap.put(ModuleEvent.INVOKE_FILTER_EVENT, new InvokeFilterEvent());
-        enumMap.put(ModuleEvent.INVOKE_TIMESPAN_EVENT, new InvokeTimeSpanEvent());
-        enumMap.put(ModuleEvent.INVOKE_MAX_TIMESPAN_EVENT, new InvokeMaxTimeSpanEvent());
-        enumMap.put(ModuleEvent.INVOKE_MIN_TIMESPAN_EVENT, new InvokeMinTimeSpanEvent());
-        enumMap.put(ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT, new InvokeFailStackTraceEvent());
+        enumMap.put(MonitorEvent.INVOKE_EVENT, new InvokeEvent());
+        enumMap.put(MonitorEvent.INVOKE_SUCC_EVENT, new InvokeSuccEvent());
+        enumMap.put(MonitorEvent.INVOKE_FAIL_EVENT, new InvokeFailEvent());
+        enumMap.put(MonitorEvent.INVOKE_TIMESPAN_EVENT, new InvokeTimeSpanEvent());
+        enumMap.put(MonitorEvent.INVOKE_MAX_TIMESPAN_EVENT, new InvokeMaxTimeSpanEvent());
+        enumMap.put(MonitorEvent.INVOKE_MIN_TIMESPAN_EVENT, new InvokeMinTimeSpanEvent());
+        enumMap.put(MonitorEvent.INVOKE_FAIL_STACKTRACE_EVENT, new InvokeFailStackTraceEvent());
     }
 
     public InvokeEventFacade(MetricsVisitorHandler handler, MetricsVisitor visitor) {
@@ -30,7 +30,7 @@ public class InvokeEventFacade {
     }
 
     @SuppressWarnings("Java8MapApi")
-    public AbstractInvokeEvent fetchEvent(ModuleEvent event) {
+    public AbstractInvokeEvent fetchEvent(MonitorEvent event) {
         if (enumMap.containsKey(event)) {
             return enumMap.get(event);
         } else {

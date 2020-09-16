@@ -1,7 +1,7 @@
 package com.xu.rpc.observer;
 
 import com.xu.rpc.event.InvokeEventFacade;
-import com.xu.rpc.event.ModuleEvent;
+import com.xu.rpc.event.MonitorEvent;
 import com.xu.rpc.jmx.MetricsVisitor;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,20 +17,18 @@ import java.util.Observable;
 public class InvokeFailObserver extends AbstractInvokeObserver {
     private Throwable error;
 
-    public InvokeFailObserver(InvokeEventFacade facade, MetricsVisitor visitor, Throwable error) {
-        super(facade, visitor);
+    public InvokeFailObserver(InvokeEventFacade facade, MetricsVisitor visitor, Throwable error, MonitorEvent event) {
+        super(facade, visitor, event);
         this.error = error;
     }
 
     @Override
-    public void update(Observable o, Object arg) {
-        if (arg == ModuleEvent.INVOKE_FAIL_EVENT) {
-            //更新方法调用失败的次数
-            super.getFacade().fetchEvent(ModuleEvent.INVOKE_FAIL_EVENT)
-                    .notify(super.getFacade(), null);
-            //更新方法调用最后一次失败的时间以及最后一次失败的堆栈明细
-            super.getFacade().fetchEvent(ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT)
-                    .notify(super.getFacade(), error);
-        }
+    public void doUpdate() {
+        //更新方法调用失败的次数
+        super.getFacade().fetchEvent(MonitorEvent.INVOKE_FAIL_EVENT)
+                .notify(super.getFacade(), null);
+        //更新方法调用最后一次失败的时间以及最后一次失败的堆栈明细
+        super.getFacade().fetchEvent(MonitorEvent.INVOKE_FAIL_STACKTRACE_EVENT)
+                .notify(super.getFacade(), error);
     }
 }

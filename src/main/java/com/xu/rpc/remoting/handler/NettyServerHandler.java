@@ -5,6 +5,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -12,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyServerHandler extends ChannelDuplexHandler{
+
+    private static final Logger logger = Logger.getLogger(NettyServerHandler.class);
 
     private final ChannelHandler handler;
 
@@ -49,7 +52,7 @@ public class NettyServerHandler extends ChannelDuplexHandler{
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        logger.error("error occurs and the channel will be closed, error: " + cause.getMessage());
         ctx.close();
     }
 

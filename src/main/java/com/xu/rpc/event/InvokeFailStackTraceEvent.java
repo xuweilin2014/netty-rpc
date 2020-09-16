@@ -22,7 +22,7 @@ public class InvokeFailStackTraceEvent extends AbstractInvokeEvent {
     public Notification buildNotification(Object oldValue, Object newValue) {
         return new AttributeChangeNotification(this,
                 sequenceInvokeFailStackTraceNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.visitor.getClassName(), super.visitor.getMethodName(), ModuleEvent.INVOKE_FAIL_STACKTRACE_EVENT.toString(),
+                super.visitor.getClassName(), super.visitor.getMethodName(), MonitorEvent.INVOKE_FAIL_STACKTRACE_EVENT.toString(),
                 oldValue, newValue);
     }
 }

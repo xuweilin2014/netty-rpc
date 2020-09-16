@@ -13,7 +13,11 @@ import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 
-
+/**
+ * ModuleMetricsHandler是一个 MXBean，或者说一个管理构件，用来代表一个被管理的资源实例。
+ * 拥有属性：ModuleMetricsVisitor
+ * 拥有行为：addModuleMetricsVisitor
+ */
 public class MetricsVisitorHandler extends NotificationBroadcasterSupport implements MetricsVisitorMXBean {
 
     private List<MetricsVisitor> visitorList = new CopyOnWriteArrayList<>();

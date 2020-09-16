@@ -26,9 +26,9 @@ public class InvokeEvent extends AbstractInvokeEvent {
         // 参数列表中的各个参数与AttributeChangeNotification类中的属性对应关系如下：
         // className -> msg
         // methodName -> attributeName
-        // ModuleEvent.INVOKE_EVENT.toString() -> attributeType
+        // MonitorEvent.INVOKE_EVENT.toString() -> attributeType
         return new AttributeChangeNotification(this, sequenceInvokeNumber.incrementAndGet(), System.currentTimeMillis(),
-                super.visitor.getClassName(), super.visitor.getMethodName(), ModuleEvent.INVOKE_EVENT.toString(),
+                super.visitor.getClassName(), super.visitor.getMethodName(), MonitorEvent.INVOKE_EVENT.toString(),
                 oldValue, newValue);
     }
 }

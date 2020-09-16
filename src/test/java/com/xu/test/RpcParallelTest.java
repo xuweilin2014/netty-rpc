@@ -64,7 +64,7 @@ public class RpcParallelTest {
 
     public static void main(String[] args) throws Exception {
         //并行度1000
-        int parallel = 400;
+        int parallel = 1000;
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
         for (int i = 0; i < 1; i++) {
