@@ -120,7 +120,7 @@ public class ServiceConfig<T> extends AbstractConfig{
             logger.warn(interfaceName + " does not have any method.");
             parameters.put(RpcConfig.METHODS_KEY, "");
         }else {
-            parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(methodNames, RpcConfig.METHOD_SEPARATOR));
+            parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(methodNames, RpcConfig.SEMICOLON));
         }
 
         // 获取协议所使用的序列化方式

@@ -93,7 +93,7 @@ public class RpcConfig {
 
     public static final String TIMEOUT_KEY = "timeout";
 
-    public static final int DEFAULT_TIMEOUT = 5000;
+    public static final int DEFAULT_TIMEOUT = 30000;
 
     public static final int RECONNECT_INTERVAL = 2000;
 
@@ -163,7 +163,7 @@ public class RpcConfig {
 
     public static final String ADDRESS_DELIMITER = ":";
 
-    public static final String METHOD_SEPARATOR = ";";
+    public static final String SEMICOLON = ";";
 
     public static final CharSequence ABILITY_KEY = "ability";
 

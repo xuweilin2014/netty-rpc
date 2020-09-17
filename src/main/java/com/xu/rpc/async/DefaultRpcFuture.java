@@ -209,7 +209,7 @@ public class DefaultRpcFuture implements RpcFuture{
             throw new RpcException("future is cancelled.");
 
         if (response.getInvokeStatus().isExceptional())
-            throw new RpcException("exception occurs when rpc server executes the service " + request.getInterfaceName()
+            throw new RpcException("exception occurs when invoking service " + request.getInterfaceName()
                     + ", caused by " + response.getError().getMessage());
 
         if (response.getInvokeStatus().isDone()){

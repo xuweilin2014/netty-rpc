@@ -46,10 +46,10 @@ public class RecvExecutionTask implements Runnable {
 
         RpcResult result;
         try {
-            result = (RpcResult) handler.reply(request, channel);
+            result = handler.reply(request, channel);
 
             if (result.getException() != null){
-                logger.error("rpc server invoke error!\n" + result.getException().getMessage());
+                logger.warn("rpc server invoke error!, caused by" + result.getException().getMessage());
                 // 如果通过反射调用方法的过程中发生了异常，并且这个异常没有被捕获的话，就会在此被捕获，并且设置到MessageResponse的error属性中，并且打印出来。
                 invokeStatus = MethodInvokeStatus.EXCEPTIONAL;
                 response.setResult(null);

@@ -5,11 +5,11 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public enum Serialization {
 
-    JDKSERIALIZE("jdk"),
+    JDK("jdk"),
 
-    KRYOSERIALIZE("kryo"),
+    KRYO("kryo"),
 
-    HESSIANSERIALIZE("hessian");
+    HESSIAN("hessian");
 
     private String serialize;
 

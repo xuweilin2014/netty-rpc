@@ -73,7 +73,7 @@ public class NettyClient implements Client {
         this.handler = ChannelHandlers.wrapHandler(handler);
 
         // 客户端发送数据的序列化协议，默认为JDK自带的序列化方法
-        String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE);
+        String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE).toUpperCase();
         this.serialization = Enum.valueOf(Serialization.class, serialize);
 
         this.host = url.getHost();

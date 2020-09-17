@@ -13,12 +13,12 @@
 
     <nettyrpc:application name="application-provider" metrics="true"/>
 
-    <nettyrpc:protocol id="rpc" name="rpc" port="10886" serialize="JDKSERIALIZE"/>
-    <nettyrpc:protocol id="injvm" name="injvm" port="10887" serialize="JDKSERIALIZE"/>
+    <nettyrpc:protocol id="rpc1" name="rpc" port="10886" serialize="jdk"/>
+    <nettyrpc:protocol id="rpc2" name="rpc" port="10887" serialize="jdk"/>
 
-    <nettyrpc:service id="demoAddService" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService"/>
-    <nettyrpc:service id="demoMultiService"  interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService"/>
-    <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.xu.rpc.services.PersonManage" ref="personManageService"/>
+    <nettyrpc:service id="demoAddService" protocol="rpc2" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService"/>
+    <nettyrpc:service id="demoMultiService" protocol="rpc1"  interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService"/>
+    <nettyrpc:service id="demoPersonManage" registry="zk" interfaceName="com.xu.rpc.services.PersonManage" ref="personManageService" token="false"/>
     <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.xu.rpc.services.CostTimeCalculate" ref="costTimeCalculateService"/>
     <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.xu.rpc.services.Cache" ref="cacheService"/>
     <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.xu.rpc.services.Store" ref="storeService"/>

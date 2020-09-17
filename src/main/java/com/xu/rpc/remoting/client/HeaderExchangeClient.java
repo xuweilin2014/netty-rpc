@@ -76,6 +76,7 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
         req.setMethodName(inv.getMethodName());
         req.setParametersVal(inv.getParameters());
         req.setTypeParameters(inv.getParameterTypes());
+        req.setToken(inv.getToken());
 
         RpcFuture future = new DefaultRpcFuture(timeout, req, client.getUrl());
 

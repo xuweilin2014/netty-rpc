@@ -11,7 +11,7 @@
     
     <nettyrpc:registry address="127.0.0.1:2181" name="zookeeper"/>
 
-    <nettyrpc:reference id="addCalc" interfaceName="com.xu.rpc.services.AddCalculate"/>
+    <nettyrpc:reference id="addCalc" interfaceName="com.xu.rpc.services.AddCalculate" url="rpc://169.254.207.250:10886;rpc://169.254.207.250:10887"/>
     <nettyrpc:reference id="multiCalc" interfaceName="com.xu.rpc.services.MultiCalculate"/>
     <nettyrpc:reference id="personManage" interfaceName="com.xu.rpc.services.PersonManage"/>
     <nettyrpc:reference id="costTime" interfaceName="com.xu.rpc.services.CostTimeCalculate"/>

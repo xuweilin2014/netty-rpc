@@ -1,5 +1,6 @@
 package com.xu.rpc.remoting.client;
 
+import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.protocol.Invoker;
@@ -33,7 +34,10 @@ public class ProxyWrapper implements InvocationHandler {
             return invoker.equals(args[0]);
         }
 
-        RpcResult result = invoker.invoke(new RpcInvocation(method, args));
+        RpcInvocation invocation = new RpcInvocation(method, args);
+        // 如果服务端的 invoker 的 url 含有令牌，则将其保存到 RpcInvocation 中
+        invocation.setToken(invoker.getUrl().getParameter(RpcConfig.TOKEN_KEY));
+        RpcResult result = invoker.invoke(invocation);
         if (result.getException() != null)
             throw result.getException();
         return result.getResult();

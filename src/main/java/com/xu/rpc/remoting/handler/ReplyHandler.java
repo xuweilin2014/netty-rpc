@@ -1,13 +1,13 @@
 package com.xu.rpc.remoting.handler;
 
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
 import io.netty.channel.Channel;
 
 public abstract class ReplyHandler implements ChannelHandler {
 
-    public abstract Object reply(Object message, Channel channel) throws RemotingException;
-
+    public abstract RpcResult reply(Object message, Channel channel) throws RemotingException;
 
     @Override
     public void sent(Channel channel, Object message) throws RemotingException {

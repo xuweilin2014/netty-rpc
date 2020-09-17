@@ -31,10 +31,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class AbstractConfig implements InitializingBean {
 
     private static final Logger logger = Logger.getLogger(AbstractConfig.class);
-    @Attribute
+    @Attribute(excluded = true)
     protected String id;
     // 服务接口名
-    @Attribute
+    @Attribute(excluded = true)
     protected String interfaceName;
     // 使用的注册中心的id值指明各个注册中心，不指定则将服务注册在所有注册中心上，或者向所有的注册中心进行订阅
     @Attribute
@@ -132,15 +132,18 @@ public abstract class AbstractConfig implements InitializingBean {
             Field[] fields = cls.getDeclaredFields();
             for (Field field : fields) {
                 if (field.isAnnotationPresent(Attribute.class) && !parameters.containsKey(field.getName())){
-                    field.setAccessible(true);
-                    try {
-                        String o = (String) field.get(object);
-                        if (o != null && o.length() > 0 && !RpcConfig.FALSE.equals(o)
-                                && !RpcConfig.RPC_DEFAULT.equals(o)){
-                            parameters.put(field.getName(), o);
+                    Attribute attribute = field.getAnnotation(Attribute.class);
+                    if (!attribute.excluded()){
+                        field.setAccessible(true);
+                        try {
+                            String o = (String) field.get(object);
+                            if (o != null && o.length() > 0 && !RpcConfig.FALSE.equals(o)
+                                    && !RpcConfig.RPC_DEFAULT.equals(o)){
+                                parameters.put(field.getName(), o);
+                            }
+                        } catch (IllegalAccessException e) {
+                            logger.warn("failed to get value " + field.getName() + " in object " + cls.getName());
                         }
-                    } catch (IllegalAccessException e) {
-                        logger.warn("failed to get value " + field.getName() + " in object " + cls.getName());
                     }
                 }
             }
@@ -241,7 +244,7 @@ public abstract class AbstractConfig implements InitializingBean {
                 throw new IllegalStateException(e.getMessage(), e);
             }
         }else {
-            if (URL.IP_PATTER.matcher(host).matches()){
+            if (URL.getIpPatter().matcher(host).matches()){
                 return host;
             }else{
                 throw new IllegalStateException("host address " + host + " is invalid in tag <nettyrpc:protocol/>");

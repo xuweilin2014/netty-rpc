@@ -198,7 +198,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
                 if (methodsKey == null || methodsKey.length() == 0){
                     throw new IllegalStateException("methods attribute is null.");
                 }
-                String[] methods = methodsKey.split(RpcConfig.METHOD_SEPARATOR);
+                String[] methods = methodsKey.split(RpcConfig.SEMICOLON);
                 for (String method : methods) {
                     List<Invoker> invokers = newMethodToInvokers.get(method);
                     if (invokers == null){

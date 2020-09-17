@@ -13,4 +13,5 @@ public @interface Attribute {
 
     String defaultValue() default "";
 
+    boolean excluded() default false;
 }

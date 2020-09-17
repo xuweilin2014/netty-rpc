@@ -70,7 +70,7 @@ public class NettyServer implements Server{
         this.url = url;
         this.handler = ChannelHandlers.wrapHandler(handler);
 
-        String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE);
+        String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE).toUpperCase();
         this.serialization = Enum.valueOf(Serialization.class, serialize);
 
         this.host = url.getHost();

@@ -26,15 +26,15 @@ public class RpcSerializeFrame implements SerializeFrame {
     @Override
     public void select(Serialization serialization, ChannelPipeline pipeline, ChannelDuplexHandler handler) {
         switch (serialization) {
-            case JDKSERIALIZE: {
+            case JDK: {
                 initializers.getInstance(JdkNativeInitializer.class).handle(pipeline, handler);
                 break;
             }
-            case KRYOSERIALIZE: {
+            case KRYO: {
                 initializers.getInstance(KryoInitializer.class).handle(pipeline, handler);
                 break;
             }
-            case HESSIANSERIALIZE: {
+            case HESSIAN: {
                 initializers.getInstance(HessianInitializer.class).handle(pipeline, handler);
                 break;
             }

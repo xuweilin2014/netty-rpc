@@ -3,6 +3,7 @@ package com.xu.rpc.protocol.rpc;
 import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
+import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.jmx.MetricsHtmlBuilder;
@@ -53,7 +54,7 @@ public class RpcProtocol extends AbstractProtocol {
 
     private ReplyHandler replyHandler = new ReplyHandler() {
         @Override
-        public Object reply(Object message, Channel channel) throws RemotingException {
+        public RpcResult reply(Object message, Channel channel) throws RemotingException {
             if (message instanceof MessageRequest){
                 MessageRequest request = (MessageRequest) message;
 
@@ -63,18 +64,25 @@ public class RpcProtocol extends AbstractProtocol {
                 // service key 为 ServiceName:Port
                 String serviceKey = getServiceKey(request.getInterfaceName(), port);
                 Exporter exporter = exporters.get(serviceKey);
+                RpcResult result = null;
 
                 try {
                     if (!StringUtils.isEmpty(request.getInterfaceName())){
                         Class<?> cls = Thread.currentThread().getContextClassLoader().loadClass(request.getInterfaceName());
                         Method method = ReflectionUtils.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
-                        return exporter.getInvoker().invoke(new RpcInvocation(method, request.getParametersVal()));
+                        RpcInvocation invocation = new RpcInvocation(method, request.getParametersVal());
+                        // 如果 request 中含有令牌，则将其保存到 RpcInvocation 中
+                        invocation.setToken(request.getToken());
+                        result = exporter.getInvoker().invoke(invocation);
+                        return result;
                     }
-                } catch (Throwable throwable) {
-                    throw new RpcException("errors occur when executing method : " + throwable.getMessage(), throwable);
+                } catch (Throwable t) {
+                    result = new RpcResult(t);
+                    result.setResult(null);
+                    return result;
                 }
 
-                throw new RpcException("cannot invoke method " + request.getMethodName());
+                throw new RemotingException("cannot invoke method.");
             }
 
             throw new RemotingException("unsupported message type :" + message.getClass().getName() + " , consumer address :"
