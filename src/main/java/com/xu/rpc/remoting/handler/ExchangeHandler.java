@@ -50,4 +50,8 @@ public class ExchangeHandler extends AbstractHandlerDelegate {
     public static Map<String, Channel> getChannels() {
         return channels;
     }
+
+    public static ExecutorService getExecutor(){
+        return executor;
+    }
 }

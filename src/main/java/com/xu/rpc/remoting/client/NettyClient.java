@@ -233,8 +233,8 @@ public class NettyClient implements Client {
     private void close(){
         if (closed.compareAndSet(false, true)){
             try {
-                reconnectExecutor.shutdownNow();
                 disconnect();
+                reconnectExecutor.shutdownNow();
                 eventLoopGroup.shutdownGracefully();
             } catch (Throwable e) {
                 logger.warn(e.getMessage());

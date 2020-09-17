@@ -24,8 +24,7 @@ public class HeaderExchangeServer extends HeartbeatExchangeEndpoint implements S
     public void close(int timeout) {
         if (timeout > 0){
             long start = System.currentTimeMillis();
-            // 如果 ExchangeHandler 中的 channels 集合不为空，表明还有任务在服务器端执行，
-            // 因此继续等待 timeout 时间，之后进行强制关闭
+            // 如果 ExchangeHandler 中的 channels 集合不为空，表明还有任务在服务器端执行，因此继续等待 timeout 时间，之后进行强制关闭
             while (!ExchangeHandler.getChannels().isEmpty()
                     && System.currentTimeMillis() - start < timeout){
                 try {

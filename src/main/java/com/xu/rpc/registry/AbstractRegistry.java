@@ -38,10 +38,10 @@ public abstract class AbstractRegistry implements Registry {
 
     private final AtomicBoolean destroyed = new AtomicBoolean(false);
 
-    private URL registryURL;
+    private URL registryUrl;
 
     public AbstractRegistry(URL url){
-        this.registryURL = url;
+        this.registryUrl = url;
 
         // 如果用户在 <nettyrpc:registry/> 中配置了 file 属性的话，使用用户自己的设置，否则使用默认的设置
         String defaultPath = url.getServiceName() + "-" + url.getParameter(RpcConfig.APPLICATION_KEY) + "-cache";
@@ -70,7 +70,7 @@ public abstract class AbstractRegistry implements Registry {
 
     @Override
     public URL getUrl() {
-        return registryURL;
+        return registryUrl;
     }
 
     @Override
@@ -215,7 +215,7 @@ public abstract class AbstractRegistry implements Registry {
             return;
         }
 
-        logger.info("destroy the registry for url " + registryURL);
+        logger.info("close connection to registry: " + registryUrl);
 
         // 取消注册在注册中心上的节点
         ArrayList<URL> registered = new ArrayList<>(getRegistered());
@@ -223,7 +223,7 @@ public abstract class AbstractRegistry implements Registry {
             for (URL url : registered) {
                 try {
                     unregister(url);
-                    logger.info("destroy url " + url);
+                    logger.info("unregister url " + url);
                 } catch (Exception e) {
                     logger.error("failed to destroy url " + url + " , caused by " + e.getMessage());
                 }
@@ -238,7 +238,7 @@ public abstract class AbstractRegistry implements Registry {
             try {
                 for (NotifyListener listener : listeners) {
                     unsubscribe(url, listener);
-                    logger.info("destroy the listener for url " + url);
+                    logger.info("unregister the listener for url " + url);
                 }
             } catch (Exception e) {
                 logger.error("failed to destroy the listener for url " + url + " , caused  by " + e.getMessage());

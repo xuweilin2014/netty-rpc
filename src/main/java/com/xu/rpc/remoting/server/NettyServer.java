@@ -4,6 +4,7 @@ import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;
+import com.xu.rpc.remoting.handler.ExchangeHandler;
 import com.xu.rpc.remoting.handler.NettyServerHandler;
 import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
@@ -19,7 +20,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -138,6 +141,8 @@ public class NettyServer implements Server{
         if (!closed.compareAndSet(false, true))
             return;
 
+        gracefulShutdown(ExchangeHandler.getExecutor(), timeout);
+
         if (channel != null){
             try {
                 channel.close();
@@ -161,6 +166,25 @@ public class NettyServer implements Server{
             boss.shutdownGracefully();
         } catch (Exception e) {
             logger.warn("error occurs when trying to shutdown the event loop group.");
+        }
+    }
+
+    private void gracefulShutdown(ExecutorService executor, int timeout) {
+        if (executor.isShutdown())
+            return;
+        // 关闭线程池，将线程池的状态设置为 shutdown，不会再接收新的任务
+        executor.shutdown();
+        try {
+            // 等待 timeout 时间，让线程池中正在执行的任务执行完毕，如果在 timeout 时间内执行完毕，那么返回 true
+            // 否则，返回 false
+            if (!executor.awaitTermination(timeout, TimeUnit.MILLISECONDS)){
+                // 如果还有任务没有执行完毕，就调用 shutdownNow，会调用每个线程的 interrupt 方法，
+                // 当然，线程处于阻塞状态，就会立即退出，抛出异常，否则其它状态时，线程不一定会停止运行
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            executor.shutdownNow();
         }
     }
 

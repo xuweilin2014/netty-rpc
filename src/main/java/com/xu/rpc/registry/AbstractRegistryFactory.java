@@ -2,6 +2,7 @@ package com.xu.rpc.registry;
 
 import com.xu.rpc.commons.Assert;
 import com.xu.rpc.commons.URL;
+import com.xu.rpc.core.RpcConfig;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +41,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory{
     // 也就是在一台客户机上，使用相同地址的相同类型注册中心的话，就会获取到相同的 Registry 对象类型
     private String getRegistryKey(URL url){
         Assert.notNull(url, "url cannot be null, when fetching registry.");
-        return url.getProtocol() + "://" + url.getHost() + ":" + url.getPort();
+        return url.getProtocol() + "://" + url.getHost() + RpcConfig.ADDRESS_DELIMITER + url.getPort();
     }
 
     public abstract Registry createRegistry(URL url);
