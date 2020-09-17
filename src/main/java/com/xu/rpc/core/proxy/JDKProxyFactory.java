@@ -46,12 +46,13 @@ public class JDKProxyFactory {
 
                 try {
                     // 获取存根的实现类，并且判断是否实现了接口
-                    Class<?> stubClass = Class.forName(stub);
+                    Class<?> stubClass = Thread.currentThread().getContextClassLoader().loadClass(stub);
                     if (!invoker.getInterface().isAssignableFrom(stubClass)){
                         throw new IllegalStateException("stub class " + stubClass.getName() + " did not " +
                                 "implement interface " + invoker.getInterface());
                     }
                     // 将 proxy 传入存根类的构造函数中，然后创建存根类对象赋值给 proxy，然后返回
+                    // 因此存根类中必须要有一个拷贝构造函数，方便框架将远程调用的 proxy 对象传递进来
                     proxy = (T) stubClass.getConstructor(invoker.getInterface()).newInstance(proxy);
                 } catch (ClassNotFoundException e) {
                     throw new IllegalStateException("stub class " + stub + " is not found.");
