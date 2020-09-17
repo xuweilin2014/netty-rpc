@@ -1,4 +1,4 @@
-package com.xu.rpc.event;
+package com.xu.rpc.jmx;
 
 public enum MonitorEvent {
 

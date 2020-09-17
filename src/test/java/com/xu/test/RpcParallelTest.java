@@ -1,6 +1,8 @@
 package com.xu.test;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.xu.rpc.services.AddCalculate;
@@ -9,6 +11,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class RpcParallelTest {
+
+    private static final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
     public static void parallelAddCalcTask(AddCalculate calc, int parallel) throws InterruptedException {
         //开始计时
@@ -64,7 +68,7 @@ public class RpcParallelTest {
 
     public static void main(String[] args) throws Exception {
         //并行度1000
-        int parallel = 1000;
+        int parallel = 80;
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
         for (int i = 0; i < 1; i++) {

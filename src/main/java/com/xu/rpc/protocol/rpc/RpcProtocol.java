@@ -76,6 +76,7 @@ public class RpcProtocol extends AbstractProtocol {
 
                 throw new RpcException("cannot invoke method " + request.getMethodName());
             }
+
             throw new RemotingException("unsupported message type :" + message.getClass().getName() + " , consumer address :"
                     + channel.remoteAddress());
         }

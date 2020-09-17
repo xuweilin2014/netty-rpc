@@ -65,14 +65,13 @@ public class MetricsServer{
             mbs.registerMBean(MetricsVisitorHandler.getINSTANCE(), name);
 
             // 在此ModuleMetricsHandler上注册一个NotificationListener，用来处理发生的事件。
-            mbs.addNotificationListener(name, listener, null, null);
+            // mbs.addNotificationListener(name, listener, null, null);
 
             jmxServer.start();
             semaphoreWrapper.release();
 
             logger.info("netty-rpc jmx server starts successfully! jmx-url: " + moduleMetricsJmxUrl);
-        } catch (IOException | MalformedObjectNameException | InstanceNotFoundException
-                | InstanceAlreadyExistsException | NotCompliantMBeanException
+        } catch (IOException | MalformedObjectNameException | InstanceAlreadyExistsException | NotCompliantMBeanException
                 | MBeanRegistrationException e) {
             logger.error("cannot start jmx server, error occurs: " + e.getMessage());
         }

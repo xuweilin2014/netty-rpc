@@ -33,8 +33,8 @@ public class PojoCallErrorTest {
         PersonManage manage = (PersonManage) context.getBean("personManage");
 
         try {
-            test1(manage);
-            //test2(manage);
+            //test1(manage);
+            test2(manage);
         } finally {
             context.destroy();
         }

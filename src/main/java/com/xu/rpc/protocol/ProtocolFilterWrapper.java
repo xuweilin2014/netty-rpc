@@ -78,4 +78,7 @@ public class ProtocolFilterWrapper implements Protocol {
         protocol.destroy();
     }
 
+    public Protocol getProtocol() {
+        return protocol;
+    }
 }

@@ -51,9 +51,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
             // 创建的节点目录结构为 /rpc/com.xxx.ServiceName/url
             // 其中，/rpc 和 /rpc/com.xxx.ServiceName 都是永久节点，而 /rpc/com.xxx.ServiceName/url 则是临时节点
             // 因此，在创建的过程中，如果创建的节点是临时节点和永久节点必须要分情况讨论
-            // TODO: 2020/9/17  
-            create(toRegistryPath(url), false);
-            logger.info("register successfully to zookeeper " + url.getAddress() + ", url " + url);
+            String path = toRegistryPath(url);
+            if (!zookeeperClient.exists(path)) {
+                create(path, true);
+                logger.info("register successfully to zookeeper " + url.getAddress() + ", url " + url);
+            }else {
+                logger.info("path already exists in zookeeper, path " + path);
+            }
         }catch (Throwable t){
             throw new RpcException("failed to register " + url.toFullString() + " to zookeeper "
                     + url.getAddress() +" , please check.", t);
@@ -117,7 +121,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         int index = path.lastIndexOf('/');
         if (index > 0){
             String parent = path.substring(0, index);
-            if (!zookeeperClient.isPathExist(parent)){
+            if (!zookeeperClient.exists(parent)){
                 create(parent, false);
             }
         }

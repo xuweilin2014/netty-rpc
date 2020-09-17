@@ -101,7 +101,7 @@ public class ZkClientWrapper {
         zkClient.close();
     }
 
-    public boolean isPathExist(String path) {
+    public boolean exists(String path) {
         Assert.notNull(zkClient, new IllegalStateException("zkClient is null, cannot connect to zookeeper!"));
         return zkClient.exists(path);
     }

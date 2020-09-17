@@ -1,10 +1,7 @@
 package com.xu.rpc.core;
 
 import com.xu.rpc.core.extension.ExtensionLoader;
-import com.xu.rpc.protocol.AbstractProtocol;
-import com.xu.rpc.protocol.Exporter;
-import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.protocol.Protocol;
+import com.xu.rpc.protocol.*;
 import com.xu.rpc.remoting.server.NettyServer;
 import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.spring.config.AbstractConfig;
@@ -68,8 +65,8 @@ public class AbilityDetailProvider implements AbilityDetail {
         }
 
         for (Protocol ext : exts) {
-            if (ext instanceof AbstractProtocol){
-                AbstractProtocol protocol = (AbstractProtocol) ext;
+            if (ext instanceof ProtocolFilterWrapper){
+                AbstractProtocol protocol = (AbstractProtocol) ((ProtocolFilterWrapper) ext).getProtocol();
                 Map<String, Exporter<?>> exporters = protocol.getExporters();
 
                 if (exporters != null && exporters.size() > 0){

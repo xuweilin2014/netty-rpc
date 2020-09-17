@@ -1,36 +1,26 @@
 package com.xu.rpc.filter.support;
 
+import com.xu.rpc.commons.util.ReflectionUtils;
+import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.core.RpcResult;
-import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.extension.Activate;
-import com.xu.rpc.event.InvokeEventFacade;
-import com.xu.rpc.event.MonitorEvent;
-import com.xu.rpc.event.MonitorNotification;
 import com.xu.rpc.filter.ChainFilter;
+import com.xu.rpc.jmx.MetricsListener;
 import com.xu.rpc.jmx.MetricsVisitor;
 import com.xu.rpc.jmx.MetricsVisitorHandler;
-import com.xu.rpc.observer.InvokeEventTarget;
-import com.xu.rpc.observer.InvokeFailObserver;
-import com.xu.rpc.observer.InvokeObserver;
-import com.xu.rpc.observer.InvokeSuccObserver;
+import com.xu.rpc.jmx.MonitorEvent;
 import com.xu.rpc.protocol.Invoker;
-import com.xu.rpc.commons.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Activate(group = {RpcConfig.PROVIDER}, order = 4, value = RpcConfig.MONITOR_KEY)
 public class MonitorChainFilter implements ChainFilter {
 
-    private RpcInvocation invocation;
-
-    private InvokeEventFacade facade;
-
     private static final Map<String, Map<String, MetricsVisitor>> cachedVisitors = new ConcurrentHashMap<>();
-
-    private InvokeEventTarget target = new InvokeEventTarget();
 
     /**
      * 每一个客户端发起的一次Rpc请求，都会在服务器端将其包装成一个Task，然后放到线程池中去执行。这些Task的类型是MessageRecvInitializeTask
@@ -43,7 +33,6 @@ public class MonitorChainFilter implements ChainFilter {
      */
     @Override
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) {
-        this.invocation = invocation;
         RpcResult result = invoker.invoke(invocation);
 
         if (invoker.getUrl().getParameter(RpcConfig.METRICS_KEY, true)
@@ -92,23 +81,23 @@ public class MonitorChainFilter implements ChainFilter {
     }
 
     protected void injectInvoke(MetricsVisitor visitor) {
-        // 创建了一个InvokeEventFacade类型的对象facade，它包含了所有INVOKE类型的Event对象，并且这些Event对象中都保存了handler、visitor这两个参数
-        facade = new InvokeEventFacade(MetricsVisitorHandler.getINSTANCE(), visitor);
-        // target是被观察的对象，通过addObserver方法可以添加观察者对象，这里是InvokeObserver
-        target.addObserver(new InvokeObserver(facade, visitor, MonitorEvent.INVOKE_EVENT));
-        // 调用notify方法，回调所有观察者对象的update方法，并且将INVOKE_EVENT事件进行传递，但是只有InvokeObserver可以被接收到
-        target.notify(new MonitorNotification(visitor, MonitorEvent.INVOKE_EVENT));
+        MetricsListener.handleNotification(visitor, MonitorEvent.INVOKE_EVENT, null);
     }
 
     protected void injectSuccInvoke(long invokeTimespan, MetricsVisitor visitor) {
-        target.addObserver(new InvokeSuccObserver(facade, visitor, invokeTimespan, MonitorEvent.INVOKE_SUCC_EVENT));
-        target.notify(new MonitorNotification(visitor, MonitorEvent.INVOKE_SUCC_EVENT));
+        Map<String, Object> attachments = new HashMap<>();
+        attachments.put(RpcConfig.INVOKE_TIMESPAN_KEY, invokeTimespan);
+        MetricsListener.handleNotification(visitor, MonitorEvent.INVOKE_SUCC_EVENT, null);
+        MetricsListener.handleNotification(visitor, MonitorEvent.INVOKE_TIMESPAN_EVENT, attachments);
+        MetricsListener.handleNotification(visitor, MonitorEvent.INVOKE_MAX_TIMESPAN_EVENT, attachments);
+        MetricsListener.handleNotification(visitor, MonitorEvent.INVOKE_MIN_TIMESPAN_EVENT, attachments);
     }
 
-    // 当方法调用失败之后，就会调用此方法，作用是更新方法调用失败的次数、方法调用最后一次失败的时间
-    // 以及最后一次失败的堆栈明细这三个参数。
+    // 当方法调用失败之后，就会调用此方法，作用是更新方法调用失败的次数、方法调用最后一次失败的时间以及最后一次失败的堆栈明细这三个参数。
     protected void injectFailInvoke(Throwable error, MetricsVisitor visitor) {
-        target.addObserver(new InvokeFailObserver(facade, visitor, error, MonitorEvent.INVOKE_FAIL_EVENT));
-        target.notify(new MonitorNotification(visitor, MonitorEvent.INVOKE_FAIL_EVENT));
+        Map<String, Object> attachments = new HashMap<>();
+        attachments.put(RpcConfig.STACK_TRACE_KEY, error);
+        MetricsListener.handleNotification(visitor, MonitorEvent.INVOKE_FAIL_EVENT, null);
+        MetricsListener.handleNotification(visitor, MonitorEvent.INVOKE_FAIL_STACKTRACE_EVENT, attachments);
     }
 }

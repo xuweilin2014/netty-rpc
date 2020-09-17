@@ -55,7 +55,7 @@ public class RecvExecutionTask implements Runnable {
                 response.setResult(null);
                 response.setError(result.getException());
             } else {
-                logger.info("rpc request " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
+                logger.info("rpc request " + request.getMessageId() + " for service " + request.getMethodName() + " in " + request.getInterfaceName() + " is executed successfully. ");
                 // 调用本地方法成功的话，就将结果信息封装到MessageResponse对象中
                 invokeStatus = MethodInvokeStatus.DONE;
                 response.setResult(result.getResult());
