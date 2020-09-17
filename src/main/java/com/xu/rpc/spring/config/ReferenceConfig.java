@@ -52,11 +52,14 @@ public class ReferenceConfig<T> extends AbstractConfig {
     // 过滤器
     @Attribute
     protected String filter;
-
-    protected T ref;
     // 是否开启粘滞连接
     @Attribute
     protected String sticky;
+    // 直连 url
+    @Attribute
+    protected String url;
+
+    protected T ref;
 
     private List<URL> urls = new ArrayList<>();
 
@@ -85,7 +88,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
         // 添加 ip 的值，也就是本机的 ip 地址
         parameters.put(RpcConfig.IP_ADDRESS, getHostAddress());
         // 添加 methods 的值，也就是 interfaceClass 这个类中所有的方法名（不包括父类），并且方法名之间使用逗号分隔
-        parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(new ReflectionUtils().getClassMethodSignature(interfaceClass), RpcConfig.METHOD_SEPARATOR));
+        parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(new ReflectionUtils().getClassMethodSignature(interfaceClass), RpcConfig.SEMICOLON));
         // 添加 application 的值，也就是应用名
         parameters.put(RpcConfig.APPLICATION_KEY, application.getName());
         // 将此 ReferenceConfig 中的不为空的成员属性添加到 map 中
@@ -117,10 +120,24 @@ public class ReferenceConfig<T> extends AbstractConfig {
 
         // 进行远程引用
         }else{
-            List<URL> us = getRegistries();
-            if (us != null && us.size() > 0) {
-                for (URL u : us) {
-                    urls.add(u.addParameterAndEncoded(RpcConfig.REFER_KEY, URL.toQueryString(map)));
+            if (!StringUtils.isEmpty(url)){
+                String[] us = url.split(RpcConfig.SEMICOLON);
+                if (us.length > 0){
+                    for (String u : us) {
+                        if (!URL.isUrlInvalid(u)){
+                            throw new IllegalStateException("url format is invalid, url " + u);
+                        }
+                        URL url = URL.valueOf(u);
+                        url = new URL(url.getProtocol(), url.getHost(), url.getPort(), interfaceName, map);
+                        urls.add(url);
+                    }
+                }
+            } else {
+                List<URL> us = getRegistries();
+                if (us != null && us.size() > 0) {
+                    for (URL u : us) {
+                        urls.add(u.addParameterAndEncoded(RpcConfig.REFER_KEY, URL.toQueryString(map)));
+                    }
                 }
             }
 

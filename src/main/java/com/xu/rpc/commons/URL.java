@@ -2,6 +2,8 @@ package com.xu.rpc.commons;
 
 import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.extension.ExtensionLoader;
+import com.xu.rpc.protocol.Protocol;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -124,13 +126,14 @@ public final class URL {
         buf.append("://");
 
         Assert.notEmpty(host, " host == null.");
-        Assert.notEmpty(path, "path == null.");
 
         buf.append(host);
         if (port > 0)
             buf.append(":").append(port);
         buf.append("/");
-        buf.append(path);
+        if (!StringUtils.isEmpty(path)) {
+            buf.append(path);
+        }
 
         if (parameters.size() > 0){
             buf.append("?");
@@ -194,18 +197,18 @@ public final class URL {
             protocol = header.substring(0, i);
             String rest = header.substring(i + 3);
 
-            if ((i = rest.indexOf("/")) == -1) {
-                throw new IllegalStateException("url format is invalid, missing / in url " + url);
+            String address = rest;
+            if ((i = rest.indexOf("/")) != -1) {
+                address = rest.substring(0, i);
+                path = rest.substring(i + 1);
             }
 
-            String address = rest.substring(0, i);
             if (address.contains(":")){
                 port = Integer.parseInt(address.split(":")[1]);
             }
             host = address.split(":")[0];
-            path = rest.substring(i + 1);
         }else{
-            throw new IllegalStateException("url format is invalid, missing :// in url " + url);
+            throw new IllegalStateException("url format is invalid, missing :// in header, url " + url);
         }
 
         if (body != null){
@@ -280,6 +283,32 @@ public final class URL {
                 counter++;
             }
         }
+    }
+
+    // 用来对用户配置的服务直连 url 的格式进行检验
+    public static boolean isUrlInvalid(String url){
+        if (StringUtils.isEmpty(url))
+            return false;
+
+        int i = url.indexOf("://");
+        if (i != -1){
+            String protocol = url.substring(0, i);
+            if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(protocol))
+                return false;
+
+            String rest = url.substring(i + 3);
+            if (rest.contains(RpcConfig.ADDRESS_DELIMITER)){
+                String[] address = rest.split(RpcConfig.ADDRESS_DELIMITER);
+                if (address.length == 2){
+                    if (getIpPatter().matcher(address[0]).matches()
+                            && StringUtils.isNumeric(address[1])){
+                            return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public static Pattern getIpPatter() {

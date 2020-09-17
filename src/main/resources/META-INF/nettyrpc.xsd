@@ -70,6 +70,7 @@
 					<xsd:attribute name="cache" type="xsd:string" use="optional"/>
 					<xsd:attribute name="sticky" type="xsd:string" use="optional"/>
 					<xsd:attribute name="capacity" type="xsd:string" use="optional"/>
+					<xsd:attribute name="url" type="xsd:string" use="optional"/>
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
