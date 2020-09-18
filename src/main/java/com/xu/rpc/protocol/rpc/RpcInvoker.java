@@ -41,18 +41,24 @@ public class RpcInvoker<T> extends AbstractInvoker<T> {
     @Override
     public RpcResult doInvoke(RpcInvocation invocation) throws RpcException {
         int timeout = getUrl().getParameter(RpcConfig.TIMEOUT_KEY, RpcConfig.DEFAULT_TIMEOUT);
-        boolean isAsync = getUrl().getParameter(RpcConfig.ASYNC_KEY, false);
+        String isAsync = invocation.getAttachments().get(RpcConfig.ASYNC_KEY);
+        String oneWay = invocation.getAttachments().get(RpcConfig.ONE_WAY_KEY);
         String token = getUrl().getParameter(RpcConfig.TOKEN_KEY);
 
         // 在向服务器发送请求之前，先检查服务器是否开启了 token 验证，如果开启了的话，就把 token 放入到
         // RpcInvocation 中保存起来
         if (token != null && token.length() != 0){
-            invocation.setToken(token);
+            invocation.getAttachments().put(RpcConfig.TOKEN_KEY, token);
         }
 
         try{
+            // oneWay 为 true，表明方法没有返回值，所以发送完毕之后，不用等待直接返回一个空结果（会被忽略）
+            if (RpcConfig.TRUE.equals(oneWay)){
+                RpcContext.getContext().setFuture(null);
+                client.request(invocation, timeout);
+                return new RpcResult();
             // 如果为异步调用的话
-            if (isAsync){
+            }else if (RpcConfig.TRUE.equals(isAsync)){
                 Future<?> future = new FutureWrapper(client.request(invocation, timeout));
                 RpcContext.getContext().setFuture(future);
                 // 返回一个空的结果
@@ -60,6 +66,7 @@ public class RpcInvoker<T> extends AbstractInvoker<T> {
             // 如果为同步调用的话
             }else {
                 RpcContext.getContext().setFuture(null);
+                // 阻塞直到结果返回
                 Object result = client.request(invocation, timeout).get();
                 return new RpcResult(result);
             }
