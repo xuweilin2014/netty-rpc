@@ -98,9 +98,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
 
         String directoryPath = toRegistryDir(url);
-        List<String> childs = zookeeperClient.subscribeChildChanges(directoryPath, zkChildListener);
-        logger.info("subscribe successfully to zookeeper " + url.getAddress() + ", directory " + directoryPath + ", url " + url);
-        notify(url, listener, toURLs(childs));
+        try{
+            List<String> childs = zookeeperClient.subscribeChildChanges(directoryPath, zkChildListener);
+            logger.info("subscribe successfully to zookeeper " + url.getAddress() + ", directory " + directoryPath + ", url " + url);
+            notify(url, listener, toURLs(childs));
+        }catch (Throwable t){
+            throw new RpcException("failed to subscribe to the zookeeper " + url + ", caused by " + t.getMessage());
+        }
     }
 
     @Override

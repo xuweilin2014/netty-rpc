@@ -1,10 +1,12 @@
 package com.xu.rpc.registry.zookeeper;
 
+import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.registry.KeeperStateListener;
 import com.xu.rpc.commons.Assert;
 import org.I0Itec.zkclient.IZkChildListener;
 import org.I0Itec.zkclient.IZkStateListener;
 import org.I0Itec.zkclient.ZkClient;
+import org.I0Itec.zkclient.serialize.SerializableSerializer;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 
@@ -28,9 +30,20 @@ public class ZkClientWrapper {
     private List<KeeperStateListener> listeners = new CopyOnWriteArrayList<>();
 
     public ZkClientWrapper(String address, int connectionTimeout) {
-        // address 是 Zookeeper 的地址，而 Integer.MAX_VALUE 则是连接超时时间，如果超过这个时间还没有连上注册中心，就会抛出异常
+        /*
+         * address：是 Zookeeper 的地址
+         * sessionTimeout：是一个会话的超时时间，使用默认值 30s
+         * connectionTimeout：则是连接超时时间，如果超过这个时间还没有连上注册中心，就会抛出异常
+         * zkSerializer zookeeper：的数据序列化器
+         * operationRetryTimeout：Most operations done through this ZkClient are retried in cases like
+         *                       connection loss with the Zookeeper servers. During such failures, this
+         *                       operationRetryTimeout decides the maximum amount of time, in milli seconds, each
+         *                       operation is retried. A value lesser than 0 is considered as
+         *                       "retry forever until a connection has been reestablished".
+         */
         try{
-            zkClient =  new ZkClient(address, connectionTimeout);
+            zkClient =  new ZkClient(address, RpcConfig.ZOOKEEPER_SESSION_TIMEOUT, connectionTimeout,
+                    new SerializableSerializer(), RpcConfig.OPERATION_RETRY_TIMEOUT);
         }catch (Throwable t){
             logger.warn("zookeeper timeout! cannot connect to zookeeper in " + connectionTimeout + " ms, please check it.");
         }

@@ -172,5 +172,11 @@ public class RpcConfig {
     public static final String STACK_TRACE_KEY = "stackTrace";
 
     public static final String ONE_WAY_KEY = "oneWay";
+
+    public static final long OPERATION_RETRY_TIMEOUT = 3000;
+
+    public static final int ZOOKEEPER_SESSION_TIMEOUT = 30000;
+
+    public static final String CACHE_URL_SEPARATOR = "#";
 }
 

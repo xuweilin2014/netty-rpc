@@ -159,7 +159,7 @@ public abstract class AbstractRegistry implements Registry {
         StringBuilder cache = new StringBuilder();
         for (int i = 0; i < invokerUrls.size(); i++) {
             if (i > 0)
-                cache.append(" ");
+                cache.append(RpcConfig.CACHE_URL_SEPARATOR);
             cache.append(invokerUrls.get(i).toFullString());
         }
 
@@ -252,7 +252,7 @@ public abstract class AbstractRegistry implements Registry {
             String value = (String) entry.getValue();
             if (key != null && key.length() > 0 && url.getServiceName().equalsIgnoreCase(key)
                     && value != null && value.length() > 0){
-                String[] us = value.split("\\s+");
+                String[] us = value.split(RpcConfig.CACHE_URL_SEPARATOR);
                 List<URL> urls = new ArrayList<>();
                 for (String u : us) {
                     urls.add(URL.valueOf(u));
