@@ -72,7 +72,7 @@ public class RpcProtocol extends AbstractProtocol {
                         Method method = ReflectionUtils.getDeclaredMethod(cls, request.getMethodName(), request.getTypeParameters());
                         RpcInvocation invocation = new RpcInvocation(method, request.getParametersVal());
                         // 如果 request 中含有令牌，则将其保存到 RpcInvocation 中
-                        invocation.setToken(request.getToken());
+                        invocation.getAttachments().put(RpcConfig.TOKEN_KEY, StringUtils.isEmpty(request.getToken()) ? "" : request.getToken());
                         result = exporter.getInvoker().invoke(invocation);
                         return result;
                     }

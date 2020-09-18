@@ -5,6 +5,9 @@ import lombok.Setter;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Setter
 @Getter
@@ -20,7 +23,7 @@ public class RpcInvocation {
 
     private Class<?> serviceType;
 
-    private String token;
+    private Map<String, String> attachments;
 
     public RpcInvocation(Method method, Object[] args){
         this.method = method;
@@ -28,6 +31,7 @@ public class RpcInvocation {
         this.parameterTypes = method.getParameterTypes();
         this.serviceType = method.getDeclaringClass();
         this.parameters = args;
+        this.attachments = new ConcurrentHashMap<>();
     }
 
     @SuppressWarnings("StringBufferReplaceableByString")

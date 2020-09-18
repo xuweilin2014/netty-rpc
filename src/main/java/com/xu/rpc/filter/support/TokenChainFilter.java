@@ -24,7 +24,7 @@ public class TokenChainFilter implements ChainFilter {
         if (token == null || token.length() == 0 || RpcConfig.FALSE.equals(token)) {
             return invoker.invoke(invocation);
         } else{
-            String consumerToken = invocation.getToken();
+            String consumerToken = invocation.getAttachments().get(RpcConfig.TOKEN_KEY);
             // 消费者的 token 值和服务区端指定的 token 值相同，直接调用 invoke 方法
             if (token.equals(consumerToken)){
                 return invoker.invoke(invocation);

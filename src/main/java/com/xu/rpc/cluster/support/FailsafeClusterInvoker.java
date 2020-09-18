@@ -26,8 +26,8 @@ public class FailsafeClusterInvoker extends AbstractClusterInvoker {
         try {
             Invoker invoker = select(invokers, null, loadBalance, invocation);
             result = invoker.invoke(invocation);
-        } catch (RpcException e) {
-            logger.error("failed to invoke the invoker.");
+        } catch (Throwable e) {
+            throw new RpcException("failed to invoke the invoker, caused by " + e.getMessage());
         }
         return result;
     }

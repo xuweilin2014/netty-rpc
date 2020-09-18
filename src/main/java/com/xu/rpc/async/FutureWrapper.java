@@ -38,7 +38,7 @@ public class FutureWrapper implements Future {
     @Override
     public Object get() throws InterruptedException, ExecutionException {
         try {
-            return ((RpcResult) future.get()).getResult();
+            return future.get();
         } catch (RemotingException e) {
             throw new ExecutionException(e);
         } catch (Throwable throwable) {
@@ -49,8 +49,7 @@ public class FutureWrapper implements Future {
     @Override
     public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         try {
-            RpcResult result = (RpcResult) future.get((int) unit.convert(timeout, TimeUnit.MILLISECONDS));
-            return result.getResult();
+            return future.get((int) unit.convert(timeout, TimeUnit.MILLISECONDS));
         } catch (RpcTimeoutException ex){
             throw new TimeoutException(ex.getMessage());
         }catch (RemotingException e) {

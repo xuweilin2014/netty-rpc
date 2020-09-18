@@ -170,5 +170,7 @@ public class RpcConfig {
     public static final String INVOKE_TIMESPAN_KEY = "invokeTimespan";
 
     public static final String STACK_TRACE_KEY = "stackTrace";
+
+    public static final String ONE_WAY_KEY = "oneWay";
 }
 
