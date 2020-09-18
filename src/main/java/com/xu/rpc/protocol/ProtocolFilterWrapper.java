@@ -24,7 +24,8 @@ public class ProtocolFilterWrapper implements Protocol {
     private <T> Invoker<T> buildInvokerChain(Invoker<T> invoker, String group){
         URL url = invoker.getUrl();
         List<ChainFilter> filters = ExtensionLoader.getExtensionLoader(ChainFilter.class).getActivateExtension(url, RpcConfig.FILTER, group);
-        for (ChainFilter filter : filters) {
+        for (int i = filters.size() - 1; i >= 0; i--) {
+            ChainFilter filter = filters.get(i);
             Invoker<T> next = invoker;
             invoker = new Invoker<T>() {
                 @Override

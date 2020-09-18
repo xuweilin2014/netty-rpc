@@ -189,6 +189,9 @@ public class ReferenceConfig<T> extends AbstractConfig {
     }
 
     private boolean isJvm(URL tmpUrl) {
+        // 如果指定了使用 url 直连的功能，那么就不能使用本地调用
+        if (!StringUtils.isEmpty(url))
+            return false;
         // 如果用户指定使用本地的方法，就进行本地调用
         return RpcConfig.SCOPE_LOCAL.equals(tmpUrl.getParameter(RpcConfig.SCOPE_KEY));
     }

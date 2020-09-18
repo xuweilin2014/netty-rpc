@@ -145,7 +145,7 @@ public final class ExtensionLoader<T> {
                 String key = line.split("=")[0];
                 String className = line.split("=")[1];
                 copyValue = className;
-                Class<?> extClass =  Class.forName(className);
+                Class<?> extClass =  Thread.currentThread().getContextClassLoader().loadClass(className);
 
                 if (!type.isAssignableFrom(extClass)){
                     throw new IllegalStateException("extension " + extClass.getName() + " is not a subtype of " + type.getName());
