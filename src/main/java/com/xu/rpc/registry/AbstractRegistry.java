@@ -101,7 +101,7 @@ public abstract class AbstractRegistry implements Registry {
             throw new IllegalArgumentException("url == null.");
         Set<NotifyListener> listeners = subscribed.get(url);
         if (listeners == null){
-            subscribed.put(url, new ConcurrentSet<>());
+            subscribed.put(url, new CopyOnWriteArraySet<>());
             listeners = subscribed.get(url);
         }
         listeners.add(listener);
@@ -117,7 +117,7 @@ public abstract class AbstractRegistry implements Registry {
             throw new IllegalArgumentException("url == null.");
         Set<NotifyListener> listeners = subscribed.get(url);
         if (listeners == null){
-            subscribed.put(url, new ConcurrentSet<>());
+            subscribed.put(url, new CopyOnWriteArraySet<>());
             listeners = subscribed.get(url);
         }
         listeners.remove(listener);
@@ -163,7 +163,7 @@ public abstract class AbstractRegistry implements Registry {
             cache.append(invokerUrls.get(i).toFullString());
         }
 
-        // properties 里面以服务名作为键，并且以各个提供者的 url 字符串为值，并且各个 url 之间使用空格作为分隔
+        // properties 里面以服务名作为键，并且以各个提供者的 url 字符串为值，并且各个 url 之间使用 # 作为分隔
         properties.setProperty(url.getServiceName(), cache.toString());
         cacheExecutor.submit(new SaveCacheTask(cacheVersion.incrementAndGet(), 0));
     }
@@ -187,6 +187,7 @@ public abstract class AbstractRegistry implements Registry {
                 try(FileOutputStream fos = new FileOutputStream(file)){
                     // 将内存中 properties 对象中所保存的缓存 url 写入到磁盘里面
                     properties.store(fos, "SaveCacheUrls");
+                    logger.info("save new urls to cache file " + file.getName() + ", version " + version);
                 }catch (IOException e){
                     throw e;
                 }

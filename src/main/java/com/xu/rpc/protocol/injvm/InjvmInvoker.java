@@ -32,6 +32,6 @@ public class InjvmInvoker<T> extends AbstractInvoker<T> {
         if (exporter == null) {
             return false;
         }
-        return isDestroyed();
+        return !isDestroyed();
     }
 }

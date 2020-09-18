@@ -207,7 +207,7 @@ public class ServiceConfig<T> extends AbstractConfig{
 
         Protocol protocolLocal = AdaptiveExtensionUtils.getProtocol(localUrl);
         // 通过 JDKProxyFactory 生成一个 invoker，用来真正执行具体的方法，再调用 export 方法将其导出成为一个 exporter
-        Exporter<?> exporter = protocolLocal.export(JDKProxyFactory.getInvoker(ref, localUrl, interfaceClass));
+        Exporter<?> exporter = protocolLocal.export(JDKProxyFactory.getInvoker(bean, localUrl, interfaceClass));
 
         logger.info("export service " + interfaceName + " to " + localUrl);
         exporters.add(exporter);
