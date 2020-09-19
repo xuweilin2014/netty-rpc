@@ -52,8 +52,9 @@ public class ProxyWrapper implements InvocationHandler {
         // 如果要调用的方法没有返回值，直接返回 null
         if (oneWay){
             return null;
-        // 如果异步调用的话
-        }else if (async){
+        }
+
+        if (result.getResult() == null) {
             // 如果方法的返回值为原始类型（int,boolean等），那么就不能直接返回 null，否则会报错
             if (boolean.class == method.getReturnType())
                 return false;

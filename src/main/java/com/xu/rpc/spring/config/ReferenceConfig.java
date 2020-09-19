@@ -7,6 +7,7 @@ import com.xu.rpc.commons.URL;
 import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
 import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.core.extension.Activate;
 import com.xu.rpc.core.extension.Attribute;
 import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Invoker;
@@ -58,6 +59,9 @@ public class ReferenceConfig<T> extends AbstractConfig {
     // 直连 url
     @Attribute
     protected String url;
+    // 服务降级(本地伪装)
+    @Attribute
+    protected String mock;
 
     protected T ref;
 

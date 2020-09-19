@@ -8,6 +8,7 @@ import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,14 +47,20 @@ public class MockClusterInvoker<T> implements Invoker<T> {
     @Override
     public RpcResult invoke(RpcInvocation invocation) throws RpcException {
         String mock = directory.getUrl().getParameter(RpcConfig.MOCK_KEY, Boolean.FALSE.toString());
-        RpcResult result;
-        if (mock.length() == 0 || RpcConfig.FALSE.equalsIgnoreCase(mock)){
+        RpcResult result = null;
+        if (StringUtils.isEmpty(mock) || RpcConfig.FALSE.equalsIgnoreCase(mock)){
             result = invoker.invoke(invocation);
-        // 当 mock 为 fail 时
+        // 当 mock 为 fail 时，调用失败之后，直接返回一个 null 结果
         } else if (RpcConfig.MOCK_FAIL_KEY.equalsIgnoreCase(mock)){
             try{
+                // 正常返回的 result 也有可能是包含了异常，也就是调用发生了错误
                 result = invoker.invoke(invocation);
-            }catch (RpcException e){
+                if (result.getException() != null){
+                    result.setResult(null);
+                    // 把 exception 置为 null，因此 ProxyWrapper 就不会把异常抛出
+                    result.setException(null);
+                }
+            }catch (Throwable e){
                 result = new RpcResult();
                 result.setResult(null);
             }
@@ -63,9 +70,15 @@ public class MockClusterInvoker<T> implements Invoker<T> {
             result.setResult(null);
         // 当 mock 为 true 或者类名时
         } else {
+            Throwable throwable;
             try {
                 result = invoker.invoke(invocation);
-            } catch (RpcException e) {
+                throwable = result.getException();
+            } catch (Throwable e) {
+                throwable = e;
+            }
+
+            if (throwable != null){
                 // 调用失败之后，调用用户自己定义的 Mock 类
                 if (RpcConfig.TRUE.equalsIgnoreCase(mock)){
                     mock = invocation.getServiceType().getName() + "Mock";

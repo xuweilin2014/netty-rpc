@@ -43,6 +43,8 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         try{
             return doInvoke(invocation);
         } catch (Throwable e){
+            // 调用链为 AbstractInvoker -> RpcInvoker -> HeaderExchangeClient -> NettyClient
+            // 在后面 3 个的调用中，直接抛出任何异常，即使在 catch 语句块汇总还是会抛出异常
             return new RpcResult(e);
         }
 

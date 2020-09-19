@@ -83,7 +83,7 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
         try {
             // 由 NettyClient 发送给服务器端
             client.send(req);
-        } catch (RemotingException e) {
+        } catch (Throwable e) {
             future.cancel();
             throw e;
         }

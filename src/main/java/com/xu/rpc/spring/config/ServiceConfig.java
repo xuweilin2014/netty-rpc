@@ -62,9 +62,6 @@ public class ServiceConfig<T> extends AbstractConfig{
     // 此服务提供者的权重
     @Attribute
     private String weight;
-    // 服务降级
-    @Attribute
-    private String mock;
 
     protected T bean;
 

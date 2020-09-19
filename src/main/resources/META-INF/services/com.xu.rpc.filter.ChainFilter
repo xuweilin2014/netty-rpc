@@ -4,3 +4,5 @@ cache=com.xu.rpc.filter.support.CacheChainFilter
 limiter=com.xu.rpc.filter.support.RateLimiterChainFilter
 classloader=com.xu.rpc.filter.support.ClassLoaderChainFilter
 token=com.xu.rpc.filter.support.TokenChainFilter
+one=com.xu.rpc.services.filter.FilterOne
+two=com.xu.rpc.services.filter.FilterTwo
