@@ -93,11 +93,11 @@ public final class URL {
     }
 
     public String getAddress(){
-        return host + ":" + port;
+        return host + RpcConfig.ADDRESS_DELIMITER + port;
     }
 
     public String getServiceName() {
-        return getParameter("interface", path);
+        return getParameter(RpcConfig.INTERFACE_KEY, path);
     }
 
     public int getParameter(String key, int defaultValue){

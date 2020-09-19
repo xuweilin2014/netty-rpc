@@ -93,7 +93,7 @@ public class RpcConfig {
 
     public static final String TIMEOUT_KEY = "timeout";
 
-    public static final int DEFAULT_TIMEOUT = 5000;
+    public static final int DEFAULT_TIMEOUT = 10000;
 
     public static final int RECONNECT_INTERVAL = 2000;
 
@@ -177,6 +177,14 @@ public class RpcConfig {
 
     public static final int ZOOKEEPER_SESSION_TIMEOUT = 30000;
 
-    public static final String CACHE_URL_SEPARATOR = "#";
+    public static final String HEX_SEPARATOR = "#";
+
+    public static final String OVERRIDE_KEY = "override";
+
+    public static final String MOCK_SET_KEY = "mockSet";
+
+    public static final String METHOD_KEY = "methodName";
+
+    public static final String FILTER_KEY = "filter";
 }
 

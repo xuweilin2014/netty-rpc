@@ -3,11 +3,11 @@ package com.xu.rpc.remoting.echo;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
@@ -19,8 +19,6 @@ import org.apache.log4j.Logger;
 public class ApiEchoServer{
 
     public static final Logger logger = Logger.getLogger(ApiEchoHandler.class);
-
-    private static final boolean SSL = System.getProperty("ssl") != null;
 
     private EventLoopGroup bossGroup;
 
@@ -42,29 +40,29 @@ public class ApiEchoServer{
         this.workerGroup = new NioEventLoopGroup();
 
         try {
-            SslContext sslCtx = null;
-            if (SSL) {
-                SelfSignedCertificate ssc = new SelfSignedCertificate();
-                sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
-            }
-
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 1024);
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    //.handler(new LoggingHandler(LogLevel.INFO))
                     /*
                      * 这里的childHandler方法是当有新连接建立时（即NioSocketChannel），把ApiEchoInitializer添加到这个
                      * channel对应的pipeline中，然后当此channel最终注册到某个NioEventLoop上时，回调这个ApiEchoInitializer
                      * 中的handlerAdded方法，最终调用到其中的initChannel方法，初始化新连接，往其中添加各种handler
                      */
-                    .childHandler(new ApiEchoInitializer(sslCtx, url));
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            p.addLast(new HttpServerCodec());
+                            p.addLast(new ApiEchoHandler(url, host, RpcConfig.ECHO_PORT));
+                        }
+                    });
 
             this.channel = b.bind(host, RpcConfig.ECHO_PORT).sync().channel();
 
-            logger.info("echo server starts successfully! netty-rpc server api interface:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/ability");
+            logger.info("echo server starts successfully! netty-rpc server api interface:" + "http" + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/ability");
             if (url.getParameter(RpcConfig.METRICS_KEY, true)){
-                logger.info("echo server starts successfully! netty-rpc server metrics:" + (SSL ? "https" : "http") + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/metrics");
+                logger.info("echo server starts successfully! netty-rpc server metrics:" + "http" + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/metrics");
             }
 
         } catch (Throwable e) {

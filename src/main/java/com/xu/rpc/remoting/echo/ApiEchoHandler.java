@@ -1,5 +1,7 @@
 package com.xu.rpc.remoting.echo;
 
+import com.sun.org.apache.regexp.internal.RE;
+import com.xu.rpc.commons.DateStore;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.AbilityDetailProvider;
 import com.xu.rpc.core.RpcConfig;
@@ -14,6 +16,12 @@ import io.netty.handler.codec.http.HttpRequest;
 import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -38,8 +46,14 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
 
     private final URL url;
 
-    public ApiEchoHandler(URL url) {
+    private final String host;
+
+    private int port;
+
+    public ApiEchoHandler(URL url, String host, int port) {
         this.url = url;
+        this.host = host;
+        this.port = port;
     }
 
     @Override
@@ -51,6 +65,12 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof HttpRequest) {
             HttpRequest req = (HttpRequest) msg;
+
+            if (req.uri().contains(RpcConfig.OVERRIDE_KEY)){
+                doMock(req.uri());
+                return;
+            }
+
             byte[] content = buildResponseMsg(req);
             FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(content));
             response.headers().set(CONTENT_TYPE, "text/html");
@@ -69,16 +89,16 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
     private byte[] buildResponseMsg(HttpRequest req) {
         byte[] content = null;
 
-        // http请求的uri中是否包括metrics，即是否表明要获取NettyRPC模块调用情况
-        boolean metrics = req.getUri().contains(RpcConfig.METRICS_KEY);
-        boolean ability = req.getUri().contains(RpcConfig.ABILITY_KEY);
-        String isMetricsOpen = url.getParameter(RpcConfig.METRICS_KEY, RpcConfig.TRUE);
-        /*
-         * 1.如果系统支持JMX，并且metrics为true的话（也就是用户请求获取NettyRPC模块调用情况），就会构造调用信息，并且传递给content。
-         * 2.如果系统不支持JMX，并且metrics为true的话，就会直接返回"NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
-         * 3.如果metrics为false的话，表明用户只是想知道NettyRPC服务器端可以提供的能力，即可以调用的接口信息
-         */
+        String uri = req.uri();
 
+        // http请求的uri中是否包括metrics，即是否表明要获取NettyRPC模块调用情况
+        boolean metrics = uri.contains(RpcConfig.METRICS_KEY);
+        boolean ability = uri.contains(RpcConfig.ABILITY_KEY);
+        String isMetricsOpen = url.getParameter(RpcConfig.METRICS_KEY, RpcConfig.TRUE);
+
+        // 1.如果系统支持 jmx，并且 metrics 为true的话（也就是用户请求获取NettyRPC模块调用情况），就会构造调用信息，并且传递给content。
+        // 2.如果系统不支持 jmx，并且metrics为true的话，就会直接返回"NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
+        // 3.如果 metrics 为 false 的话，表明用户只是想知道NettyRPC服务器端可以提供的能力，即可以调用的接口信息
         if (RpcConfig.TRUE.equals(isMetricsOpen) && metrics) {
             try {
                 // 返回构造的content，用来在网页上显示RPC服务器中每个方法的调用具体信息，比如：调用次数、调用成功次数、调用失败次数等等
@@ -92,10 +112,44 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
         } else {
             AbilityDetailProvider provider = new AbilityDetailProvider();
             // 返回的content表明NettyRPC服务器端可以被调用的接口信息
-            content = provider.listAbilityDetail(true).toString().getBytes();
+            content = provider.listAbilityDetail(host, port).toString().getBytes();
         }
 
         return content;
+    }
+
+    @SuppressWarnings({"ConstantConditions", "unchecked"})
+    private void doMock(String uri){
+        if (!uri.contains(RpcConfig.OVERRIDE_KEY))
+            return;
+
+        String[] kvs = URL.decode(uri).substring(uri.indexOf("?") + 1).split("&");
+        String interfaceName = null;
+        String methodName = null;
+        String mock = null;
+        for (String kv : kvs) {
+            if (kv.contains("=")){
+                String key = kv.split("=")[0];
+                String value = kv.split("=")[1];
+                if (RpcConfig.INTERFACE_KEY.equalsIgnoreCase(key))
+                    interfaceName = value;
+                if (RpcConfig.MOCK_KEY.equalsIgnoreCase(key))
+                    mock = value;
+                if (RpcConfig.METHOD_KEY.equalsIgnoreCase(key))
+                    methodName = value;
+            }
+        }
+
+        Set<String> set = (Set<String>) DateStore.get(RpcConfig.MOCK_SET_KEY);
+        if (set == null){
+            DateStore.put(RpcConfig.MOCK_SET_KEY, new CopyOnWriteArraySet<>());
+            set = (Set<String>) DateStore.get(RpcConfig.MOCK_SET_KEY);
+        }
+
+        if (RpcConfig.TRUE.equalsIgnoreCase(mock))
+            set.add(interfaceName + RpcConfig.HEX_SEPARATOR + methodName);
+        else if (RpcConfig.FALSE.equalsIgnoreCase(mock))
+            set.remove(interfaceName + RpcConfig.HEX_SEPARATOR + methodName);
     }
 
 }

@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 
-@Activate(group = {RpcConfig.PROVIDER}, order = 1)
+@Activate(group = {RpcConfig.PROVIDER}, order = 5)
 public class TimeoutChainFilter implements ChainFilter {
 
     public static final Logger logger = Logger.getLogger(TimeoutChainFilter.class);

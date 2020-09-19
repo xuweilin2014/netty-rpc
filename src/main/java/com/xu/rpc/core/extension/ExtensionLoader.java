@@ -225,8 +225,8 @@ public final class ExtensionLoader<T> {
             }
         }
 
-        // 3.对 exts 集合中的对象进行排序，order 值越大，排序就
-        // 比如 MonitorChainFilter 一定要在 TimeoutChainFilter 后面调用
+        // 3.对 exts 集合中的对象进行排序，order 值越小，执行 invoker#invoke(invocation) 方法时，就越是先被调用
+        // 由于 MonitorChainFilter 一定要在 TimeoutChainFilter 后面调用，因此 MonitorChainFilter 的 order 要比 TimeoutChainFilter 更大
         exts.sort(ActivateComparator.COMPARATOR);
 
         // 3.获取用户配置的自定义的扩展对象

@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Activate(group = {RpcConfig.PROVIDER, RpcConfig.CONSUMER}, value = RpcConfig.CACHE_KEY, order = 2)
+@Activate(group = {RpcConfig.PROVIDER, RpcConfig.CONSUMER}, value = RpcConfig.CACHE_KEY, order = 3)
 public class CacheChainFilter implements ChainFilter {
 
     private static final Map<String, Cache<Object, Object>> caches = new ConcurrentHashMap<>();

@@ -8,13 +8,13 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslContext;
 
 
-public class ApiEchoInitializer extends ChannelInitializer<SocketChannel> {
+/*public class ApiEchoInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final SslContext sslCtx;
+*//*    private final SslContext sslCtx;
 
     private final URL url;
 
-    public ApiEchoInitializer(SslContext sslCtx, URL url) {
+    public ApiEchoInitializer(SslContext sslCtx, URL url, String host, int port) {
         this.sslCtx = sslCtx;
         this.url = url;
     }
@@ -26,7 +26,7 @@ public class ApiEchoInitializer extends ChannelInitializer<SocketChannel> {
             p.addLast(sslCtx.newHandler(ch.alloc()));
         }
         p.addLast(new HttpServerCodec());
-        p.addLast(new ApiEchoHandler(url));
-    }
-}
+        p.addLast(new ApiEchoHandler());
+    }*//*
+}*/
 

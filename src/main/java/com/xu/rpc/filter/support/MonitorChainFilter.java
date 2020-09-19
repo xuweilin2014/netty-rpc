@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Activate(group = {RpcConfig.PROVIDER}, order = 4, value = RpcConfig.MONITOR_KEY)
+@Activate(group = {RpcConfig.PROVIDER}, order = 10, value = RpcConfig.MONITOR_KEY)
 public class MonitorChainFilter implements ChainFilter {
 
     private static final Map<String, Map<String, MetricsVisitor>> cachedVisitors = new ConcurrentHashMap<>();

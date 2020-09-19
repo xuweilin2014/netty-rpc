@@ -104,14 +104,15 @@ public abstract class AbstractConfig implements InitializingBean {
         return registryUrls;
     }
 
-    // 检查 <nettyrpc:protocol/> 标签中的各个属性是否为空，以及是否支持配置的协议类型
+    // 检查 <nettyrpc:protocol/> 标签中的各个属性是否为空，以及是否支持配置的协议类型，
+    // 同时检测端口号 port 是否和 jmx port 以及 echo port 一样
     public void checkProtocol(NettyRpcProtocol protocol){
         if (protocol == null){
             throw new IllegalStateException("tag <nettyrpc:protocol/> must be configured.");
         }
 
         String name = protocol.getName();
-        if (name == null || name.length() == 0){
+        if (StringUtils.isEmpty(name)){
             throw new IllegalStateException("in tag <nettyrpc:protocol/>, name attribute cannot be empty.");
         }
 
@@ -119,8 +120,13 @@ public abstract class AbstractConfig implements InitializingBean {
         if (ext == null)
             throw new IllegalStateException("protocol " + name + " is not supported yet.");
 
-        if (protocol.getPort() == null || protocol.getPort().length() == 0)
+        String port = protocol.getPort();
+        if (StringUtils.isEmpty(port))
             throw new IllegalStateException("in tag <nettyrpc:protocol/>, port attribute cannot be empty.");
+
+        if (String.valueOf(RpcConfig.METRICS_PORT).equals(port)
+                || String.valueOf(RpcConfig.ECHO_PORT).equals(port))
+            throw new IllegalStateException("in tag <nettyrpc:protocol/>, port cannot be the same as echo port or jmx port.");
 
         if (protocol.getSerialize() == null || protocol.getSerialize().length() == 0)
             throw new IllegalStateException("in tag <nettyrpc:protocol/>, serialize attribute cannot be empty.");
@@ -216,6 +222,8 @@ public abstract class AbstractConfig implements InitializingBean {
             List<NettyRpcProtocol> protocols = new ArrayList<>();
             for (Map.Entry<String, NettyRpcProtocol> entry : protocolMap.entrySet()) {
                 String key = entry.getKey();
+                // 检测 protocol 的各项属性是否合法
+                checkProtocol(entry.getValue());
                 if (isProtocolConfigured){
                     if (userProtocols.contains(key)){
                         protocols.add(entry.getValue());

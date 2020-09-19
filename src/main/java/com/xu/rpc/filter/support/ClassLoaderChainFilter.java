@@ -9,7 +9,7 @@ import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.filter.ChainFilter;
 import com.xu.rpc.protocol.Invoker;
 
-@Activate(group = RpcConfig.PROVIDER, order = 2)
+@Activate(group = RpcConfig.PROVIDER, order = 8)
 public class ClassLoaderChainFilter implements ChainFilter {
     @Override
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) throws RpcException {
