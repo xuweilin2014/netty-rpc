@@ -2,11 +2,10 @@ package com.xu.test;
 
 import com.xu.rpc.services.PersonManage;
 import com.xu.rpc.services.pojo.Person;
-import com.xu.rpc.spring.config.AbstractConfig;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+public class PojoMockCallTest {
 
-public class PojoCallTest {
     public static void main(String[] args) throws InterruptedException {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
@@ -19,8 +18,13 @@ public class PojoCallTest {
 
         int result = manage.save(p);
         manage.query(p);
+        System.out.println("first call pojo rpc result:" + result);
 
-        System.out.println("call pojo rpc result:" + result);
+        Thread.sleep(20000);
+
+        result = manage.save(p);
+        manage.query(p);
+        System.out.println("second call pojo rpc result:" + result);
     }
-}
 
+}
