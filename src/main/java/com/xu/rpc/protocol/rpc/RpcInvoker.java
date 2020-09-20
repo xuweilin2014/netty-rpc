@@ -71,9 +71,9 @@ public class RpcInvoker<T> extends AbstractInvoker<T> {
                 return new RpcResult(result);
             }
         }catch (RpcTimeoutException ex){
-            throw new RpcException("invoke method " + invocation.getMethodName() + " timeout, caused by " + ex.getMessage());
+            throw new RpcException("invoke service: " + invocation.getServiceType().getName() + " method: " + invocation.getMethodName() + " timeout");
         }catch (RemotingException ex){
-            throw new RpcException("failed to invoke the remote method " + invocation.getMethodName() + ", caused by " + ex.getMessage());
+            throw new RpcException("failed to invoke the service: " + invocation.getServiceType().getName() + " remote method: " + invocation.getMethodName());
         } catch (InterruptedException e) {
             throw new RpcException("failed to invoke the remote method" + invocation.getMethodName() + " caused by interruption.");
         }

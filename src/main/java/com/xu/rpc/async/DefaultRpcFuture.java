@@ -190,6 +190,10 @@ public class DefaultRpcFuture implements RpcFuture{
                     if (isDone() || System.currentTimeMillis() - start >= timeout)
                         break;
                 }
+
+                if (!isDone())
+                    throw new RpcTimeoutException("invoke method " + request.getMethodName() + " for service " + request.getInterfaceName()
+                            + " timeout, cost " + (System.currentTimeMillis() - start) + ", time limit " + timeout);
             } catch (InterruptedException e) {
                 throw e;
             } finally {
@@ -201,16 +205,12 @@ public class DefaultRpcFuture implements RpcFuture{
     }
 
     private Object getReturnValue() throws RpcTimeoutException {
-        if (!isDone())
-            throw new RpcTimeoutException("invoke method " + request.getMethodName() + " for service " + request.getInterfaceName()
-                    + " timeout, cost " + (System.currentTimeMillis() - start) + ", time limit " + timeout);
-
         if (response.getInvokeStatus().isCancelled())
             throw new RpcException("future is cancelled.");
 
         if (response.getInvokeStatus().isExceptional())
             throw new RpcException("exception occurs when invoking service " + request.getInterfaceName()
-                    + ", caused by " + response.getError().getMessage());
+                    + ", caused by " + response.getError());
 
         if (response.getInvokeStatus().isDone()){
             return response.getResult();
@@ -238,8 +238,7 @@ public class DefaultRpcFuture implements RpcFuture{
                 lock.unlock();
             }
 
-            // 如果添加 listener 之后，发现 future 执行完成，那么立即执行注册的所有 listener，
-            // 否则这个 listener 将不会被执行
+            // 如果添加 listener 之后，发现 future 执行完成，那么立即执行注册的所有 listener，否则这个 listener 将不会被执行
             if (isDone()){
                 notifyRpcListeners();
             }

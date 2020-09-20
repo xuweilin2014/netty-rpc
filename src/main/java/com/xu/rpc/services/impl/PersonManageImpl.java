@@ -11,7 +11,7 @@ public class PersonManageImpl implements PersonManage {
         //your business logic code here!
         System.out.println("person data[" + p + "] has save!");
         try {
-            Thread.sleep(Integer.MAX_VALUE);
+            Thread.sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

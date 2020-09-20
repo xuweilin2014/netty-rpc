@@ -34,7 +34,7 @@ public class CostTimeCalculateImpl implements CostTimeCalculate {
             long start = 0, end = 0;
             start = System.currentTimeMillis();
             //模拟耗时操作,超过nettyrpc.default.msg.timeout定义的上限
-            Thread.sleep(35 * 1000L);
+            Thread.sleep(10 * 1000L);
             end = System.currentTimeMillis();
 
             long interval = end - start;
