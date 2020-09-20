@@ -97,7 +97,7 @@ public class RpcConfig {
 
     public static final int RECONNECT_INTERVAL = 2000;
 
-    public static final int RECONNECT_TIMEOUT = 900000;
+    public static final int RECONNECT_TIMEOUT = 15000;
 
     public static final String LOADBALANCE_KEY = "loadbalance";
 

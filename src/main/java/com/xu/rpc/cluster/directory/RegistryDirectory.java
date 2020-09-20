@@ -120,19 +120,20 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
             for (Invoker invoker : invokers) {
                 try {
                     invoker.destroy();
+                    logger.info("destroy invoker [" + invoker + "] successfully!");
                 } catch (Exception e) {
                     logger.error("failed to destroy the invoker for " + invoker.getUrl());
                 }
             }
         }
         localUrlToInvokers.clear();
-        urlToInvokers = null;
     }
 
     @Override
     public void notify(List<URL> invokerUrls) throws RpcException {
-        if (invokerUrls == null)
+        if (invokerUrls == null) {
             return;
+        }
 
         Map<String, Invoker> oldUrlToInvokers = this.urlToInvokers;
 
@@ -149,7 +150,6 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
 
         Map<String, Invoker> newUrltoInvokers = toInvokers(invokerUrls);
         Map<String, List<Invoker>> newMethodToInvokers = toMethodInvokers(newUrltoInvokers);
-
         this.urlToInvokers = newUrltoInvokers;
         this.methodToInvokers = newMethodToInvokers;
 
@@ -168,9 +168,9 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
         }
 
         List<String> unused = new ArrayList<>();
-        Collection<Invoker> invokers = newUrltoInvokers.values();
+        Set<String> invokers = newUrltoInvokers.keySet();
         for (Map.Entry<String, Invoker> entry : oldUrlToInvokers.entrySet()) {
-            if (!invokers.contains(entry.getValue())){
+            if (!invokers.contains(entry.getKey())){
                 unused.add(entry.getKey());
             }
         }
@@ -180,7 +180,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
             if (invoker != null){
                 try {
                     invoker.destroy();
-                    logger.debug("destroy the invoker [" + invoker.getUrl() + "] successfully.");
+                    logger.info("destroy the invoker [" + invoker.getUrl() + "] successfully.");
                 } catch (Exception e) {
                     logger.error("destroy the invoker [" + invoker.getUrl() + "] fail.");
                 }

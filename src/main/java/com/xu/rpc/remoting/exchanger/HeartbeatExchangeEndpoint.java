@@ -122,11 +122,7 @@ public abstract class HeartbeatExchangeEndpoint{
     public void close(){
         if (closed.compareAndSet(false, true)) {
             stopHeartbeat();
-            try {
-                heartbeatExecutor.shutdown();
-            } catch (Throwable e) {
-                logger.error("error occurs when shutting down the executor, caused by " + e.getMessage());
-            }
+            logger.info("closing heartbeat.");
         }
     }
 }

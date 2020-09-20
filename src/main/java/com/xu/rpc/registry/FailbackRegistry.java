@@ -4,6 +4,7 @@ import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.commons.URL;
 import io.netty.util.internal.ConcurrentSet;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -11,6 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 // 失败重试
 public abstract class FailbackRegistry extends AbstractRegistry{
+
+    private static final Logger logger = Logger.getLogger(FailbackRegistry.class);
 
     private List<URL> failedRegisteredURLs = new CopyOnWriteArrayList<>();
 

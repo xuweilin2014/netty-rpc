@@ -17,6 +17,7 @@ public class ReferenceCountClient implements ExchangeClient{
     public ReferenceCountClient(URL url, ExchangeClient client) {
         this.url = url;
         this.client = client;
+        referenceCount.incrementAndGet();
     }
 
     public void incrementAndGet(){

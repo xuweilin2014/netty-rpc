@@ -68,6 +68,8 @@ public class NettyClient implements Client {
 
     private final Lock lock = new ReentrantLock();
 
+    private volatile ChannelFuture channelCloseFuture = null;
+
     public NettyClient(URL url, ChannelHandler handler) throws RemotingException {
         this.url = url;
         this.handler = ChannelHandlers.wrapHandler(handler);
@@ -143,7 +145,8 @@ public class NettyClient implements Client {
             try{
                 Channel oldChannel = this.channel;
                 if (oldChannel != null){
-                    logger.info("closing old channel " + oldChannel);
+                    logger.info("closing old channel: " + oldChannel);
+                    logger.info("new channel: " + newChannel);
                     oldChannel.close();
                 }
             }finally {
@@ -156,6 +159,7 @@ public class NettyClient implements Client {
                     }
                 }else{
                     this.channel = newChannel;
+                    logger.info("new channel:" + newChannel);
                 }
             }
         }else {
@@ -178,9 +182,11 @@ public class NettyClient implements Client {
                             connect();
                         }
                     }catch (Throwable t){
-                        if (System.currentTimeMillis() - lastConnectedTime >= RpcConfig.RECONNECT_TIMEOUT){
-                            logger.error("Failed to reconnect to server: " + getRemoteAddress() + " from client: "
-                                    + getLocalAddress() + " with url [" + url.toFullString() + "]");
+                        if (System.currentTimeMillis() - lastConnectedTime >= RpcConfig.RECONNECT_TIMEOUT) {
+                            if (!isConnected()) {
+                                logger.error("Failed to reconnect to server: " + getRemoteAddress() + " from client: "
+                                        + getLocalAddress() + " with url [" + url.toFullString() + "]");
+                            }
                         }
                     }
                 }
@@ -233,8 +239,8 @@ public class NettyClient implements Client {
     private void close(){
         if (closed.compareAndSet(false, true)){
             try {
+                // 不能关闭掉 reconnectExecutor，因为断线重连可能会需要把新的任务加入进去
                 disconnect();
-                reconnectExecutor.shutdownNow();
                 eventLoopGroup.shutdownGracefully();
             } catch (Throwable e) {
                 logger.warn(e.getMessage());
@@ -251,8 +257,11 @@ public class NettyClient implements Client {
     public void disconnect() {
         lock.lock();
         try{
-            if (channel != null)
-                channel.close();
+            if (channel != null) {
+                // 阻塞直到 channel 关闭完成，否则可能会调用后面的 connect 方法时，channel 还没有关闭
+                channel.close().sync();
+                logger.info("netty client is closed, close channel " + channel);
+            }
             closeReconnectThread();
         }catch (Throwable t){
             logger.error(t.getMessage());
@@ -261,7 +270,7 @@ public class NettyClient implements Client {
         }
     }
 
-    public boolean isConnected() {
+    public synchronized boolean isConnected() {
         if (channel == null)
             return false;
         return channel.isActive();

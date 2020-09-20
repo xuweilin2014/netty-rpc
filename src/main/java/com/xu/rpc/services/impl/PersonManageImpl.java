@@ -10,11 +10,6 @@ public class PersonManageImpl implements PersonManage {
     public int save(Person p) {
         //your business logic code here!
         System.out.println("person data[" + p + "] has save!");
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         return 5;
     }
 
