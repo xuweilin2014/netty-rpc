@@ -1,15 +1,14 @@
 package com.xu.rpc.remoting.client;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RemotingException;
-import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyClientHandler;
 import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
-import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -67,8 +66,6 @@ public class NettyClient implements Client {
     private long lastConnectedTime = System.currentTimeMillis();
 
     private final Lock lock = new ReentrantLock();
-
-    private volatile ChannelFuture channelCloseFuture = null;
 
     public NettyClient(URL url, ChannelHandler handler) throws RemotingException {
         this.url = url;
@@ -208,15 +205,28 @@ public class NettyClient implements Client {
     @Override
     public void send(Object message) throws RemotingException {
         if (isClosed()){
-            logger.warn("client is closed, cannot send message.");
+            logger.warn("client " + this.channel.localAddress() + " is closed, cannot send message to remote " + channel.remoteAddress());
         }
 
+        boolean success = false;
         try {
             // 将消息发出
-            channel.writeAndFlush(message);
+            ChannelFuture future = channel.writeAndFlush(message);
+            int timeout = getUrl().getParameter(RpcConfig.TIMEOUT_KEY, RpcConfig.DEFAULT_TIMEOUT);
+            // 阻塞等待 timeout 时间，直到发送成功或者超时
+            success = future.await(timeout);
+
+            if (future.cause() != null)
+                throw future.cause();
+
         } catch (Throwable e) {
-            throw new RemotingException("failed to send message, caused by " + e.getMessage());
+            throw new RemotingException("failed to send message from client " + channel.localAddress() + ", caused by " + e.getMessage());
         }
+
+        // 运行到这里时，success 为 false，说明等待发送的时间超时
+        if (!success)
+            throw new RemotingException("failed to send message from client " + channel.localAddress() + " to remote " + channel.remoteAddress() +
+                        " within time " + timeout);
     }
 
     public boolean isClosed(){
