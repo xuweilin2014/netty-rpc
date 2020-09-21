@@ -39,7 +39,7 @@ public class RpcConfig {
 
     public static final String DIR_SEPARATOR = "/";
 
-    public static final int RETRY_PERIOD = 5000;
+    public static final int RETRY_PERIOD = 2000;
 
     public static final String SERIALIZE = "serialize";
 
@@ -105,7 +105,7 @@ public class RpcConfig {
 
     public static final String RETRIES_KEY = "retries";
 
-    public static final int DEFAULT_RETRIES = 2;
+    public static final int DEFAULT_RETRIES = 3;
 
     public static final String WEIGHT_KEY = "weight";
 

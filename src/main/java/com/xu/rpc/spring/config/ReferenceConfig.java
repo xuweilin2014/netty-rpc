@@ -171,7 +171,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
                     Cluster cluster = AdaptiveExtensionUtils.getCluster(url);
                     invoker = cluster.join(new StaticDirectory(invokers, url));
 
-                // 有多个服务直连 url，使用 url 中指定的 Cluster，如果没有指定的话，使用 FailoverCluster，并且使用 StaticDirectory 保存 invokers
+                // 有多个服务直连 url，使用 url 中指定的 Cluster，如果没有指定的话，使用 FailsafeCluster，并且使用 StaticDirectory 保存 invokers
                 }else{
                     if (invokers.size() == 0){
                         throw new IllegalStateException("no invoker available.");
