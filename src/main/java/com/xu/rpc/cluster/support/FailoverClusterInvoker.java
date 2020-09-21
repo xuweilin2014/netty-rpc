@@ -27,7 +27,7 @@ public class FailoverClusterInvoker extends AbstractClusterInvoker {
     public RpcResult doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException{
         // 获取到重试次数（第一次不算在内）
         // 如果用户没有配置重试次数，那么获取到的就是默认的次数 3 次，第一次 + 两次重试
-        // 如果用户配置了重试次数，那么会将其加上一，也就是加上第一次调用，所以说用户配置的重试次数，第一次不算在内
+        // 如果用户配置了重试次数，那么会将其加上一，也就是加上第一次调用
         int retries = getUrl().getParameter(RpcConfig.RETRIES_KEY, RpcConfig.DEFAULT_RETRIES) + 1;
         List<Invoker> copyInvokers = invokers;
         List<Invoker> selected = new ArrayList<>();
@@ -41,29 +41,35 @@ public class FailoverClusterInvoker extends AbstractClusterInvoker {
             if (counter > 0){
                 copyInvokers = list(invocation);
             }
+
             if (invokers == null || invokers.isEmpty()){
                 throw new RpcException("there is no invoker to invoke.");
             }
 
             try{
                 Invoker invoker = select(copyInvokers, selected, loadBalance, invocation);
-                // select 方法返回的 invoker 可能为 null。
-                // 添加 invoker 到 selected 列表中，selected 集合中的 invoker 没有正常提供服务
+                // select 方法返回的 invoker 可能为 null。添加 invoker 到 selected 列表中，在上面的 select 方法中，selected 集合中的 invoker 意味着没有正常提供服务
+                // 这是因为正常的话，选出来的 invoker 一次调用成功，那么 select 方法也就只会被调用一次， selected 集合为空。而再次调用的话，说明刚刚选出的 invoker 调用失败
                 if (invoker != null)
                     selected.add(invoker);
 
                 RpcResult result = invoker.invoke(invocation);
-                if (lastException != null){
-                    logger.warn("although retry successfully, but there are failed invokers " + selected);
+                if (result.getException() != null) {
+                    throw result.getException();
                 }
+
+                if (lastException != null)
+                    logger.warn("although retry successfully, but there are failed invokers " + selected);
+
                 return result;
             }catch (Throwable t){
                 lastException = t;
             }
         }
 
-        //若重试失败，则抛出异常
-        throw new RpcException("tried " + counter + " times, netty-rpc failed to invoke.");
+        // 若重试失败，则抛出异常
+        throw new RpcException("has tried " + (counter - 1) + " times, netty-rpc failed to invoke the interface "
+                + invocation.getServiceType().getName() + ", method " + invocation.getMethodName());
     }
 
 }

@@ -20,13 +20,18 @@ public class FailfastClusterInvoker extends AbstractClusterInvoker {
     @Override
     public RpcResult doInvoke(RpcInvocation invocation, List<Invoker> invokers, LoadBalancer loadBalance) throws RpcException{
         if (invokers == null || invokers.isEmpty())
-            throw new RpcException("there is no invoker to invoke.");
+            throw new RpcException("there is no invoker to be invoked.");
 
         Invoker invoker = select(invokers, null, loadBalance, invocation);
         try {
-            return invoker.invoke(invocation);
-        } catch (RpcException e) {
-            throw new RpcException("failed to invoke the invoker.");
+            RpcResult result = invoker.invoke(invocation);
+
+            if (result.getException() != null)
+                throw result.getException();
+
+            return result;
+        } catch (Throwable e) {
+            throw new RpcException("failed to invoke the invoker, caused by " + e.getMessage());
         }
     }
 

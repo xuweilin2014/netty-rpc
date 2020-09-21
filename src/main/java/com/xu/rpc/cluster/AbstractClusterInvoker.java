@@ -40,12 +40,10 @@ public abstract class AbstractClusterInvoker implements Invoker{
     public Invoker select(List<Invoker> invokers, List<Invoker> selected, LoadBalancer loadBalance, RpcInvocation invocation)
             throws RpcException{
         if (invokers == null || invokers.isEmpty()){
-            logger.error("no provider available to select.");
+            logger.error("no provider available to be selected.");
             return null;
         }
 
-        // 如果线程走到当前代码处，说明没有开启 sticky 配置，或者前面的 stickyInvoker 为空，或者不可用。
-        // 此时继续调用 doSelect ，进入真正的选择逻辑，选择 Invoker
         boolean sticky = invokers.get(0).getUrl().getParameter(RpcConfig.STICKY_KEY, false);
 
         // 检测 invokers 列表是否包含 stickyInvoker，如果不包含，说明 stickyInvoker 代表的服务提供者挂了，此时需要将其置空
@@ -54,11 +52,13 @@ public abstract class AbstractClusterInvoker implements Invoker{
             stickyInvoker = null;
         }
 
-        // stickyInvoker不为null，并且没在已选列表中，返回上次的服务提供者stickyInvoker，但之前强制校验可达性，如果没有开启强制校验，也不能返回 stickyInvoker。
-        // selected 如果包含的 stickyInvoker 的话，说明 stickyInvoker 在此之前没有成功提供服务（但其仍然处于存活状态）。此时我们认为这个服务不可靠，
-        // 不应该在重试期间内再次被调用，因此这个时候不会返回该 stickyInvoker。如果 selected 不包含 stickyInvoker，此时还需要进行可用性检测，比如检测服务提供者网络连通性等。
-        // 当可用性检测通过，才可返回 stickyInvoker。
         if (sticky && stickyInvoker != null){
+            // stickyInvoker 不为 null，并且没在已选列表 selected 中，返回上次的服务提供者 stickyInvoker；
+            // selected 如果包含的 stickyInvoker 的话，说明 stickyInvoker 在此之前没有成功提供服务（但其仍然处于存活状态）。
+            // 此时我们认为这个服务不可靠，
+            //
+            // 不应该在重试期间内再次被调用，因此这个时候不会返回该 stickyInvoker。如果 selected 不包含 stickyInvoker，此时还需要进行可用性检测，比如检测服务提供者网络连通性等。
+            // 当可用性检测通过，才可返回 stickyInvoker。
             if (stickyInvoker.isAvailable() && (selected == null || !selected.contains(stickyInvoker))){
                 return stickyInvoker;
             }
@@ -74,10 +74,9 @@ public abstract class AbstractClusterInvoker implements Invoker{
         return invoker;
     }
 
-    // 其它异常均被捕获，在使用负载均衡策略选择 invoker 的时候，可能会抛出异常
-    // 返回的结果可能为 null，分别在 1 和 4 处
+    // 其它异常均被捕获，在使用负载均衡策略选择 invoker 的时候，可能会抛出异常返回的结果可能为 null，分别在 1 和 4 处
     private Invoker select0(List<Invoker> invokers, List<Invoker> selected, LoadBalancer loadBalance, RpcInvocation invocation)
-                throws RpcException{
+                throws RpcException {
         // 1.当 invokers 为 null 或者空集的时候，直接返回 null。
         if (invokers == null || invokers.size() == 0){
             logger.error("no provider available to select.");
@@ -97,10 +96,10 @@ public abstract class AbstractClusterInvoker implements Invoker{
             try {
                 invoker = reselect(invokers, selected, loadBalance, invocation);
                 if (invoker == null){
-                    logger.warn("no suitable provider available.");
+                    throw new RpcException("no suitable invoker to invoke remote service.");
                 }
             } catch (Throwable t) {
-                logger.error("error occurs when trying to reselect invokers.");
+                throw new RpcException("error occurs when trying to reselect invokers, caused by " + t.getMessage());
             }
         }
 
@@ -124,8 +123,8 @@ public abstract class AbstractClusterInvoker implements Invoker{
             return loadBalance.select(invocation, reselectInvokers, getUrl());
         }
 
-        // 若线程走到此处，说明 reselectInvokers 集合为空，也就是说 selected 集合之外的 invoker 都不可用。
-        // 所以接着从 selected 列表中查找可用的 Invoker，并将其添加到 reselectInvokers 集合中
+        // 若线程走到此处，说明 reselectInvokers 集合为空，也就是说 selected 集合之外的 invoker 都不可用。所以接着从 selected 列表中查找可用的 Invoker，
+        // 并将其添加到 reselectInvokers 集合中
         if (selected != null) {
             for (Invoker invoker : selected) {
                 if (invoker.isAvailable())

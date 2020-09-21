@@ -250,9 +250,12 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
             // 缓存没有命中
             if (invoker == null){
                 String filter = getConsumerUrl().getParameter(RpcConfig.FILTER_KEY);
-                if (!StringUtils.isEmpty(filter)){
-                    providerUrl = providerUrl.removeParameter(RpcConfig.FILTER_KEY).addParameter(RpcConfig.FILTER_KEY, filter);
-                }
+                String sticky = getConsumerUrl().getParameter(RpcConfig.STICKY_KEY);
+
+                // providerUrl 为从注册中心上获取到的 url，也就是服务提供者的配置信息，所以要加上或者覆盖消费者自己的配置信息，比如 filter、sticky
+                providerUrl = providerUrl.removeParameter(RpcConfig.FILTER_KEY).addParameter(RpcConfig.FILTER_KEY, filter);
+                providerUrl = providerUrl.addParameter(RpcConfig.STICKY_KEY, sticky);
+
                 Protocol protocol = AdaptiveExtensionUtils.getProtocol(providerUrl);
                 invoker = protocol.refer(providerUrl, this.type);
             }

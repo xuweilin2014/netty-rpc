@@ -1,5 +1,6 @@
 package com.xu.rpc.cluster.support;
 
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import com.xu.rpc.cluster.AbstractClusterInvoker;
 import com.xu.rpc.cluster.Directory;
 import com.xu.rpc.cluster.LoadBalancer;
@@ -11,7 +12,7 @@ import com.xu.rpc.protocol.Invoker;
 import org.apache.log4j.Logger;
 import java.util.List;
 
-// 失败安全：调用失败之后，仅仅会打印出错误日志，然后返回一个 null
+// 失败安全：调用失败之后，仅仅会打印出错误日志，然后返回一个空结果，这个结果需要被忽略
 public class FailsafeClusterInvoker extends AbstractClusterInvoker {
 
     private static Logger logger = Logger.getLogger(FailsafeClusterInvoker.class);
@@ -26,10 +27,15 @@ public class FailsafeClusterInvoker extends AbstractClusterInvoker {
         try {
             Invoker invoker = select(invokers, null, loadBalance, invocation);
             result = invoker.invoke(invocation);
+
+            if (result.getException() != null)
+                throw result.getException();
+
+            return result;
         } catch (Throwable e) {
-            throw new RpcException("failed to invoke the invoker, caused by " + e.getMessage());
+            logger.error("failed to invoke the invoker, caused by " + e.getMessage());
+            return new RpcResult();
         }
-        return result;
     }
 
 }
