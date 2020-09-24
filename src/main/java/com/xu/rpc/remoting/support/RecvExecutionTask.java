@@ -4,6 +4,7 @@ import com.xu.rpc.core.RpcResult;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.model.MessageResponse;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ExchangeHandler;
 import com.xu.rpc.remoting.handler.ReplyHandler;
@@ -25,7 +26,7 @@ public class RecvExecutionTask implements Runnable {
 
     private MessageResponse response;
 
-    protected final Channel channel;
+    protected final RpcChannel channel;
 
     private MethodInvokeStatus invokeStatus = MethodInvokeStatus.INIT;
 
@@ -33,7 +34,7 @@ public class RecvExecutionTask implements Runnable {
 
     protected final ReplyHandler handler;
 
-    public RecvExecutionTask(MessageRequest request, ChannelHandler handler, Channel channel) {
+    public RecvExecutionTask(MessageRequest request, ChannelHandler handler, RpcChannel channel) {
         this.request = request;
         this.handler = (ReplyHandler) handler;
         this.channel = channel;
@@ -64,7 +65,7 @@ public class RecvExecutionTask implements Runnable {
 
             // 设置方法调用的结果，以供客户端进行对应判断与处理
             response.setInvokeStatus(invokeStatus);
-            channel.writeAndFlush(response);
+            channel.send(response);
         } catch (RemotingException e) {
             logger.error("error occurs when executing the method " + request.getMethodName() + " for service " + request.getInterfaceName());
         } finally {

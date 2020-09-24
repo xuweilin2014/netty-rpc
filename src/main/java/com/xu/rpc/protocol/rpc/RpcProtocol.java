@@ -15,6 +15,7 @@ import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.remoting.client.ExchangeClient;
 import com.xu.rpc.remoting.client.ReferenceCountClient;
 import com.xu.rpc.remoting.exchanger.Exchangers;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.handler.ReplyHandler;
 import com.xu.rpc.remoting.echo.ApiEchoServer;
 import com.xu.rpc.remoting.server.HeaderExchangeServer;
@@ -53,12 +54,13 @@ public class RpcProtocol extends AbstractProtocol {
     private static final int DEFAULT_SHUTDOWN_WAIT_TIME = 5000;
 
     private ReplyHandler replyHandler = new ReplyHandler() {
+
         @Override
-        public RpcResult reply(Object message, Channel channel) throws RemotingException {
+        public RpcResult reply(Object message, RpcChannel channel) throws RemotingException {
             if (message instanceof MessageRequest){
                 MessageRequest request = (MessageRequest) message;
 
-                InetSocketAddress socketAddress = (InetSocketAddress) channel.localAddress();
+                InetSocketAddress socketAddress = (InetSocketAddress) channel.getLocalAddress();
                 int port = socketAddress.getPort();
 
                 // service key 为 ServiceName:Port
@@ -86,8 +88,9 @@ public class RpcProtocol extends AbstractProtocol {
             }
 
             throw new RemotingException("unsupported message type :" + message.getClass().getName() + " , consumer address :"
-                    + channel.remoteAddress());
+                    + channel.getRemoteAddress());
         }
+
     };
 
     @Override

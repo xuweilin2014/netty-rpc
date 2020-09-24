@@ -119,9 +119,9 @@ public class RpcConfig {
 
     public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeat.timeout";
 
-    public static final AttributeKey<Long> LAST_READ_TIMESTAMP = AttributeKey.valueOf("lastReadTimestamp");
+    public static final String LAST_READ_TIMESTAMP = "lastReadTimestamp";
 
-    public static final AttributeKey<Long> LAST_WRITE_TIMESTAMP = AttributeKey.valueOf("lastWriteTimestamp");
+    public static final String LAST_WRITE_TIMESTAMP = "lastWriteTimestamp";
 
     public static final String STUB_KEY = "stub";
 

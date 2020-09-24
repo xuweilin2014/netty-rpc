@@ -2,6 +2,7 @@ package com.xu.rpc.remoting.server;
 
 import com.xu.rpc.remoting.exchanger.HeartbeatExchangeEndpoint;
 import com.xu.rpc.commons.URL;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.handler.ExchangeHandler;
 import io.netty.channel.Channel;
 import org.apache.log4j.Logger;
@@ -51,7 +52,7 @@ public class HeaderExchangeServer extends HeartbeatExchangeEndpoint implements S
     }
 
     @Override
-    public List<Channel> getChannels() {
+    public List<RpcChannel> getChannels() {
         return server.getChannels();
     }
 }

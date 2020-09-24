@@ -1,16 +1,17 @@
 package com.xu.rpc.remoting.handler;
 
 import com.xu.rpc.exception.RemotingException;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import io.netty.channel.Channel;
 
 public interface ChannelHandler {
 
-    public void sent(Channel channel, Object message) throws RemotingException;
+    public void sent(RpcChannel channel, Object message) throws RemotingException;
 
-    public void received(Channel channel, Object message) throws RemotingException;
+    public void received(RpcChannel channel, Object message) throws RemotingException;
 
-    public void connected(Channel channel) throws RemotingException;
+    public void connected(RpcChannel channel) throws RemotingException;
 
-    public void disconnected(Channel channel) throws RemotingException;
+    public void disconnected(RpcChannel channel) throws RemotingException;
 
 }

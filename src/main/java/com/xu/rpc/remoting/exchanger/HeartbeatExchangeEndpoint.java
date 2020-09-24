@@ -26,6 +26,8 @@ public abstract class HeartbeatExchangeEndpoint{
 
     private int heartbeat;
 
+    private EndPoint endPoint;
+
     private int heartbeatTimeout;
 
     private ScheduledFuture<?> heartbeatFuture;
@@ -38,13 +40,14 @@ public abstract class HeartbeatExchangeEndpoint{
         if (endPoint == null)
             throw new IllegalArgumentException("endpoint == null.");
 
+        this.endPoint = endPoint;
         url = endPoint.getUrl();
         heartbeat = endPoint.getUrl().getParameter(RpcConfig.HEARTBEAT_KEY, RpcConfig.DEFAULT_HEARTBEAT);
         // heartbeat 是强制开启的，如果其小于0，那么就直接设定为默认值
         if (heartbeat <= 0){
             heartbeat = RpcConfig.DEFAULT_HEARTBEAT;
         }
-        // heartbeat 的 timeout 时间默认是 heartbeat 的 3倍
+        // heartbeat 的 timeout 时间默认最低是 heartbeat 的 3倍
         heartbeatTimeout = endPoint.getUrl().getParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY, heartbeat * 3);
         if (heartbeatTimeout < heartbeat * 3){
             heartbeatTimeout = heartbeat * 3;
@@ -60,7 +63,7 @@ public abstract class HeartbeatExchangeEndpoint{
             @Override
             public void run() {
                 if (endPoint != null){
-                    List<Channel> channels = new ArrayList<>();
+                    List<RpcChannel> channels = new ArrayList<>();
                     boolean isServer = false;
                     if (endPoint instanceof Server){
                         channels.addAll(((Server) endPoint).getChannels());
@@ -70,22 +73,24 @@ public abstract class HeartbeatExchangeEndpoint{
                         channels.add(((Client) endPoint).getChannel());
                     }
 
-                    for (Channel channel : channels) {
-                        Attribute<Long> readAttr = channel.attr(RpcConfig.LAST_READ_TIMESTAMP);
-                        Attribute<Long> writeAttr = channel.attr(RpcConfig.LAST_WRITE_TIMESTAMP);
+                    for (RpcChannel channel : channels) {
+                        Long lastRead = (Long) channel.getAttribute(RpcConfig.LAST_READ_TIMESTAMP);
+                        Long lastWrite = (Long) channel.getAttribute(RpcConfig.LAST_WRITE_TIMESTAMP);
                         long now = System.currentTimeMillis();
-                        if (readAttr != null && writeAttr != null){
+                        if (lastRead != null && lastWrite != null){
                             try{
-                                Long lastRead = readAttr.get();
-                                Long lastWrite = writeAttr.get();
-                                if ((lastRead != null && (now - lastRead >= heartbeat))
-                                        || (lastWrite != null && (now - lastWrite >= heartbeat))){
+                                // 如果在 heartbeat 时间范围内，连接 channel 上没有发送或者接收数据，那么就会向对方发送一个心跳包
+                                if ((now - lastRead >= heartbeat)
+                                        || (now - lastWrite >= heartbeat)){
                                     MessageRequest request = new MessageRequest();
                                     request.setHeartbeat(true);
-                                    channel.writeAndFlush(request);
+                                    channel.send(request);
                                 }
 
-                                if (lastRead != null && (now - lastRead >= heartbeatTimeout)){
+                                // 如果超过 heartbeatTimeout 没有接收到对方发送过来的任何数据，那么就会采取对应措施
+                                // 客户端：尝试进行重新连接
+                                // 服务端：直接关闭掉连接
+                                if (now - lastRead >= heartbeatTimeout){
                                     if (isServer) {
                                         channel.close();
                                     }else {
@@ -122,7 +127,9 @@ public abstract class HeartbeatExchangeEndpoint{
     public void close(){
         if (closed.compareAndSet(false, true)) {
             stopHeartbeat();
-            logger.info("closing heartbeat.");
+            logger.info("closing heartbeat for " + endPoint.getUrl());
         }
     }
+
+
 }

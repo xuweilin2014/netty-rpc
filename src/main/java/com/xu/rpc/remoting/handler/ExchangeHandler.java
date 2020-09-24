@@ -5,6 +5,8 @@ import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.model.MessageRequest;
 import com.xu.rpc.model.MessageResponse;
 import com.xu.rpc.parallel.NamedThreadFactory;
+import com.xu.rpc.remoting.exchanger.NettyChannel;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.support.RecvExecutionTask;
 import io.netty.channel.Channel;
 import io.netty.util.internal.ConcurrentSet;
@@ -19,7 +21,7 @@ public class ExchangeHandler extends AbstractHandlerDelegate {
 
     private static final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("RpcExecutionThread", true));
 
-    private static Map<String, Channel> channels = new ConcurrentHashMap<>();
+    private static Map<String, RpcChannel> channels = new ConcurrentHashMap<>();
 
     public ExchangeHandler(ChannelHandler handler) {
         super(handler);
@@ -29,7 +31,8 @@ public class ExchangeHandler extends AbstractHandlerDelegate {
      * 此方法接收客户端发过来的Rpc调用请求，并且将方法的实际调用包装成一个Task，然后放到线程池中去执行。不会阻塞Netty的worker线程。
      * 根据是否开启JMX监控，返回的Task不同。
      */
-    public void received(Channel channel, Object message){
+    @Override
+    public void received(RpcChannel channel, Object message){
         setReadTimestamp(channel);
         if (message instanceof MessageRequest){
             MessageRequest request = (MessageRequest) message;
@@ -47,7 +50,7 @@ public class ExchangeHandler extends AbstractHandlerDelegate {
         }
     }
 
-    public static Map<String, Channel> getChannels() {
+    public static Map<String, RpcChannel> getChannels() {
         return channels;
     }
 
