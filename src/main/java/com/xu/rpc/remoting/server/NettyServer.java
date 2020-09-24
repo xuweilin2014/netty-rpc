@@ -17,10 +17,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -135,7 +132,8 @@ public class NettyServer implements Server{
     // 返回连接到这个服务器的所有客户端连接
     @Override
     public List<RpcChannel> getChannels() {
-        return Collections.unmodifiableList((List<RpcChannel>) channels.values());
+        List<RpcChannel> rpcChannels = new ArrayList<>(channels.values());
+        return Collections.unmodifiableList(rpcChannels);
     }
 
     @Override

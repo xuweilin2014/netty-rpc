@@ -95,7 +95,7 @@ public class RpcConfig {
 
     public static final int DEFAULT_TIMEOUT = 5000;
 
-    public static final int RECONNECT_INTERVAL = 2000;
+    public static final int RECONNECT_INTERVAL = 10000;
 
     public static final int RECONNECT_TIMEOUT = 15000;
 
@@ -117,7 +117,7 @@ public class RpcConfig {
 
     public static final int DEFAULT_HEARTBEAT = 60000;
 
-    public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeat.timeout";
+    public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeatTimeout";
 
     public static final String LAST_READ_TIMESTAMP = "lastReadTimestamp";
 
@@ -186,5 +186,7 @@ public class RpcConfig {
     public static final String METHOD_KEY = "methodName";
 
     public static final String FILTER_KEY = "filter";
+
+    public static final String ID_KEY = "id";
 }
 

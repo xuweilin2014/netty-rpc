@@ -11,6 +11,7 @@ import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import org.apache.log4j.Logger;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
@@ -84,6 +85,7 @@ public abstract class HeartbeatExchangeEndpoint{
                                         || (now - lastWrite >= heartbeat)){
                                     MessageRequest request = new MessageRequest();
                                     request.setHeartbeat(true);
+                                    logger.info("send heartbeat packet to " + (isServer ? " client" : " server") + " address: " + channel.getRemoteAddress());
                                     channel.send(request);
                                 }
 
@@ -92,13 +94,15 @@ public abstract class HeartbeatExchangeEndpoint{
                                 // 服务端：直接关闭掉连接
                                 if (now - lastRead >= heartbeatTimeout){
                                     if (isServer) {
+                                        logger.warn("heartbeat timeout, server " + endPoint.getUrl().getAddress() + " will close channel " + channel);
                                         channel.close();
                                     }else {
+                                        logger.warn("heart beat timeout, client " + endPoint.getUrl().getAddress() + " will reconnect to server " + channel.getRemoteAddress());
                                         ((Client) endPoint).reconnect();
                                     }
                                 }
                             }catch (Throwable t){
-                                logger.warn("error occurs when sending heartbeat request to the remote.");
+                                logger.warn("error occurs when sending heartbeat request to the remote");
                             }
                         }
                     }

@@ -127,13 +127,14 @@ public abstract class AbstractRegistry implements Registry {
         if (destroyed.get())
             return;
         if (listener == null)
-            throw new IllegalArgumentException("listener == null.");
+            throw new IllegalArgumentException("listener == null");
         if (url == null)
-            throw new IllegalArgumentException("url == null.");
-        if (urls == null || urls.size() == 0){
-            logger.info("provider update is ignored.");
+            throw new IllegalArgumentException("url == null");
+        if (urls == null){
+            logger.info("provider update is ignored since urls is null");
             return;
         }
+
         List<URL> result = new ArrayList<>();
         for (URL u : urls) {
             String providerServiceName = u.getServiceName();
@@ -143,8 +144,7 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
 
-        // 每当注册中心的提供者 url 发生了改变时，就会从注册中心获取到最新的提供者的全量数据，并将其保存到内存中的
-        // properties 对象里面
+        // 每当注册中心的提供者 url 发生了改变时，就会从注册中心获取到最新的提供者的全量数据，并将其保存到内存中的 properties 对象里面
         saveCacheUrls(url, result);
         listener.notify(result);
     }

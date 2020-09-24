@@ -131,17 +131,18 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
 
     @Override
     public void notify(List<URL> invokerUrls) throws RpcException {
-        if (invokerUrls == null) {
+        if (invokerUrls == null || invokerUrls.size() == 0) {
+            destroyAllInvokers();
             return;
         }
 
         Map<String, Invoker> oldUrlToInvokers = this.urlToInvokers;
 
-        if (invokerUrls.size() == 0 && cachedInvokerUrls.size() != 0){
+        if (cachedInvokerUrls.size() != 0){
             invokerUrls.addAll(cachedInvokerUrls);
         }else{
             // 更新缓存 Invoker 的 url
-            cachedInvokerUrls = new ConcurrentSet<>();
+            cachedInvokerUrls = new HashSet<>();
             cachedInvokerUrls.addAll(invokerUrls);
         }
 
@@ -249,12 +250,8 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
 
             // 缓存没有命中
             if (invoker == null){
-                String filter = getConsumerUrl().getParameter(RpcConfig.FILTER_KEY);
-                String sticky = getConsumerUrl().getParameter(RpcConfig.STICKY_KEY);
-
-                // providerUrl 为从注册中心上获取到的 url，也就是服务提供者的配置信息，所以要加上或者覆盖消费者自己的配置信息，比如 filter、sticky
-                providerUrl = providerUrl.removeParameter(RpcConfig.FILTER_KEY).addParameter(RpcConfig.FILTER_KEY, filter);
-                providerUrl = providerUrl.addParameter(RpcConfig.STICKY_KEY, sticky);
+                // consumerUrl 是客户端的配置，而 providerUrl 为服务端的配置，这两个配置可能有冲突，所以要进行一些合并或者覆盖操作
+                providerUrl = mergeUrl(providerUrl, getConsumerUrl());
 
                 Protocol protocol = AdaptiveExtensionUtils.getProtocol(providerUrl);
                 invoker = protocol.refer(providerUrl, this.type);
@@ -264,6 +261,24 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
         }
 
         return newInvokerToUrls;
+    }
+    
+    private URL mergeUrl(URL providerUrl, URL consumerUrl){
+        if (providerUrl == null || consumerUrl == null)
+            throw new IllegalArgumentException("invalid argument for provioderUrl or consumerUrl");
+
+        String filter = consumerUrl.getParameter(RpcConfig.FILTER_KEY);
+        String sticky = consumerUrl.getParameter(RpcConfig.STICKY_KEY);
+        int heartbeat = consumerUrl.getParameter(RpcConfig.HEARTBEAT_KEY, RpcConfig.DEFAULT_HEARTBEAT);
+        int heartbeatTimeout = consumerUrl.getParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY, 3 * heartbeat);
+
+        // providerUrl 为从注册中心上获取到的 url，也就是服务提供者的配置信息，所以要加上或者覆盖消费者自己的配置信息，比如 filter、sticky、heartbeat、heartbeatTimeout
+        providerUrl = providerUrl.removeParameter(RpcConfig.FILTER_KEY).addParameter(RpcConfig.FILTER_KEY, filter);
+        providerUrl = providerUrl.addParameter(RpcConfig.STICKY_KEY, sticky);
+        providerUrl = providerUrl.removeParameter(RpcConfig.HEARTBEAT_KEY).addParameter(RpcConfig.HEARTBEAT_KEY, String.valueOf(heartbeat));
+        providerUrl = providerUrl.removeParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY).addParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY, String.valueOf(heartbeatTimeout));
+        
+        return providerUrl;
     }
 
 

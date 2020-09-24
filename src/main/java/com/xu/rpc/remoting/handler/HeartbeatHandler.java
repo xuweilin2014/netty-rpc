@@ -18,22 +18,22 @@ public class HeartbeatHandler extends AbstractHandlerDelegate {
 
     @Override
     public void received(RpcChannel channel, Object message) throws RemotingException {
-        setWriteTimestamp(channel);
+        setReadTimestamp(channel);
         if (message instanceof MessageRequest && ((MessageRequest) message).isHeartbeat()){
             MessageResponse response = new MessageResponse();
             response.setHeartbeat(true);
             try {
+                logger.info("heartbeat request packet is received, heartbeat response will be sent to " + channel.getRemoteAddress());
                 channel.send(response);
-                logger.debug("received heartbeat request packet, heartbeat response will be sent.");
             } catch (Exception e) {
-                logger.debug("error occurs when sending heartbeat response.");
+                logger.warn("error occurs when sending heartbeat response.");
             }
 
             return;
         }
 
         if (message instanceof MessageResponse && ((MessageResponse) message).isHeartbeat()){
-            logger.debug("receive heartbeat response packet.");
+            logger.warn("heartbeat response packet is received from " + channel.getRemoteAddress());
             return;
         }
 
