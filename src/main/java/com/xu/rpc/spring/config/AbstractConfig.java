@@ -9,6 +9,7 @@ import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.registry.AbstractRegistryFactory;
 import com.xu.rpc.registry.Registry;
 import com.xu.rpc.spring.bean.NettyRpcApplication;
+import com.xu.rpc.spring.bean.NettyRpcParameter;
 import com.xu.rpc.spring.bean.NettyRpcProtocol;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.spring.bean.NettyRpcRegistry;
@@ -24,6 +25,7 @@ import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Getter
@@ -56,6 +58,11 @@ public abstract class AbstractConfig implements InitializingBean {
     protected List<NettyRpcRegistry> registries;
 
     protected List<NettyRpcProtocol> protocols;
+
+    // <nettyrpc:parameter/> 标签的值
+    // 键值对为：key$value -> NettyRpcParameter
+    // 比如：heartbeat$3000 -> NettyRpcParameter
+    protected final Map<String, NettyRpcParameter> parameters = new ConcurrentHashMap<>();
 
     protected NettyRpcApplication application;
 
@@ -234,6 +241,26 @@ public abstract class AbstractConfig implements InitializingBean {
             }
 
             setProtocols(protocols);
+        }
+
+        if ((getParameters() == null || getParameters().size() == 0) && applicationContext != null){
+            Map<String, NettyRpcParameter> map = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext,
+                    NettyRpcParameter.class, false, false);
+            if (!map.isEmpty()){
+                for (Map.Entry<String, NettyRpcParameter> entry : map.entrySet()) {
+                    NettyRpcParameter parameter = entry.getValue();
+                    if (StringUtils.isEmpty(parameter.getKey()) || StringUtils.isEmpty(parameter.getValue())){
+                        throw new IllegalStateException("key or value cannot be empty in tag <nettyrpc:parameter/>");
+                    }
+
+                    String key = parameter.getKey() + RpcConfig.HEX_SEPARATOR + parameter.getValue();
+                    if (parameters.containsKey(key)){
+                        throw new IllegalStateException("value of tag <nettyrpc:parameter/> is duplicated/>");
+                    }
+
+                    parameters.put(key, parameter);
+                }
+            }
         }
 
 

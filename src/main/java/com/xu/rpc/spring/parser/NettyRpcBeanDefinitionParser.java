@@ -2,6 +2,7 @@ package com.xu.rpc.spring.parser;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.extension.Attribute;
+import com.xu.rpc.spring.bean.NettyRpcParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -16,6 +17,8 @@ import java.util.*;
 public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
 
     private static final String PREFIX = "NettyRpc";
+
+    private static int GLOBAL_ID = 1;
 
     private Class<?> beanClass;
 
@@ -40,7 +43,7 @@ public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
                     String name = field.getName();
                     String value = element.getAttribute(name);
                     beanDefinition.getPropertyValues().addPropertyValue(name, value);
-                    if ("id".equals(name)){
+                    if (RpcConfig.ID_KEY.equals(name)){
                         id = value;
                     }
                 }
@@ -48,7 +51,7 @@ public class NettyRpcBeanDefinitionParser implements BeanDefinitionParser {
             beanDefClass = beanDefClass.getSuperclass();
         }
 
-        parserContext.getRegistry().registerBeanDefinition(StringUtils.isEmpty(id) ? tagName : id, beanDefinition);
+        parserContext.getRegistry().registerBeanDefinition(StringUtils.isEmpty(id) ? String.valueOf(GLOBAL_ID++) : id, beanDefinition);
 
         return beanDefinition;
     }

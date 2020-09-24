@@ -40,13 +40,10 @@
 	</xsd:element>
 	<xsd:element name="registry">
 		<xsd:complexType>
-			<xsd:complexContent>
-				<xsd:extension base="beans:identifiedType">
-					<xsd:attribute name="address" type="xsd:string" use="required"/>
-					<xsd:attribute name="name" type="xsd:string" use="required"/>
-					<xsd:attribute name="file" type="xsd:string" use="optional"/>
-				</xsd:extension>
-			</xsd:complexContent>
+			<xsd:attribute name="id" type="xsd:string" use="required"/>
+			<xsd:attribute name="address" type="xsd:string" use="required"/>
+			<xsd:attribute name="name" type="xsd:string" use="required"/>
+			<xsd:attribute name="file" type="xsd:string" use="optional"/>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name="reference">
@@ -60,8 +57,6 @@
 					<xsd:attribute name="loadbalance" type="xsd:string" use="optional"/>
 					<xsd:attribute name="async" type="xsd:string" use="optional"/>
 					<xsd:attribute name="cluster" type="xsd:string" use="optional"/>
-					<xsd:attribute name="heartbeat" type="xsd:string" use="optional"/>
-					<xsd:attribute name="heartbeatTimeout" type="xsd:string" use="optional"/>
 					<xsd:attribute name="stub" type="xsd:string" use="optional"/>
 					<xsd:attribute name="scope" type="xsd:string" use="optional"/>
 					<xsd:attribute name="filter" type="xsd:string" use="optional"/>
@@ -77,14 +72,17 @@
 	</xsd:element>
 	<xsd:element name="protocol">
 		<xsd:complexType>
-			<xsd:complexContent>
-				<xsd:extension base="beans:identifiedType">
-					<xsd:attribute name="name" type="xsd:string" use="required"/>
-					<xsd:attribute name="port" type="xsd:string" use="required"/>
-					<xsd:attribute name="serialize" type="xsd:string" use="required"/>
-					<xsd:attribute name="host" type="xsd:string" use="optional"/>
-				</xsd:extension>
-			</xsd:complexContent>
+			<xsd:attribute name="id" type="xsd:string" use="required"/>
+			<xsd:attribute name="name" type="xsd:string" use="required"/>
+			<xsd:attribute name="port" type="xsd:string" use="required"/>
+			<xsd:attribute name="serialize" type="xsd:string" use="required"/>
+			<xsd:attribute name="host" type="xsd:string" use="optional"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="parameter">
+		<xsd:complexType>
+			<xsd:attribute name="key" type="xsd:string" use="required"/>
+			<xsd:attribute name="value" type="xsd:string" use="required"/>
 		</xsd:complexType>
 	</xsd:element>
 </xsd:schema>

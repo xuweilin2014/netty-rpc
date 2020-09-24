@@ -12,6 +12,7 @@ import com.xu.rpc.core.extension.Attribute;
 import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
+import com.xu.rpc.spring.bean.NettyRpcParameter;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -38,12 +39,6 @@ public class ReferenceConfig<T> extends AbstractConfig {
     // 集群容错方式:failback, failover, failsafe, failfast
     @Attribute
     protected String cluster;
-    // 发送心跳包的时间间隔
-    @Attribute(defaultValue = "60000")
-    protected String heartbeat;
-    // 心跳超时时间
-    @Attribute
-    protected String heartbeatTimeout;
     // 桩
     @Attribute
     protected String stub;
@@ -95,6 +90,15 @@ public class ReferenceConfig<T> extends AbstractConfig {
         parameters.put(RpcConfig.METHODS_KEY, StringUtils.join(new ReflectionUtils().getClassMethodSignature(interfaceClass), RpcConfig.SEMICOLON));
         // 添加 application 的值，也就是应用名
         parameters.put(RpcConfig.APPLICATION_KEY, application.getName());
+
+        if (getParameters() != null && getParameters().size() > 0){
+            for (NettyRpcParameter parameter : getParameters().values()) {
+                if (!StringUtils.isEmpty(parameter.getKey()) && !StringUtils.isEmpty(parameter.getValue())){
+                    parameters.put(parameter.getKey(), parameter.getValue());
+                }
+            }
+        }
+
         // 将此 ReferenceConfig 中的不为空的成员属性添加到 map 中
         appendParameters(this, parameters);
 

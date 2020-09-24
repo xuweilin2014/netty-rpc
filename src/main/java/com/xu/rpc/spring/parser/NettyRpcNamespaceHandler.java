@@ -20,6 +20,7 @@ public class NettyRpcNamespaceHandler extends NamespaceHandlerSupport {
         registerBeanDefinitionParser("reference", new NettyRpcBeanDefinitionParser(NettyRpcReference.class));
         registerBeanDefinitionParser("protocol", new NettyRpcBeanDefinitionParser(NettyRpcProtocol.class));
         registerBeanDefinitionParser("application", new NettyRpcBeanDefinitionParser(NettyRpcApplication.class));
+        registerBeanDefinitionParser("parameter", new NettyRpcBeanDefinitionParser(NettyRpcParameter.class));
     }
 }
 

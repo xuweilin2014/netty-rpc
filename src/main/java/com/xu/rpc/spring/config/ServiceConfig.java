@@ -6,6 +6,7 @@ import com.xu.rpc.core.proxy.JDKProxyFactory;
 import com.xu.rpc.protocol.Exporter;
 import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
+import com.xu.rpc.spring.bean.NettyRpcParameter;
 import com.xu.rpc.spring.bean.NettyRpcProtocol;
 import com.xu.rpc.commons.*;
 import com.xu.rpc.commons.util.*;
@@ -138,6 +139,14 @@ public class ServiceConfig<T> extends AbstractConfig{
             if (!StringUtils.isEmpty(application.getMetrics())){
                 // 设置 application 中的 metrics 值，用于表明是否开启监控，不设置的话默认会开启
                 parameters.put(RpcConfig.METRICS_KEY, application.getMetrics());
+            }
+        }
+
+        if (getParameters() != null && getParameters().size() > 0){
+            for (NettyRpcParameter parameter : getParameters().values()) {
+                if (!StringUtils.isEmpty(parameter.getKey()) && !StringUtils.isEmpty(parameter.getValue())){
+                    parameters.put(parameter.getKey(), parameter.getValue());
+                }
             }
         }
 
