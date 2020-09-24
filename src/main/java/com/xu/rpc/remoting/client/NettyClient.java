@@ -4,6 +4,8 @@ import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.exception.RemotingException;
 import com.xu.rpc.parallel.NamedThreadFactory;
+import com.xu.rpc.remoting.exchanger.NettyChannel;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyClientHandler;
@@ -40,7 +42,7 @@ public class NettyClient implements Client {
 
     private Bootstrap bootstrap;
 
-    private volatile Channel channel;
+    private volatile RpcChannel channel;
 
     // 客户端NioEventLoopGroup中NioEventLoop的数量大小
     private static final int PARALLEL = RpcConfig.SYSTEM_PROPERTY_PARALLEL * 2;
@@ -99,7 +101,7 @@ public class NettyClient implements Client {
     }
 
     private void open(){
-        NettyClientHandler clientHandler = new NettyClientHandler(handler);
+        NettyClientHandler clientHandler = new NettyClientHandler(handler, url);
         bootstrap = new Bootstrap();
         bootstrap.group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -138,12 +140,12 @@ public class NettyClient implements Client {
 
         // 连接到服务器成功的话，如果存在旧的连接，必须先把旧的连接关闭掉
         if (res && channelFuture.isSuccess()){
-            Channel newChannel = channelFuture.channel();
+            RpcChannel newChannel = NettyChannel.getChannel(channelFuture.channel(), getUrl());
+
             try{
-                Channel oldChannel = this.channel;
+                RpcChannel oldChannel = this.channel;
                 if (oldChannel != null){
                     logger.info("closing old channel: " + oldChannel);
-                    logger.info("new channel: " + newChannel);
                     oldChannel.close();
                 }
             }finally {
@@ -204,29 +206,14 @@ public class NettyClient implements Client {
 
     @Override
     public void send(Object message) throws RemotingException {
+        if (channel == null)
+            logger.warn("cannot send message to remote when channel still is null");
+
         if (isClosed()){
-            logger.warn("client " + this.channel.localAddress() + " is closed, cannot send message to remote " + channel.remoteAddress());
+            logger.warn("client " + this.channel.getLocalAddress() + " is closed, cannot send message to remote " + channel.getRemoteAddress());
         }
 
-        boolean success = false;
-        try {
-            // 将消息发出
-            ChannelFuture future = channel.writeAndFlush(message);
-            int timeout = getUrl().getParameter(RpcConfig.TIMEOUT_KEY, RpcConfig.DEFAULT_TIMEOUT);
-            // 阻塞等待 timeout 时间，直到发送成功或者超时
-            success = future.await(timeout);
-
-            if (future.cause() != null)
-                throw future.cause();
-
-        } catch (Throwable e) {
-            throw new RemotingException("failed to send message from client " + channel.localAddress() + ", caused by " + e.getMessage());
-        }
-
-        // 运行到这里时，success 为 false，说明等待发送的时间超时
-        if (!success)
-            throw new RemotingException("failed to send message from client " + channel.localAddress() + " to remote " + channel.remoteAddress() +
-                        " within time " + timeout);
+        channel.send(message);
     }
 
     public boolean isClosed(){
@@ -269,7 +256,7 @@ public class NettyClient implements Client {
         try{
             if (channel != null) {
                 // 阻塞直到 channel 关闭完成，否则可能会调用后面的 connect 方法时，channel 还没有关闭
-                channel.close().sync();
+                channel.close();
                 logger.info("netty client is closed, close channel " + channel);
             }
             closeReconnectThread();
@@ -283,25 +270,25 @@ public class NettyClient implements Client {
     public synchronized boolean isConnected() {
         if (channel == null)
             return false;
-        return channel.isActive();
+        return channel.isConnected();
     }
 
     public SocketAddress getLocalAddress() {
         if (channel == null)
             return null;
 
-        return channel.localAddress();
+        return channel.getLocalAddress();
     }
 
     public SocketAddress getRemoteAddress() {
         if (channel == null)
             return null;
 
-        return channel.remoteAddress();
+        return channel.getRemoteAddress();
     }
 
     @Override
-    public Channel getChannel() {
+    public RpcChannel getChannel() {
         return channel;
     }
 

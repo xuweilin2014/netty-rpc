@@ -2,6 +2,8 @@ package com.xu.rpc.remoting.server;
 
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.parallel.NamedThreadFactory;
+import com.xu.rpc.remoting.exchanger.NettyChannel;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.ExchangeHandler;
@@ -62,9 +64,9 @@ public class NettyServer implements Server{
 
     protected URL url;
 
-    private Map<String, Channel> channels = new ConcurrentHashMap<>();
+    private Map<String, RpcChannel> channels = new ConcurrentHashMap<>();
 
-    private Channel channel;
+    private RpcChannel channel;
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
@@ -92,7 +94,7 @@ public class NettyServer implements Server{
 
     public void open() {
         try {
-            NettyServerHandler serverHandler = new NettyServerHandler(handler);
+            NettyServerHandler serverHandler = new NettyServerHandler(handler, url);
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
                     // 根据用户所选择的序列化协议不同，往NioSocketChannel对应的pipeline中添加不同的handler的类型也不同
@@ -105,9 +107,9 @@ public class NettyServer implements Server{
 
             channels = serverHandler.getChannels();
             future = bootstrap.bind(host, port).sync();
-            this.channel = future.channel();
+            this.channel = NettyChannel.getChannel(future.channel(), url);
             future.addListener(new ChannelFutureListener() {
-                /**
+                /*
                  * 在RPC服务器启动时，指定其监听一个ip地址127.0.0.1:18887，客户端发送调用请求到这个客户端。
                  * 不过当指定RPC服务器监听上面这个ip地址之后，还必须让RPC服务器监听另外一个ip地址127.0.0.1:18886。
                  * 这个端口是用来监听浏览器发送过来的http请求，然后把Rpc服务器可以提供的服务（也就是各个接口中的方法签名）
@@ -132,8 +134,8 @@ public class NettyServer implements Server{
 
     // 返回连接到这个服务器的所有客户端连接
     @Override
-    public List<Channel> getChannels() {
-        return Collections.unmodifiableList((List<Channel>) channels.values());
+    public List<RpcChannel> getChannels() {
+        return Collections.unmodifiableList((List<RpcChannel>) channels.values());
     }
 
     @Override
@@ -151,7 +153,7 @@ public class NettyServer implements Server{
             }
         }
 
-        for (Channel channel : channels.values()) {
+        for (RpcChannel channel : channels.values()) {
             try {
                 channel.close();
             } catch (Exception e) {

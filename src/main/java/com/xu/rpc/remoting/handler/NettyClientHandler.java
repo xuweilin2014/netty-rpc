@@ -1,5 +1,8 @@
 package com.xu.rpc.remoting.handler;
 
+import com.xu.rpc.commons.URL;
+import com.xu.rpc.remoting.exchanger.NettyChannel;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 
@@ -15,21 +18,25 @@ public class NettyClientHandler extends ChannelDuplexHandler{
 
     private static final Logger logger = Logger.getLogger(NettyClientHandler.class);
 
-    private ChannelHandler handler;
+    private final ChannelHandler handler;
 
-    public NettyClientHandler(ChannelHandler handler){
+    private final URL url;
+
+    public NettyClientHandler(ChannelHandler handler, URL url) {
         this.handler = handler;
+        this.url = url;
     }
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         super.write(ctx, msg, promise);
-        handler.sent(ctx.channel(), msg);
+        RpcChannel channel = NettyChannel.getChannel(ctx.channel(), url);
+        handler.sent(channel, msg);
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        handler.received(ctx.channel(), msg);
+        handler.received(NettyChannel.getChannel(ctx.channel(), url), msg);
     }
 
     @Override
@@ -40,11 +47,11 @@ public class NettyClientHandler extends ChannelDuplexHandler{
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        handler.connected(ctx.channel());
+        handler.connected(NettyChannel.getChannel(ctx.channel(), url));
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        handler.disconnected(ctx.channel());
+        handler.disconnected(NettyChannel.getChannel(ctx.channel(), url));
     }
 }

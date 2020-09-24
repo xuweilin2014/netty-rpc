@@ -1,6 +1,9 @@
 package com.xu.rpc.remoting.handler;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.commons.util.RpcUtils;
+import com.xu.rpc.remoting.exchanger.NettyChannel;
+import com.xu.rpc.remoting.exchanger.RpcChannel;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,35 +21,37 @@ public class NettyServerHandler extends ChannelDuplexHandler{
 
     private final ChannelHandler handler;
 
-    private final Map<String, Channel> channels = new ConcurrentHashMap<>();
+    private final URL url;
 
-    public NettyServerHandler(ChannelHandler handler){
+    private final Map<String, RpcChannel> channels = new ConcurrentHashMap<>();
+
+    public NettyServerHandler(ChannelHandler handler, URL url){
         this.handler = handler;
+        this.url = url;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Channel channel = ctx.channel();
-        handler.received(channel, msg);
+        handler.received(NettyChannel.getChannel(ctx.channel(), url), msg);
     }
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         super.write(ctx, msg, promise);
-        handler.sent(ctx.channel(), msg);
+        handler.sent(NettyChannel.getChannel(ctx.channel(), url), msg);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        channels.put(RpcUtils.toAddressString((InetSocketAddress) channel.remoteAddress()), channel);
+        RpcChannel channel = NettyChannel.getChannel(ctx.channel(), url);
+        channels.put(RpcUtils.toAddressString((InetSocketAddress) channel.getRemoteAddress()), channel);
         handler.connected(channel);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        channels.remove(RpcUtils.toAddressString((InetSocketAddress) channel.remoteAddress()));
+        RpcChannel channel = NettyChannel.getChannel(ctx.channel(), url);
+        channels.remove(RpcUtils.toAddressString((InetSocketAddress) channel.getRemoteAddress()));
         handler.disconnected(channel);
     }
 
@@ -56,7 +61,7 @@ public class NettyServerHandler extends ChannelDuplexHandler{
         ctx.close();
     }
 
-    public Map<String, Channel> getChannels() {
+    public Map<String, RpcChannel> getChannels() {
         return channels;
     }
 }
