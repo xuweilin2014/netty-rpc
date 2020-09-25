@@ -219,15 +219,14 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
         if (invokerUrls == null || invokerUrls.size() == 0)
             return newInvokerToUrls;
 
-        // TODO: 2020/9/19
         // 用户在 <nettyrpc:reference/> 的 protocol 属性中进行配置，只调用指定协议的服务提供方，其它协议忽略
         String protocols = parameters.get(RpcConfig.PROTOCOL_KEY);
+
         for (URL providerUrl : invokerUrls) {
 
             if (protocols != null && protocols.length() != 0){
+                String[] acceptProtocols = protocols.split(RpcConfig.COMMA_SEPARATOR);
                 boolean accept = false;
-                String[] acceptProtocols = protocols.split(",");
-
                 // 遍历检查提供者 invoker 的 url 是否在用户指定的协议之中
                 for (String protocol : acceptProtocols) {
                     if (StringUtils.equals(protocol, providerUrl.getProtocol())){

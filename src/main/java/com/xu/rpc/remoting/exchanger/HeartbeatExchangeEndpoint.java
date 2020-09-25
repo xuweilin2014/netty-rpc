@@ -85,7 +85,7 @@ public abstract class HeartbeatExchangeEndpoint{
                                         || (now - lastWrite >= heartbeat)){
                                     MessageRequest request = new MessageRequest();
                                     request.setHeartbeat(true);
-                                    logger.info("send heartbeat packet to " + (isServer ? " client" : " server") + " address: " + channel.getRemoteAddress());
+                                    logger.debug("send heartbeat packet to " + (isServer ? " client" : " server") + " address: " + channel.getRemoteAddress());
                                     channel.send(request);
                                 }
 

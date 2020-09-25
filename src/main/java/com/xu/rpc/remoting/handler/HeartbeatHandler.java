@@ -23,7 +23,7 @@ public class HeartbeatHandler extends AbstractHandlerDelegate {
             MessageResponse response = new MessageResponse();
             response.setHeartbeat(true);
             try {
-                logger.info("heartbeat request packet is received, heartbeat response will be sent to " + channel.getRemoteAddress());
+                logger.debug("heartbeat request packet is received, heartbeat response will be sent to " + channel.getRemoteAddress());
                 channel.send(response);
             } catch (Exception e) {
                 logger.warn("error occurs when sending heartbeat response.");
@@ -33,7 +33,7 @@ public class HeartbeatHandler extends AbstractHandlerDelegate {
         }
 
         if (message instanceof MessageResponse && ((MessageResponse) message).isHeartbeat()){
-            logger.warn("heartbeat response packet is received from " + channel.getRemoteAddress());
+            logger.debug("heartbeat response packet is received from " + channel.getRemoteAddress());
             return;
         }
 
