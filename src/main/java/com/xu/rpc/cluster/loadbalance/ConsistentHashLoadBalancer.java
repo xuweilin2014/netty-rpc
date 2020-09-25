@@ -1,6 +1,7 @@
 package com.xu.rpc.cluster.loadbalance;
 
 import com.xu.rpc.commons.URL;
+import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
 import com.xu.rpc.exception.RpcException;
 import com.xu.rpc.protocol.Invoker;
@@ -19,8 +20,8 @@ public class ConsistentHashLoadBalancer extends AbstractLoadBalancer{
 
     @Override
     public Invoker doSelect(RpcInvocation invocation, List<Invoker> invokers, URL url) throws RpcException {
-        // key的值一般为 服务全类名.方法名，比如：com.dubbo.simple.common.DemoService.sayHello
-        String key = invokers.get(0).getUrl().getServiceName() + "." + invocation.getMethodName();
+        // key的值一般为 服务全类名#方法名，比如：com.dubbo.simple.common.DemoService.sayHello
+        String key = invokers.get(0).getUrl().getServiceName() + RpcConfig.HEX_SEPARATOR + invocation.getMethodName();
 
         // 当满足两个条件之一时，会创建或者说重新创建 selector
         // 1.与 key 相对应的 selector 还没有被创建过，selector == null
@@ -54,6 +55,7 @@ public class ConsistentHashLoadBalancer extends AbstractLoadBalancer{
             for (Invoker invoker : invokers) {
                 for (int i = 0; i < REPLICA_NUMBER; i++) {
                     String address = invoker.getUrl().getAddress();
+                    // 在生成虚拟节点的时候，使用的 hash 字符串为：ip:port + 节点序号
                     long key = FNVHash(address + i);
                     virtualNodes.put(key, invoker);
                 }
