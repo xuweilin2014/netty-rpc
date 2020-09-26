@@ -168,8 +168,7 @@ public abstract class AbstractConfig implements InitializingBean {
                         try {
                             String o = (String) field.get(object);
                             // field 的值不为空或者 false/default 的话
-                            if (o != null && o.length() > 0 && !RpcConfig.FALSE.equals(o)
-                                    && !RpcConfig.RPC_DEFAULT.equals(o)){
+                            if (o != null && o.length() > 0){
                                 parameters.put(field.getName(), o);
                             }
                         } catch (IllegalAccessException e) {

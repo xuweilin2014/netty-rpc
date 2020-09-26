@@ -92,11 +92,13 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
 
         // http 请求的 uri 中是否包括 metrics 字符串，即是否表明要获取 netty-rpc 模块调用情况
         boolean metrics = uri.contains(RpcConfig.METRICS_KEY);
+        // http 请求的 uri 中是否包括 ability 字符串，即是否表明要获取 netty-rpc 服务能力
+        boolean ability = uri.contains(RpcConfig.ABILITY_KEY);
         // metrics 是否开启
         String isMetricsOpen = url.getParameter(RpcConfig.METRICS_KEY, RpcConfig.TRUE);
 
         // 1.如果监控开启的话，并且 metrics 为 true 的话，就会构造调用信息，并且传递给 content。
-        // 2.如果监控没有开启的话，并且 metrics 为 true 的话，就会直接返回 "NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
+        // 2.如果监控没有开启的话，无论 metrics 为什么值，就会直接返回 "NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
         // 3.如果 metrics 为 false 的话，表明用户只是想知道 netty-rpc 服务器端可以提供的能力，即可以调用的接口信息
         if (RpcConfig.TRUE.equals(isMetricsOpen) && metrics) {
             try {
@@ -105,13 +107,13 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
             } catch (UnsupportedEncodingException e) {
                 logger.error(e.getMessage());
             }
-        } else if (RpcConfig.FALSE.equals(isMetricsOpen) && metrics) {
-            logger.error(METRICS_ERR_MSG);
-            content = METRICS_ERR_MSG.getBytes();
-        } else {
+        } else if (ability) {
             AbilityDetailProvider provider = new AbilityDetailProvider();
             // 返回的 content 表明 netty-rpc 服务器端可以被调用的接口信息
             content = provider.listAbilityDetail(host, port).toString().getBytes();
+        } else {
+            logger.error(METRICS_ERR_MSG);
+            content = METRICS_ERR_MSG.getBytes();
         }
 
         return content;
