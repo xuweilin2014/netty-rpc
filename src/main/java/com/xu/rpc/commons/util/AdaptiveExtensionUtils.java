@@ -69,9 +69,9 @@ public class AdaptiveExtensionUtils {
         String cache = url.getParameter(RpcConfig.CACHE_KEY);
         ExtensionLoader<CacheFactory> loader = ExtensionLoader.getExtensionLoader(CacheFactory.class);
         if (cache == null || cache.length() == 0)
-            return loader.getExtension(cache);
-        else
             return loader.getDefaultExtension();
+        else
+            return loader.getExtension(cache);
     }
 
     public static RateLimiterFactory getLimiterFactory(URL url){

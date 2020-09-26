@@ -1,12 +1,14 @@
 package com.xu.rpc.commons.cache.lru;
 
 import com.xu.rpc.commons.cache.Cache;
+import com.xu.rpc.core.RpcConfig;
+import com.xu.rpc.remoting.server.HeaderExchangeServer;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// LRU 缓存，每次访问或者增加节点时，都会被移动到第一个
+// 默认的 LRU 缓存实现，采用了双向链表 + hashmap 的结构，每次访问或者增加节点时，这个节点都会被移动到第一个节点的位置
 public class DefaultLruCache<K,V> implements LruCache<K,V> {
 
     private int capacity;
@@ -47,7 +49,7 @@ public class DefaultLruCache<K,V> implements LruCache<K,V> {
     public void put(K key, V value) {
         size++;
         // 如果容量超过了的话，直接移除掉最后一个结点
-        if (size >= capacity){
+        if (size > capacity){
             removeLast();
         }
 
@@ -97,15 +99,42 @@ public class DefaultLruCache<K,V> implements LruCache<K,V> {
         dummy.next = tail;
         tail.prev = dummy;
         this.size = 0;
+        map.clear();
+    }
+
+    // 移除掉缓存中的最后一个结点，也就是移除最少使用的缓存值
+    @Override
+    public void removeLast() {
+        if (!isEmpty()){
+            Node<K,V> node = tail.prev;
+
+            map.remove(tail.prev.key);
+            tail.prev = tail.prev.prev;
+            tail.prev.next = tail;
+
+            // wait for gc
+            node.prev = null;
+            node.next = null;
+
+            size--;
+        }
+    }
+
+    private boolean isEmpty(){
+        return tail.prev == dummy;
     }
 
     @Override
-    public void removeLast() {
-        map.remove(tail.prev.key);
-        if (tail.prev.prev != null) {
-            tail.prev = tail.prev.prev;
-            tail.prev.next = tail;
+    public String toString() {
+        StringBuilder cache = new StringBuilder("head");
+        Node node = dummy.next;
+        while (node != tail){
+            cache.append(" -> ");
+            cache.append(node.key);
+            node = node.next;
         }
+        cache.append(" -> ").append("tail");
+        return cache.toString();
     }
 
     private static class Node<K, V>{
