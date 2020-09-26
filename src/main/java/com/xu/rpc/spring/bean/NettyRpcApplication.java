@@ -13,4 +13,10 @@ public class NettyRpcApplication {
     // 应用的名称
     @Attribute
     private String name;
+    // jmx 的启动端口
+    @Attribute
+    private String metricsPort;
+    // 服务能力展示的端口
+    @Attribute
+    private String echoPort;
 }

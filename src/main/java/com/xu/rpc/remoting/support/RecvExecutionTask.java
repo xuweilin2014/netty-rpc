@@ -67,7 +67,7 @@ public class RecvExecutionTask implements Runnable {
             response.setInvokeStatus(invokeStatus);
             channel.send(response);
         } catch (RemotingException e) {
-            logger.error("error occurs when executing the method " + request.getMethodName() + " for service " + request.getInterfaceName());
+            logger.error("error occurs when executing the method " + request.getMethodName() + " for service " + request.getInterfaceName() + " caused by " + e.getMessage());
         } finally {
             // 当执行完成之后（不一定是成功），则移除掉和请求对应的 channel
             ExchangeHandler.getChannels().remove(request.getMessageId());

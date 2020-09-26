@@ -30,24 +30,18 @@ public class ReferenceConfig<T> extends AbstractConfig {
     // 重试次数
     @Attribute
     protected String retries;
-    // 负载均衡控制
+    // 负载均衡的策略，包括：hash、roundrobin、random 三种
     @Attribute
     protected String loadbalance;
     // 是否开启异步，默认值为 false
     @Attribute
     protected String async;
-    // 集群容错方式:failback, failover, failsafe, failfast
+    // 集群容错方式：failback, failover, failsafe, failfast
     @Attribute
     protected String cluster;
     // 桩
     @Attribute
     protected String stub;
-    // 范围
-    @Attribute
-    protected String scope;
-    // 过滤器
-    @Attribute
-    protected String filter;
     // 是否开启粘滞连接
     @Attribute
     protected String sticky;
@@ -83,7 +77,6 @@ public class ReferenceConfig<T> extends AbstractConfig {
         Map<String, String> parameters = new HashMap<>();
         // 添加 interface 的值
         parameters.put(RpcConfig.INTERFACE_KEY, interfaceName);
-
         // 添加 ip 的值，也就是本机的 ip 地址
         parameters.put(RpcConfig.IP_ADDRESS, getHostAddress());
         // 添加 methods 的值，也就是 interfaceClass 这个类中所有的方法名（不包括父类），并且方法名之间使用逗号分隔
@@ -91,6 +84,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
         // 添加 application 的值，也就是应用名
         parameters.put(RpcConfig.APPLICATION_KEY, application.getName());
 
+        // 将服务端中所有 <nettyrpc:parameter/> 标签中的 key、value 值保存到 parameters 中
         if (getParameters() != null && getParameters().size() > 0){
             for (NettyRpcParameter parameter : getParameters().values()) {
                 if (!StringUtils.isEmpty(parameter.getKey()) && !StringUtils.isEmpty(parameter.getValue())){
@@ -115,7 +109,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
     @SuppressWarnings("unchecked")
     public T createProxy(Map<String, String> map){
         // 暂时起作用的协议，只是用来判断是否进行本地引用
-        URL tmpUrl = new URL("temp", RpcConfig.LOCALHOST, 0, map.get(RpcConfig.INTERFACE_KEY),map);
+        URL tmpUrl = new URL("temp", RpcConfig.LOCALHOST, 0, map.get(RpcConfig.INTERFACE_KEY), map);
         // 判断是否进行本地引用 do local reference
         boolean isJvmRefer = isJvm(tmpUrl);
 
@@ -128,10 +122,12 @@ public class ReferenceConfig<T> extends AbstractConfig {
 
         // 进行远程引用
         }else{
+            // url 属性不为空，说明使用 url 直连
             if (!StringUtils.isEmpty(url)){
                 String[] us = url.split(RpcConfig.SEMICOLON);
                 if (us.length > 0){
                     for (String u : us) {
+                        // 检查配置的直连 url 的格式是否合法
                         if (!URL.isUrlInvalid(u)){
                             throw new IllegalStateException("url format is invalid, url " + u);
                         }
@@ -140,6 +136,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
                         urls.add(url);
                     }
                 }
+            // 使用注册中心
             } else {
                 List<URL> us = getRegistries();
                 if (us != null && us.size() > 0) {
@@ -150,7 +147,7 @@ public class ReferenceConfig<T> extends AbstractConfig {
             }
 
             if (urls == null || urls.size() == 0){
-                throw new IllegalStateException("no registry to subscribe.");
+                throw new IllegalStateException("no registry to subscribe");
             }
 
             // 只有单个注册中心或者单个服务直连 url

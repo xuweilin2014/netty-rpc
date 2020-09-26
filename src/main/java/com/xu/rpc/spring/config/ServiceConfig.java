@@ -33,23 +33,11 @@ public class ServiceConfig<T> extends AbstractConfig{
     // 服务对象实现引用
     @Attribute
     protected String ref;
-    // 过滤器
-    @Attribute
-    protected String filter;
-    /*
-     * 服务导出的范围：remote/local/空值
-     * remote:只导出到远程
-     * local:只导出到本地
-     * 空值：既导出到远程，又导出到本地
-     */
-    @Attribute
-    protected String scope;
-    // 服务是否开启监控
+    // 服务是否开启监控，值为 true/false，默认值为 true，即表示这个服务会开启监控
     @Attribute
     protected String monitor;
-
-    protected volatile boolean exported;
-    // 服务验证，可接受的值为：true/false/密码, true表示开启服务验证，反之不开启，默认使用UUID生成密码，用户也可以直接配置指定
+    // 服务验证，可接受的值为：true/false/自定义密码, true表示开启服务验证，反之不开启，
+    // 默认使用UUID生成密码，用户也可以直接配置指定值作为密码
     @Attribute
     protected String token;
     // 限流器的种类：bucket、token、guava
@@ -58,13 +46,15 @@ public class ServiceConfig<T> extends AbstractConfig{
     // 限流速率，也就是每一秒可以通过的流量
     @Attribute
     private String rate;
-
-    private String path;
-    // 此服务提供者的权重
+    // 此服务提供者的权重，用于负载均衡的计算
     @Attribute
     private String weight;
 
     protected T bean;
+
+    protected volatile boolean exported;
+
+    private String path;
 
     private Class<?> interfaceClass;
     // 在 unexport 的过程中，对 exporters 中的每一个 exporter 都进行 unexport 操作
@@ -81,13 +71,13 @@ public class ServiceConfig<T> extends AbstractConfig{
 
         try {
             // 框架的类加载器加载不了 interfaceName 对应的接口，因此使用用户线程中的 ContextClassLoader（违反了双亲委派模型）
-            // 不过实际上使用到的是 AppClassLoader，也就是系统类加载器
+            // 这种方式实际上使用到的是 AppClassLoader，也就是系统类加载器
             interfaceClass = Thread.currentThread().getContextClassLoader().loadClass(interfaceName);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
 
-        if (path == null || path.length() == 0)
+        if (StringUtils.isEmpty(path))
             path = interfaceName;
 
         doExportUrls();
@@ -95,14 +85,13 @@ public class ServiceConfig<T> extends AbstractConfig{
 
     // 将服务按照每一个协议注册到所有的注册中心上去
     private void doExportUrls() {
-        // 获取注册中心的地址
+        // 获取注册中心的 url 地址
         List<URL> registries = getRegistries();
+        // 获取到所有的协议
         List<NettyRpcProtocol> protocols = getProtocols();
 
         for (NettyRpcProtocol protocol : protocols) {
-            if (protocol == null)
-                throw new IllegalStateException("protocol with id " + id + " is not configured.");
-
+            // 检查协议中的各项属性
             checkProtocol(protocol);
             // 将这个服务使用某个协议注册到所有的或者用户配置的注册中心上去
             doExportUrlsFor1Protocol(protocol, registries);
@@ -113,6 +102,7 @@ public class ServiceConfig<T> extends AbstractConfig{
         String name = protocol.getName();
         Map<String, String> parameters = new HashMap<>();
 
+        // 获取到接口 interfaceClass 类中所有的方法签名集合，并且使用分号 ； 进行分隔
         List<String> methodNames = new ReflectionUtils().getClassMethodSignature(interfaceClass);
         if (methodNames.size() == 0){
             logger.warn(interfaceName + " does not have any method.");
@@ -129,19 +119,13 @@ public class ServiceConfig<T> extends AbstractConfig{
             // token 的值为 true 的话，使用随机 token 令牌，即使用 UUID 生成
             if (RpcConfig.TRUE.equals(token)){
                 parameters.put(RpcConfig.TOKEN_KEY, UUID.randomUUID().toString());
-            // token 不为 true 的话，即本身相当于密码
+            // token 不为 true 的话，即 token 值本身相当于密码
             }else{
                 parameters.put(RpcConfig.TOKEN_KEY, token);
             }
         }
 
-        if (application != null){
-            if (!StringUtils.isEmpty(application.getMetrics())){
-                // 设置 application 中的 metrics 值，用于表明是否开启监控，不设置的话默认会开启
-                parameters.put(RpcConfig.METRICS_KEY, application.getMetrics());
-            }
-        }
-
+        // 将服务端中所有 <nettyrpc:parameter/> 标签中的 key、value 值保存到 parameters 中
         if (getParameters() != null && getParameters().size() > 0){
             for (NettyRpcParameter parameter : getParameters().values()) {
                 if (!StringUtils.isEmpty(parameter.getKey()) && !StringUtils.isEmpty(parameter.getValue())){
@@ -150,13 +134,16 @@ public class ServiceConfig<T> extends AbstractConfig{
             }
         }
 
-        // 如果用户没有配置 monitor，就默认设置 monitor 为 true
+        // 如果用户没有配置 monitor，就默认设置 monitor 为 true，也就是默认开启监控
         if (StringUtils.isEmpty(monitor)) {
             monitor = RpcConfig.TRUE;
         }
         parameters.put(RpcConfig.MONITOR_KEY, monitor);
 
+        // 将 ServiceConfig 中的属性（也就是 <nettyrpc:service/> 中配置的属性）添加到 parameters 中
         appendParameters(this, parameters);
+        // 将 NettyRpcApplication 中的属性（也就是 <nettyrpc:application/> 中配置的属性）添加到 parameters 中
+        appendParameters(application, parameters);
 
         String host = getHostAddress(protocol.getHost());
         int port = Integer.parseInt(protocol.getPort());
@@ -190,7 +177,7 @@ public class ServiceConfig<T> extends AbstractConfig{
             Protocol regProtocol = AdaptiveExtensionUtils.getProtocol(registryUrl);
             try {
                 // 先导出 AbstractProxyInvoker 子类的对象，用于具体的执行客户端要调用的方法
-                // 将 url 和 registryURL 编码在一起，以便后面获取到 providerURL 和 registryURL
+                // 将 url 和 registryUrl 编码在一起，以便后面获取到 providerUrl 和 registryUrl
                 Invoker<T> invoker = JDKProxyFactory.getInvoker(bean,
                         registryUrl.addParameterAndEncoded(RpcConfig.EXPORT_KEY, url.toFullString()), interfaceClass);
 
@@ -219,7 +206,7 @@ public class ServiceConfig<T> extends AbstractConfig{
         exporters.add(exporter);
     }
     
-    public synchronized void unexport(){
+    protected synchronized void unexport(){
         if (!exported){
             return;
         }

@@ -12,7 +12,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import java.util.Date;
 
 
-public class NettyRpcService extends ServiceConfig implements ApplicationListener<ContextRefreshedEvent>, DisposableBean, ApplicationContextAware, InitializingBean {
+public class NettyRpcService extends ServiceConfig implements ApplicationListener<ContextRefreshedEvent>, DisposableBean,
+        ApplicationContextAware, InitializingBean {
 
     private static final Logger logger = Logger.getLogger(NettyRpcService.class);
 

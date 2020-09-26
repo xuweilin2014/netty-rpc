@@ -28,11 +28,14 @@ public class ApiEchoServer{
 
     private String host;
 
+    private int port;
+
     private URL url;
 
     public ApiEchoServer(URL url) {
         this.url = url;
         this.host = url.getHost();
+        this.port = url.getParameter(RpcConfig.ECHO_PORT_KEY, RpcConfig.ECHO_PORT);
     }
     
     public void start() {
@@ -54,15 +57,15 @@ public class ApiEchoServer{
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline p = ch.pipeline();
                             p.addLast(new HttpServerCodec());
-                            p.addLast(new ApiEchoHandler(url, host, RpcConfig.ECHO_PORT));
+                            p.addLast(new ApiEchoHandler(url, host, port));
                         }
                     });
 
-            this.channel = b.bind(host, RpcConfig.ECHO_PORT).sync().channel();
+            this.channel = b.bind(host, port).sync().channel();
 
-            logger.info("echo server starts successfully! netty-rpc server api interface:" + "http" + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/ability");
+            logger.info("echo server starts successfully! netty-rpc server api interface:" + "http" + "://" + host + ":" + port + "/netty-rpc/ability");
             if (url.getParameter(RpcConfig.METRICS_KEY, true)){
-                logger.info("echo server starts successfully! netty-rpc server metrics:" + "http" + "://" + host + ":" + RpcConfig.ECHO_PORT + "/netty-rpc/metrics");
+                logger.info("echo server starts successfully! netty-rpc server metrics:" + "http" + "://" + host + ":" + port + "/netty-rpc/metrics");
             }
 
         } catch (Throwable e) {

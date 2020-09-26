@@ -75,7 +75,7 @@ public class RpcConfig {
 
     public static final int METRICS_PORT = 9999;
 
-    public static final String METRICS_PORT_KEY = "metrics.port";
+    public static final String METRICS_PORT_KEY = "metricsPort";
 
     public static final String MONITOR_KEY = "monitor";
 
@@ -190,5 +190,7 @@ public class RpcConfig {
     public static final String ID_KEY = "id";
 
     public static final String SEGMENTS_KEY = "segments";
+
+    public static final String ECHO_PORT_KEY = "echoPort";
 }
 
