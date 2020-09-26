@@ -29,6 +29,8 @@ public class ZkClientWrapper {
 
     private List<KeeperStateListener> listeners = new CopyOnWriteArrayList<>();
 
+    private String address;
+
     public ZkClientWrapper(String address, int connectionTimeout) {
         /*
          * address：是 Zookeeper 的地址
@@ -42,6 +44,7 @@ public class ZkClientWrapper {
          *                       "retry forever until a connection has been reestablished".
          */
         try{
+            this.address = address;
             zkClient =  new ZkClient(address, RpcConfig.ZOOKEEPER_SESSION_TIMEOUT, connectionTimeout,
                     new SerializableSerializer(), RpcConfig.OPERATION_RETRY_TIMEOUT);
         }catch (Throwable t){
@@ -121,5 +124,9 @@ public class ZkClientWrapper {
 
     public boolean isConnected() {
         return state == KeeperState.SyncConnected;
+    }
+
+    public String getAddress() {
+        return address;
     }
 }
