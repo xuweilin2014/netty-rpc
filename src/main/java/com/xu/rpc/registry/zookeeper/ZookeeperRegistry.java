@@ -54,13 +54,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
             String path = toRegistryPath(url);
             if (!zookeeperClient.exists(path)) {
                 create(path, true);
-                logger.info("register successfully to zookeeper " + url.getAddress() + ", url " + url);
+                logger.info("register successfully to zookeeper " + zookeeperClient.getAddress() + ", url " + url);
             }else {
                 logger.info("path already exists in zookeeper, path " + path);
             }
         }catch (Throwable t){
             throw new RpcException("failed to register " + url.toFullString() + " to zookeeper "
-                    + url.getAddress() +" , please check.", t);
+                    + zookeeperClient.getAddress() +" , please check", t);
         }
     }
 
@@ -70,7 +70,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             return;
         try{
             zookeeperClient.delete(toRegistryPath(url));
-            logger.info("unregister successfully to zookeeper " + url.getAddress() + ", url " + url);
+            logger.info("unregister successfully to zookeeper " + zookeeperClient.getAddress() + " for url " + url);
         }catch (Throwable t){
             throw new RpcException("failed to delete " + url.toFullString() + " , please check.", t);
         }
@@ -100,10 +100,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
         String directoryPath = toRegistryDir(url);
         try{
             List<String> childs = zookeeperClient.subscribeChildChanges(directoryPath, zkChildListener);
-            logger.info("subscribe successfully to zookeeper " + url.getAddress() + ", directory " + directoryPath + ", url " + url);
+            logger.info("subscribe successfully to zookeeper " + zookeeperClient.getAddress() + ", directory " + directoryPath + ", url " + url);
             notify(url, listener, toURLs(childs));
         }catch (Throwable t){
-            throw new RpcException("failed to subscribe to the zookeeper " + url + ", caused by " + t.getMessage());
+            throw new RpcException("failed to subscribe to the zookeeper " + zookeeperClient.getAddress() + " for path " + directoryPath
+                    + ", caused by " + t.getMessage());
         }
     }
 
@@ -117,7 +118,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
             throw new IllegalStateException("listener haven't been registered on the zookeeper, cannot unsubscribe it.");
         }
         zookeeperClient.unsubscribeChildChanges(toRegistryDir(url), zkChildListener);
-        logger.info("unsubscribe successfully to zookeeper " + url.getAddress() + ", url " + url);
+        logger.info("unsubscribe successfully to zookeeper " + zookeeperClient.getAddress() + " for path " + toRegistryDir(url)
+                + ", url " + url);
     }
 
     // rpc/com.xxx.ServiceName/url 中前面两个都是永久节点，而后面的 url 则是临时节点
@@ -147,8 +149,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     private List<URL> toURLs(List<String> childs){
         List<URL> urls = new ArrayList<>();
-        for (String child : childs) {
-            urls.add(URL.valueOf(URL.decode(child)));
+        if (childs != null && childs.size() > 0){
+            for (String child : childs) {
+                urls.add(URL.valueOf(URL.decode(child)));
+            }
         }
         return urls;
     }
@@ -159,7 +163,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             try {
                 zookeeperClient.close();
             } catch (Exception e) {
-                logger.error("failed to close zookeeper client, caused by " + e.getMessage());
+                logger.error("failed to close zookeeper " + zookeeperClient.getAddress() + ", caused by " + e.getMessage());
             }
         }
     }
