@@ -13,12 +13,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -91,65 +90,76 @@ public class ApiEchoHandler extends ChannelInboundHandlerAdapter {
 
         String uri = req.uri();
 
-        // http请求的uri中是否包括metrics，即是否表明要获取NettyRPC模块调用情况
+        // http 请求的 uri 中是否包括 metrics 字符串，即是否表明要获取 netty-rpc 模块调用情况
         boolean metrics = uri.contains(RpcConfig.METRICS_KEY);
-        boolean ability = uri.contains(RpcConfig.ABILITY_KEY);
+        // metrics 是否开启
         String isMetricsOpen = url.getParameter(RpcConfig.METRICS_KEY, RpcConfig.TRUE);
 
-        // 1.如果系统支持 jmx，并且 metrics 为true的话（也就是用户请求获取NettyRPC模块调用情况），就会构造调用信息，并且传递给content。
-        // 2.如果系统不支持 jmx，并且metrics为true的话，就会直接返回"NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
-        // 3.如果 metrics 为 false 的话，表明用户只是想知道NettyRPC服务器端可以提供的能力，即可以调用的接口信息
+        // 1.如果监控开启的话，并且 metrics 为 true 的话，就会构造调用信息，并且传递给 content。
+        // 2.如果监控没有开启的话，并且 metrics 为 true 的话，就会直接返回 "NettyRPC nettyrpc.jmx.invoke.metrics attribute is closed!"
+        // 3.如果 metrics 为 false 的话，表明用户只是想知道 netty-rpc 服务器端可以提供的能力，即可以调用的接口信息
         if (RpcConfig.TRUE.equals(isMetricsOpen) && metrics) {
             try {
-                // 返回构造的content，用来在网页上显示RPC服务器中每个方法的调用具体信息，比如：调用次数、调用成功次数、调用失败次数等等
+                // 返回构造的 content，用来在网页上显示 netty-rpc 服务器中每个方法的调用具体信息，比如：调用次数、调用成功次数、调用失败次数等等
                 content = MetricsHtmlBuilder.getInstance().buildMetrics().getBytes("GBK");
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                logger.error(e.getMessage());
             }
         } else if (RpcConfig.FALSE.equals(isMetricsOpen) && metrics) {
             logger.error(METRICS_ERR_MSG);
             content = METRICS_ERR_MSG.getBytes();
         } else {
             AbilityDetailProvider provider = new AbilityDetailProvider();
-            // 返回的content表明NettyRPC服务器端可以被调用的接口信息
+            // 返回的 content 表明 netty-rpc 服务器端可以被调用的接口信息
             content = provider.listAbilityDetail(host, port).toString().getBytes();
         }
 
         return content;
     }
 
+    // 对服务进行屏蔽和恢复操作
     @SuppressWarnings({"ConstantConditions", "unchecked"})
     private void doMock(String uri){
         if (!uri.contains(RpcConfig.OVERRIDE_KEY))
             return;
 
         String[] kvs = URL.decode(uri).substring(uri.indexOf("?") + 1).split("&");
-        String interfaceName = null;
-        String methodName = null;
-        String mock = null;
+        Map<String, String> values = new HashMap<>();
         for (String kv : kvs) {
             if (kv.contains("=")){
-                String key = kv.split("=")[0];
-                String value = kv.split("=")[1];
-                if (RpcConfig.INTERFACE_KEY.equalsIgnoreCase(key))
-                    interfaceName = value;
-                if (RpcConfig.MOCK_KEY.equalsIgnoreCase(key))
-                    mock = value;
-                if (RpcConfig.METHOD_KEY.equalsIgnoreCase(key))
-                    methodName = value;
+                values.put(kv.split("=")[0], kv.split("=")[1]);
             }
         }
 
+        // set 其实就是 MockChainFilter 中的一个黑名单集合 blacklist，通过这个名单，
+        // 来控制哪些服务可以被访问，哪些不可以
         Set<String> set = (Set<String>) DateStore.get(RpcConfig.MOCK_SET_KEY);
         if (set == null){
             DateStore.put(RpcConfig.MOCK_SET_KEY, new CopyOnWriteArraySet<>());
             set = (Set<String>) DateStore.get(RpcConfig.MOCK_SET_KEY);
         }
 
+        if (!values.containsKey(RpcConfig.MOCK_KEY)){
+            throw new IllegalStateException("invalid uri for without mock key, uri " + uri);
+        }
+
+        String mock = values.remove(RpcConfig.MOCK_KEY);
+        String key = genKey(values);
+        // mock 为 true，表明要屏蔽服务
         if (RpcConfig.TRUE.equalsIgnoreCase(mock))
-            set.add(interfaceName + RpcConfig.HEX_SEPARATOR + methodName);
+            set.add(key);
+        // mock 为 false，表明要恢复服务
         else if (RpcConfig.FALSE.equalsIgnoreCase(mock))
-            set.remove(interfaceName + RpcConfig.HEX_SEPARATOR + methodName);
+            set.remove(key);
+    }
+
+    private String genKey(Map<String, String> kvs){
+        Map<String, String> map = new HashMap<>();
+        // map 中只包含 methodName 这个键值对
+        map.put(RpcConfig.METHOD_KEY, kvs.get(RpcConfig.METHOD_KEY));
+        URL u = new URL(kvs.get(RpcConfig.PROTOCOL_KEY), kvs.get(RpcConfig.IP_ADDRESS), Integer.parseInt(kvs.get(RpcConfig.PORT)),
+                kvs.get(RpcConfig.INTERFACE_KEY), map);
+        return u.toString();
     }
 
 }

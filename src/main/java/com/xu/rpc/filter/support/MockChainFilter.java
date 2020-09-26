@@ -2,6 +2,7 @@ package com.xu.rpc.filter.support;
 
 import com.xu.rpc.cluster.support.wrapper.MockClusterWrapper;
 import com.xu.rpc.commons.DateStore;
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.RpcInvocation;
@@ -14,6 +15,7 @@ import com.xu.rpc.protocol.Invoker;
 import org.apache.log4j.Logger;
 
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -35,10 +37,15 @@ public class MockChainFilter implements ChainFilter {
             blacklist = (Set<String>) DateStore.get(RpcConfig.MOCK_SET_KEY);
         }
 
-        String interfaceName = invocation.getServiceType().getName();
-        String methodName = new ReflectionUtils().getMethodSignature(invocation.getMethod());
-        if (blacklist.contains(interfaceName + RpcConfig.HEX_SEPARATOR + methodName)){
-            logger.warn("service " + interfaceName + RpcConfig.HEX_SEPARATOR + methodName + " cannot be invoked, since mock configuration is set.");
+        URL url = invoker.getUrl();
+        Map<String, String> map = new HashMap<>();
+        ReflectionUtils utils = new ReflectionUtils();
+        map.put(RpcConfig.METHOD_KEY, utils.getMethodSignature(invocation.getMethod()));
+        URL keyUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), url.getPath(), map);
+
+        // 黑名单集合中是否包括这个 keyUrl，也就是要调用的服务，如果包括，则输出一条警告日志，返回一个空结果
+        if (blacklist.contains(keyUrl.toFullString())){
+            logger.warn("service " + keyUrl.toFullString() + " cannot be invoked, since mock configuration is set");
             return new RpcResult();
         }
 

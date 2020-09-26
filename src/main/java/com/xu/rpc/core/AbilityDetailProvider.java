@@ -121,34 +121,39 @@ public class AbilityDetailProvider implements AbilityDetail {
                             String interfaceName = exporter.getInvoker().getInterface().getName();
                             for (Method method : exporter.getInvoker().getInterface().getDeclaredMethods()) {
                                 String methodName = utils.getMethodSignature(method);
-                                // 显示使用哪种类型的协议导出服务
+                                // 显示导出服务的协议
                                 utils.getProvider().append(TR_BEGIN);
                                 utils.getProvider().append(TD_BEGIN);
                                 utils.getProvider().append(url.getProtocol()).append("://").append(url.getAddress());
                                 utils.getProvider().append(TD_END);
 
-                                // 显示服务接口中的所有方法
+                                // 显示服务接口
                                 utils.getProvider().append(TD_BEGIN);
                                 utils.getProvider().append(interfaceName);
                                 utils.getProvider().append(TD_END);
 
+                                // 显示服务接口中的方法
                                 utils.getProvider().append(TD_BEGIN);
                                 utils.getProvider().append(methodName);
                                 utils.getProvider().append(TD_END);
 
+                                // 显示服务的状态：屏蔽/恢复
                                 utils.getProvider().append(TD_BEGIN);
                                 utils.getProvider().append(String.format(STATUS_LABEL, counter));
                                 utils.getProvider().append(TD_END);
 
                                 StringBuilder recoverButton = new StringBuilder();
                                 StringBuilder forbidButton = new StringBuilder();
+                                // 生成两个按钮，屏蔽按钮和恢复按钮
                                 if (!RpcConfig.INJVM_PROTOCOL.equalsIgnoreCase(protocol.getName())){
-                                    String u = "http://" + host + RpcConfig.ADDRESS_DELIMITER + port + "/" + RpcConfig.OVERRIDE_KEY + "?" + RpcConfig.INTERFACE_KEY + "=" +
-                                            interfaceName + "&" + RpcConfig.METHOD_KEY + "=" + methodName + "&" + RpcConfig.MOCK_KEY + "=" + RpcConfig.TRUE;
+                                    String duplicateU = "http://" + host + RpcConfig.ADDRESS_DELIMITER + port + "/" + RpcConfig.OVERRIDE_KEY + "?" + RpcConfig.INTERFACE_KEY + "=" +
+                                            interfaceName + "&" + RpcConfig.METHOD_KEY + "=" + methodName + "&" + RpcConfig.PROTOCOL_KEY + "=" + url.getProtocol() + "&"
+                                            + RpcConfig.IP_ADDRESS + "=" + url.getHost() + "&" + RpcConfig.PORT + "=" + url.getPort();
+
+                                    String u = duplicateU + "&" + RpcConfig.MOCK_KEY + "=" + RpcConfig.TRUE;
                                     forbidButton.append(String.format(FORBID_BUTTON, counter, interfaceName, methodName, u));
 
-                                    u = "http://" + host + RpcConfig.ADDRESS_DELIMITER + port + "/" + RpcConfig.OVERRIDE_KEY + "?" + RpcConfig.INTERFACE_KEY + "=" +
-                                            interfaceName + "&" + RpcConfig.METHOD_KEY + "=" + methodName + "&" + RpcConfig.MOCK_KEY + "=" + RpcConfig.FALSE;
+                                    u = duplicateU + "&" + RpcConfig.MOCK_KEY + "=" + RpcConfig.FALSE;
                                     recoverButton.append(String.format(RECOVER_BUTTON, counter++, interfaceName, methodName, u));
                                 }
 
