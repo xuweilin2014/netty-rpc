@@ -133,7 +133,7 @@ public class RpcConfig {
 
     public static final String CACHE_KEY = "cache";
 
-    public static final String CACHE_CAPACITY_KEY = "cache.capacity";
+    public static final String CACHE_CAPACITY_KEY = "capacity";
 
     public static final String COMMA_SEPARATOR = ",";
 
@@ -188,5 +188,7 @@ public class RpcConfig {
     public static final String FILTER_KEY = "filter";
 
     public static final String ID_KEY = "id";
+
+    public static final String SEGMENTS_KEY = "segments";
 }
 

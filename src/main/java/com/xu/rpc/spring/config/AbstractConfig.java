@@ -44,9 +44,6 @@ public abstract class AbstractConfig implements InitializingBean {
     // 缓存种类：lru、cache
     @Attribute
     protected String cache;
-    // 缓存的大小容量
-    @Attribute
-    protected String capacity;
     // 在提供者端：服务使用哪种/哪些协议进行导出,指定协议
     // 在消费者端：消费者只会调用指定协议的服务，其它协议忽略
     @Attribute

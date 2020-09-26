@@ -28,7 +28,6 @@
 					<xsd:attribute name="filter" type="xsd:string" use="optional"/>
 					<xsd:attribute name="token" type="xsd:string" use="optional"/>
 					<xsd:attribute name="cache" type="xsd:string" use="optional"/>
-					<xsd:attribute name="capacity" type="xsd:string" use="optional"/>
 					<xsd:attribute name="timeout" type="xsd:string" use="optional"/>
 					<xsd:attribute name="monitor" type="xsd:string" use="optional"/>
 					<xsd:attribute name="weight" type="xsd:string" use="optional"/>
@@ -63,7 +62,6 @@
 					<xsd:attribute name="protocol" type="xsd:string" use="optional"/>
 					<xsd:attribute name="cache" type="xsd:string" use="optional"/>
 					<xsd:attribute name="sticky" type="xsd:string" use="optional"/>
-					<xsd:attribute name="capacity" type="xsd:string" use="optional"/>
 					<xsd:attribute name="url" type="xsd:string" use="optional"/>
 					<xsd:attribute name="mock" type="xsd:string" use="optional"/>
 				</xsd:extension>

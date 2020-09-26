@@ -58,18 +58,18 @@ public class CacheChainFilter implements ChainFilter {
         return invoker.invoke(invocation);
     }
 
-    // 生成缓存的键，格式为：接口名,方法名,各参数值(使用逗号进行分隔)
+    // 生成缓存的键，格式为：接口名#方法名#各参数值(使用 # 号进行分隔)
     // 参数如果是原始类型或者原始类型的数组，就直接添加到键中，如果是其它类型，将其转换为 json 格式的字符串，然后添加到键中
     private String genCacheKey(RpcInvocation invocation){
         StringBuilder prefix = new StringBuilder();
         // 添加接口名和方法名
-        prefix.append(invocation.getServiceType().getName()).append(RpcConfig.COMMA_SEPARATOR)
+        prefix.append(invocation.getServiceType().getName()).append(RpcConfig.HEX_SEPARATOR)
                 .append(invocation.getMethodName());
         StringBuilder args = new StringBuilder();
         // 添加各参数的值
         for (Object arg : invocation.getParameters()) {
             if (args.length() > 0){
-                args.append(RpcConfig.CACHE_CAPACITY_KEY);
+                args.append(RpcConfig.HEX_SEPARATOR);
             }
             if (arg == null || isPrimitive(arg.getClass())){
                 args.append(arg);
@@ -83,7 +83,7 @@ public class CacheChainFilter implements ChainFilter {
             }
         }
 
-        return prefix.append(RpcConfig.CACHE_CAPACITY_KEY).append(args).toString();
+        return prefix.append(RpcConfig.HEX_SEPARATOR).append(args).toString();
     }
 
     private boolean isPrimitive(Class<?> cls) {

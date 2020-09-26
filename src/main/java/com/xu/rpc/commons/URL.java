@@ -245,6 +245,17 @@ public final class URL {
         return new URL(protocol, host, port, path, map);
     }
 
+    public URL replaceParameter(String key, String newValue){
+        if (StringUtils.isEmpty(key))
+            return this;
+
+        Map<String, String> map = new HashMap<>(parameters);
+        map.remove(key);
+        map.put(key, newValue);
+
+        return new URL(protocol, host, port, path, map);
+    }
+
     public static String toQueryString(Map<String, String> map){
         StringBuilder buf = new StringBuilder();
         appendParameters(buf, map);

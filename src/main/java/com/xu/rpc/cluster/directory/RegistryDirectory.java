@@ -1,5 +1,6 @@
 package com.xu.rpc.cluster.directory;
 
+import com.xu.rpc.commons.URL;
 import com.xu.rpc.commons.util.AdaptiveExtensionUtils;
 import com.xu.rpc.commons.util.ReflectionUtils;
 import com.xu.rpc.core.RpcConfig;
@@ -10,13 +11,12 @@ import com.xu.rpc.protocol.Invoker;
 import com.xu.rpc.protocol.Protocol;
 import com.xu.rpc.registry.NotifyListener;
 import com.xu.rpc.registry.Registry;
-import com.xu.rpc.commons.URL;
-import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class RegistryDirectory extends AbstractDirectory implements NotifyListener {
 
@@ -30,7 +30,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
 
     private volatile Map<String, List<Invoker>> methodToInvokers = new ConcurrentHashMap<>();
 
-    private volatile Set<URL> cachedInvokerUrls = new ConcurrentSet<>();
+    private volatile Set<URL> cachedInvokerUrls = new CopyOnWriteArraySet<>();
 
     private volatile Map<String, Invoker> urlToInvokers = new ConcurrentHashMap<>();
 
@@ -270,12 +270,19 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
         String sticky = consumerUrl.getParameter(RpcConfig.STICKY_KEY);
         int heartbeat = consumerUrl.getParameter(RpcConfig.HEARTBEAT_KEY, RpcConfig.DEFAULT_HEARTBEAT);
         int heartbeatTimeout = consumerUrl.getParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY, 3 * heartbeat);
+        String cache = consumerUrl.getParameter(RpcConfig.CACHE_KEY);
+        String capacity = consumerUrl.getParameter(RpcConfig.CACHE_CAPACITY_KEY);
+        String segments = consumerUrl.getParameter(RpcConfig.SEGMENTS_KEY);
 
-        // providerUrl 为从注册中心上获取到的 url，也就是服务提供者的配置信息，所以要加上或者覆盖消费者自己的配置信息，比如 filter、sticky、heartbeat、heartbeatTimeout
-        providerUrl = providerUrl.removeParameter(RpcConfig.FILTER_KEY).addParameter(RpcConfig.FILTER_KEY, filter);
-        providerUrl = providerUrl.addParameter(RpcConfig.STICKY_KEY, sticky);
-        providerUrl = providerUrl.removeParameter(RpcConfig.HEARTBEAT_KEY).addParameter(RpcConfig.HEARTBEAT_KEY, String.valueOf(heartbeat));
-        providerUrl = providerUrl.removeParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY).addParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY, String.valueOf(heartbeatTimeout));
+        // providerUrl 为从注册中心上获取到的 url，也就是服务提供者的配置信息，所以要加上或者覆盖消费者自己的配置信息，
+        // 比如 filter、sticky、heartbeat、heartbeatTimeout以及cache、capacity
+        providerUrl = providerUrl.replaceParameter(RpcConfig.FILTER_KEY, filter);
+        providerUrl = providerUrl.replaceParameter(RpcConfig.STICKY_KEY, sticky);
+        providerUrl = providerUrl.replaceParameter(RpcConfig.HEARTBEAT_KEY, String.valueOf(heartbeat));
+        providerUrl = providerUrl.replaceParameter(RpcConfig.HEARTBEAT_TIMEOUT_KEY, String.valueOf(heartbeatTimeout));
+        providerUrl = providerUrl.replaceParameter(RpcConfig.CACHE_KEY, cache);
+        providerUrl = providerUrl.replaceParameter(RpcConfig.CACHE_CAPACITY_KEY, capacity);
+        providerUrl = providerUrl.replaceParameter(RpcConfig.SEGMENTS_KEY, segments);
         
         return providerUrl;
     }
