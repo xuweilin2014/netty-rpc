@@ -1,8 +1,7 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.services.CostTimeCalculate;
-import com.xu.rpc.services.pojo.CostTime;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import rpc.services.CostTimeCalculate;
+import rpc.services.pojo.CostTime;
 
 
 public class AsyncRpcCallErrorTest {

@@ -1,8 +1,8 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.exception.InvokeModuleException;
-import com.xu.rpc.services.PersonManage;
-import com.xu.rpc.services.pojo.Person;
+import rpc.commons.exception.InvokeModuleException;
+import rpc.services.PersonManage;
+import rpc.services.pojo.Person;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 

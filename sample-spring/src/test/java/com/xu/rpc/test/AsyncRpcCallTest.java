@@ -1,8 +1,15 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.services.CostTimeCalculate;
-import com.xu.rpc.services.pojo.CostTime;
+import rpc.core.RpcConfig;
+import rpc.core.RpcContext;
+import rpc.services.CostTimeCalculate;
+import rpc.services.PersonManage;
+import rpc.services.pojo.CostTime;
+import rpc.services.pojo.Person;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * 介绍一下异步调用的大概逻辑：
@@ -34,51 +41,22 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  * 结果对象，然后再利用此结果对象来调用具体的方法。
  */
 public class AsyncRpcCallTest {
-    public static void main(String[] args) {
-/*        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
+        //final CostTimeCalculate calculate = (CostTimeCalculate) context.getBean("costTime");
+        PersonManage manage = (PersonManage) context.getBean("personManage");
 
-        final CostTimeCalculate calculate = (CostTimeCalculate) context.getBean("costTime");
+        Person p = new Person();
+        p.setId(20150811);
+        p.setName("XiaoHaoBaby");
+        p.setAge(1);
 
-        long start = 0, end = 0;
-        start = System.currentTimeMillis();
+        int save = manage.save(p);
+        System.out.println("person manage save: " + save);
+        Future<?> future = RpcContext.getContext().getFuture();
+        // System.out.println("future get result: " + future.get());
 
-        AsyncInvoker invoker = new AsyncInvoker();
-
-        CostTime elapse0 = invoker.submit(new AsyncCallback<CostTime>() {
-            @Override
-            public CostTime call() {
-                return calculate.calculate();
-            }
-        });
-
-        CostTime elapse1 = invoker.submit(new AsyncCallback<CostTime>() {
-            @Override
-            public CostTime call() {
-                return calculate.calculate();
-            }
-        });
-
-        CostTime elapse2 = invoker.submit(new AsyncCallback<CostTime>() {
-            @Override
-            public CostTime call() {
-                return calculate.calculate();
-            }
-        });
-
-        elapse0.setDetail("傅友德");;
-        elapse0.getElapse();
-        AsyncCallObject asyncObj = (AsyncCallObject) elapse0;
-        asyncObj._getStatus();
-        System.out.println("1 async nettyrpc call:[" + "result:" + elapse0 + ", status:[" + ((AsyncCallObject) elapse0)._getStatus() + "]");
-        System.out.println("2 async nettyrpc call:[" + "result:" + elapse1 + ", status:[" + ((AsyncCallObject) elapse1)._getStatus() + "]");
-        System.out.println("3 async nettyrpc call:[" + "result:" + elapse2 + ", status:[" + ((AsyncCallObject) elapse2)._getStatus() + "]");
-        System.out.println(elapse0.getDetail());
-
-        end = System.currentTimeMillis();
-
-        System.out.println("nettyrpc async calculate time:" + (end - start));
-
-        context.destroy();*/
+        manage.query(p);
     }
 }
 

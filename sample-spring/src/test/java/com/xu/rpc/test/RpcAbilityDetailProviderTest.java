@@ -1,7 +1,6 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.core.AbilityDetail;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import rpc.core.AbilityDetail;
 
 public class RpcAbilityDetailProviderTest {
     public static void main(String[] args) {

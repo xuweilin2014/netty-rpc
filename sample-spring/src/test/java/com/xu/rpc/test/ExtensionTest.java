@@ -1,7 +1,7 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.core.extension.ExtensionLoader;
-import com.xu.rpc.filter.ChainFilter;
+import rpc.core.extension.ExtensionLoader;
+import rpc.filter.ChainFilter;
 import java.io.IOException;
 
 

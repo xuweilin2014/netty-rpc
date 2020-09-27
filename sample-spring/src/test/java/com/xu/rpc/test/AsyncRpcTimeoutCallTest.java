@@ -1,11 +1,10 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
 
-import com.xu.rpc.core.RpcConfig;
-import com.xu.rpc.core.RpcContext;
-import com.xu.rpc.exception.InvokeTimeoutException;
-import com.xu.rpc.services.CostTimeCalculate;
-import com.xu.rpc.services.pojo.CostTime;
+import rpc.core.RpcContext;
+import rpc.commons.exception.InvokeTimeoutException;
+import rpc.services.CostTimeCalculate;
+import rpc.services.pojo.CostTime;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.concurrent.ExecutionException;

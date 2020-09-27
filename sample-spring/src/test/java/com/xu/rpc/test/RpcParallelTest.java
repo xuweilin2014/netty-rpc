@@ -1,12 +1,12 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.xu.rpc.services.AddCalculate;
-import com.xu.rpc.services.MultiCalculate;
+import rpc.services.AddCalculate;
+import rpc.services.MultiCalculate;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -68,7 +68,7 @@ public class RpcParallelTest {
 
     public static void main(String[] args) throws Exception {
         //并行度1000
-        int parallel = 80;
+        int parallel = 3000;
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
         for (int i = 0; i < 1; i++) {

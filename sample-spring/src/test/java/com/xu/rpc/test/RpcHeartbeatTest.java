@@ -1,14 +1,16 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.services.PersonManage;
-import com.xu.rpc.services.pojo.Person;
+import rpc.core.RpcContext;
+import rpc.services.PersonManage;
+import rpc.services.pojo.Person;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
-public class RpcLoadBalanceTest {
+public class RpcHeartbeatTest {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:rpc-invoke-config-client.xml");
 
         PersonManage manage = (PersonManage) context.getBean("personManage");
@@ -18,11 +20,9 @@ public class RpcLoadBalanceTest {
         p.setName("XiaoHaoBaby");
         p.setAge(1);
 
-        int counter = 1;
-        while (counter <= 10){
-            Thread.sleep(new Random().nextInt(2000));
-            manage.save(p);
-            counter++;
+        while (true){
+            Thread.sleep(new Random().nextInt(5000));
+            // manage.save(p);
         }
     }
 

@@ -1,9 +1,8 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.exception.InvokeTimeoutException;
-import com.xu.rpc.services.AddCalculate;
+import rpc.commons.exception.InvokeTimeoutException;
+import rpc.services.AddCalculate;
 
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,13 +24,9 @@ public class AddCalcParallelRequestThread implements Runnable {
     public void run() {
         try {
             signal.await();
-            Thread.sleep(new Random().nextInt(1000));
+            //Thread.sleep(new Random().nextInt(500));
             int add = calc.add(taskNumber, taskNumber);
-            if (add != taskNumber * 2){
-                System.err.println("compute error: " + taskNumber + " * 2 != " + add);
-            }else{
-                System.out.println("calc add result of " + taskNumber + " * 2 :[" + add + "]");
-            }
+            System.out.println("calc add result of [" + add + "]");
         } catch (InterruptedException ex) {
             Logger.getLogger(AddCalcParallelRequestThread.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InvokeTimeoutException ex) {

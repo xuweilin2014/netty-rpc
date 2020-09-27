@@ -1,11 +1,10 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.exception.InvokeTimeoutException;
-import com.xu.rpc.services.MultiCalculate;
+import rpc.commons.exception.InvokeTimeoutException;
+import rpc.services.MultiCalculate;
 
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

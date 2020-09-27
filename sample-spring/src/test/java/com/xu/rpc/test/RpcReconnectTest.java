@@ -1,8 +1,8 @@
-package com.xu.test;
+package com.xu.rpc.test;
 
-import com.xu.rpc.core.RpcContext;
-import com.xu.rpc.services.PersonManage;
-import com.xu.rpc.services.pojo.Person;
+import rpc.core.RpcContext;
+import rpc.services.PersonManage;
+import rpc.services.pojo.Person;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.concurrent.ExecutionException;
