@@ -1,0 +1,3 @@
+random=RandomLoadBalancer
+hash=ConsistentHashLoadBalancer
+roundrobin=RoundRobinLoadBalancer

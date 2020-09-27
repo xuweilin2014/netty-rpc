@@ -1,0 +1,6 @@
+failback=FailbackCluster
+failover=FailoverCluster
+failsafe=FailsafeCluster
+failfast=FailfastCluster
+available=AvailableCluster
+mock=MockClusterWrapper

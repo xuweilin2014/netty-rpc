@@ -1,0 +1,4 @@
+filter=ProtocolFilterWrapper
+rpc=RpcProtocol
+injvm=InjvmProtocol
+registry=RegistryProtocol
