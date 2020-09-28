@@ -21,7 +21,7 @@ public class PersonManageStub implements PersonManage {
             logger.info("after executing save method.");
             return save;
         } catch (Exception e) {
-            logger.info("error occurs " + e.getMessage());
+            logger.error("error occurs " + e.getMessage());
             return -1;
         }
     }
