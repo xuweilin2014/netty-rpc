@@ -1,6 +1,7 @@
 package com.xu.rpc.protocol.rpc;
 
 import com.xu.rpc.async.FutureWrapper;
+import com.xu.rpc.async.RpcFuture;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.commons.exception.RemotingException;
 import com.xu.rpc.commons.exception.RpcException;
@@ -62,9 +63,9 @@ public class RpcInvoker<T> extends AbstractInvoker<T> {
                 return new RpcResult();
             // 如果为同步调用的话
             }else {
-                RpcContext.getContext().setFuture(null);
+                RpcFuture rpcFuture = client.request(invocation, timeout);
                 // 阻塞直到结果返回
-                Object result = client.request(invocation, timeout).get();
+                Object result = rpcFuture.get();
                 return new RpcResult(result);
             }
         }catch (RpcTimeoutException ex){

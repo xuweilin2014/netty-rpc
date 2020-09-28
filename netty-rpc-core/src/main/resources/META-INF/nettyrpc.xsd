@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns="http://www.newlandframework.com/nettyrpc"
+<xsd:schema xmlns="http://www.xu.com/schema/nettyrpc"
 			xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 			xmlns:beans="http://www.springframework.org/schema/beans"
-			targetNamespace="http://www.newlandframework.com/nettyrpc"
+			targetNamespace="http://www.xu.com/schema/nettyrpc"
 			elementFormDefault="qualified"
 			attributeFormDefault="unqualified">
+
 	<xsd:import namespace="http://www.springframework.org/schema/beans"/>
 	<xsd:element name="application">
 		<xsd:complexType>

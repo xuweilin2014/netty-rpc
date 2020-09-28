@@ -1,7 +1,7 @@
 package com.xu.rpc.config.parser;
 
 import com.xu.rpc.config.bean.*;
-import rpc.config.bean.*;
+import com.xu.rpc.config.bean.*;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 

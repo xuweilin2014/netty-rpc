@@ -9,7 +9,9 @@ public enum Serialization {
 
     KRYO("kryo"),
 
-    HESSIAN("hessian");
+    HESSIAN("hessian"),
+
+    PROTOSTUFF("protostuff");
 
     private String serialize;
 

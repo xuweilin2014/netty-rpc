@@ -1,4 +1,4 @@
-filter=ProtocolFilterWrapper
-rpc=RpcProtocol
-injvm=InjvmProtocol
-registry=RegistryProtocol
+filter=com.xu.rpc.protocol.ProtocolFilterWrapper
+rpc=com.xu.rpc.protocol.rpc.RpcProtocol
+injvm=com.xu.rpc.protocol.injvm.InjvmProtocol
+registry=com.xu.rpc.protocol.registry.RegistryProtocol

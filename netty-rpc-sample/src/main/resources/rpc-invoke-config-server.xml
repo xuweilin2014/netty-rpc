@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:nettyrpc="http://www.xu.com/schema/nettyrpc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                           http://www.xu.com/schema/nettyrpc http://www.xu.com/schema/nettyrpc/nettyrpc.xsd">
+
+    <bean id="beanFactory" class="com.xu.rpc.commons.util.BeanFactoryUtils"/>
+
+    <nettyrpc:application name="application-provider" metricsPort="9995" echoPort="10220"/>
+
+    <nettyrpc:parameter key="heartbeat" value="60000"/>
+    <nettyrpc:parameter key="heartbeatTimeout" value="180000"/>
+
+    <nettyrpc:protocol id="rpc1" name="rpc" port="10883" serialize="protostuff"/>
+    <nettyrpc:protocol id="rpc2" name="rpc" port="10881" serialize="protostuff"/>
+
+    <nettyrpc:service id="demoAddService" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService"/>
+    <nettyrpc:service id="demoMultiService" interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService"/>
+    <nettyrpc:service id="demoPersonManage" protocol="rpc1,rpc2" registry="zk2" interfaceName="com.xu.rpc.services.PersonManage" ref="personManageService"
+                      monitor="true" weight="1"/>
+    <nettyrpc:service id="demoCostTime" registry="zk" interfaceName="com.xu.rpc.services.CostTimeCalculate" ref="costTimeCalculateService"/>
+    <nettyrpc:service id="demoCache" registry="zk" interfaceName="com.xu.rpc.services.Cache" ref="cacheService"/>
+    <nettyrpc:service id="demoStore" registry="zk" interfaceName="com.xu.rpc.services.Store" ref="storeService"/>
+
+
+    <nettyrpc:registry id="zk" name="zookeeper"  address="127.0.0.1:2181"/>
+    <nettyrpc:registry id="zk2" address="127.0.0.1:2182" name="zookeeper"/>
+
+    <bean id="calcAddService" class="com.xu.rpc.services.impl.AddCalculateImpl"/>
+    <bean id="calcMultiService" class="com.xu.rpc.services.impl.MultiCalculateImpl"/>
+    <bean id="personManageService" class="com.xu.rpc.services.impl.PersonManageImpl"/>
+    <bean id="costTimeCalculateService" class="com.xu.rpc.services.impl.CostTimeCalculateImpl"/>
+    <bean id="cacheService" class="com.xu.rpc.services.impl.CacheImpl"/>
+    <bean id="storeService" class="com.xu.rpc.services.impl.StoreImpl"/>
+
+</beans>

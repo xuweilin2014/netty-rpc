@@ -128,7 +128,7 @@ public final class ExtensionLoader<T> {
         }
 
         String dirPath = dir + type.getName();
-        InputStream is = ExtensionLoader.class.getClassLoader().getResourceAsStream(dirPath);
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(dirPath);
 
         if (is == null){
             return;

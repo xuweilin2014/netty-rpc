@@ -27,7 +27,7 @@ public class DefaultRpcFuture implements RpcFuture{
 
     private static final Map<String, DefaultRpcFuture> futures = new ConcurrentHashMap<>();
 
-    private static final int TIMEOUT_SCAN_INTERVAL = 500;
+    private static final int TIMEOUT_SCAN_INTERVAL = 1000;
 
     private static final ScheduledThreadPoolExecutor timeoutExecutor = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("RpcTimeoutFutureScan", true));
 
@@ -194,8 +194,6 @@ public class DefaultRpcFuture implements RpcFuture{
                 if (!isDone())
                     throw new RpcTimeoutException("invoke method " + request.getMethodName() + " for service " + request.getInterfaceName()
                             + " timeout, cost " + (System.currentTimeMillis() - start) + ", time limit " + timeout);
-            } catch (InterruptedException e) {
-                throw e;
             } finally {
                 lock.unlock();
             }

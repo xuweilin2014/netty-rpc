@@ -5,6 +5,7 @@ import com.google.common.collect.MutableClassToInstanceMap;
 import com.xu.rpc.remoting.initializer.hessian.HessianInitializer;
 import com.xu.rpc.remoting.initializer.jdk.JdkNativeInitializer;
 import com.xu.rpc.remoting.initializer.kryo.KryoInitializer;
+import com.xu.rpc.remoting.initializer.protostuff.ProtostuffInitializer;
 import com.xu.rpc.serialize.Serialization;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelPipeline;
@@ -21,6 +22,7 @@ public class RpcSerializeFrame implements SerializeFrame {
         initializers.putInstance(JdkNativeInitializer.class, new JdkNativeInitializer());
         initializers.putInstance(KryoInitializer.class, new KryoInitializer());
         initializers.putInstance(HessianInitializer.class, new HessianInitializer());
+        initializers.putInstance(ProtostuffInitializer.class, new ProtostuffInitializer());
     }
 
     @Override
@@ -36,6 +38,10 @@ public class RpcSerializeFrame implements SerializeFrame {
             }
             case HESSIAN: {
                 initializers.getInstance(HessianInitializer.class).handle(pipeline, handler);
+                break;
+            }
+            case PROTOSTUFF:{
+                initializers.getInstance(ProtostuffInitializer.class).handle(pipeline, handler);
                 break;
             }
             default: {

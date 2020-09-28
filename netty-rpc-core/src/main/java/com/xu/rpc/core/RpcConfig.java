@@ -33,11 +33,11 @@ public class RpcConfig {
 
     public static final String INTERFACE_KEY = "interfaceName";
 
-    public static final String ROOT_DIR = "/com/xu/rpc";
+    public static final String ROOT_DIR = "/rpc";
 
     public static final String DIR_SEPARATOR = "/";
 
-    public static final int RETRY_PERIOD = 2000;
+    public static final int RETRY_PERIOD = 5000;
 
     public static final String SERIALIZE = "serialize";
 
@@ -91,7 +91,7 @@ public class RpcConfig {
 
     public static final String TIMEOUT_KEY = "timeout";
 
-    public static final int DEFAULT_TIMEOUT = 10000;
+    public static final int DEFAULT_TIMEOUT = 3000;
 
     public static final int RECONNECT_INTERVAL = 10000;
 

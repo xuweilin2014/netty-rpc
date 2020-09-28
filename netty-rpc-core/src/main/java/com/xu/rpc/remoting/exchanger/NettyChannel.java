@@ -89,19 +89,13 @@ public class NettyChannel implements RpcChannel {
             throw new IllegalArgumentException("channel is empty, cannot send message to remote");
 
         if (closed.get() || !channel.isActive()) {
-            throw new RemotingException("channel " + channel + " is closed or inactive, cannot send message to remote");
+            throw new RemotingException("channel " + channel + " is closed or inactive, cannot send message to remote, isActive: "
+                    + channel.isActive() + ", closed: " + closed.get() + ", writable: " + channel.isWritable());
         }
 
-        if (!channel.isWritable()) {
-            throw new RemotingException("cannot write message to this channel " + channel);
-        }
-
-        boolean success;
         try {
             // 将消息发出
             ChannelFuture future = channel.writeAndFlush(message);
-            // 阻塞等待 timeout 时间，直到发送成功或者超时
-            success = future.await(SYNC_TIMEOUT);
 
             if (future.cause() != null)
                 throw future.cause();
@@ -109,11 +103,6 @@ public class NettyChannel implements RpcChannel {
         } catch (Throwable e) {
             throw new RemotingException("failed to send message from client " + channel.localAddress() + ", caused by " + e.getMessage());
         }
-
-        // 运行到这里时，success 为 false，说明等待发送的时间超时
-        if (!success)
-            throw new RemotingException("failed to send message from client " + channel.localAddress() + " to remote " + channel.remoteAddress() +
-                    " within time " + SYNC_TIMEOUT);
     }
 
     @Override
@@ -155,12 +144,8 @@ public class NettyChannel implements RpcChannel {
             return null;
 
         if (!CHANNELS.containsKey(channel)){
-            synchronized (CHANNELS){
-                if (!CHANNELS.containsKey(channel)) {
-                    NettyChannel nettyChannel = new NettyChannel(channel, url);
-                    CHANNELS.put(channel, nettyChannel);
-                }
-            }
+            NettyChannel nettyChannel = new NettyChannel(channel, url);
+            CHANNELS.put(channel, nettyChannel);
         }
 
         return CHANNELS.get(channel);

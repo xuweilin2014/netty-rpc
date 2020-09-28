@@ -12,6 +12,7 @@ import com.xu.rpc.commons.parallel.NamedThreadFactory;
 import com.xu.rpc.remoting.handler.NettyServerHandler;
 import com.xu.rpc.commons.URL;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -96,9 +97,18 @@ public class NettyServer implements Server{
             bootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
                     // 根据用户所选择的序列化协议不同，往NioSocketChannel对应的pipeline中添加不同的handler的类型也不同
                     .childHandler(new RpcChannelInitializer(serialization, serverHandler))
+                    .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                    .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                    // 服务器配置项：BACKLOG
+                    // TCP维护有两个队列，分别称为A和B, 客户端发送SYN，服务器接收到后发送SYN ACK，将客户端放入到A队列
+                    // 客户端接收到后再次发送ACK，服务器接收到后将客户端从A队列移至B队列，服务器的accept返回。A和B队列长度之和为backlog,
+                    // 当A和B队列长度之和大于backlog时，新的连接会被TCP内核拒绝。注意：backlog对程序的连接数并无影响，影响的只是还没有被accept取出的连接数。
                     .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.TCP_NODELAY, true)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+                    //指定发送缓冲区大小
+                    .option(ChannelOption.SO_SNDBUF, 32 * 1024)
+                    //指定接收缓冲区大小
+                    .option(ChannelOption.SO_RCVBUF, 32 * 1024)
+                    .option(ChannelOption.TCP_NODELAY, true);
 
             ChannelFuture future;
 

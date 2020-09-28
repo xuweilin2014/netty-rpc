@@ -1,9 +1,7 @@
-timeout=TimeoutChainFilter
-monitor=MonitorChainFilter
-cache=CacheChainFilter
-limiter=RateLimiterChainFilter
-classloader=ClassLoaderChainFilter
-token=TokenChainFilter
-mock=MockChainFilter
-one=FilterOne
-two=FilterTwo
+timeout=com.xu.rpc.filter.support.TimeoutChainFilter
+monitor=com.xu.rpc.filter.support.MonitorChainFilter
+cache=com.xu.rpc.filter.support.CacheChainFilter
+limiter=com.xu.rpc.filter.support.RateLimiterChainFilter
+classloader=com.xu.rpc.filter.support.ClassLoaderChainFilter
+token=com.xu.rpc.filter.support.TokenChainFilter
+mock=com.xu.rpc.filter.support.MockChainFilter
