@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>sample-spring</artifactId>
+    <artifactId>netty-rpc-sample</artifactId>
 
     <dependencies>
         <dependency>
@@ -20,7 +20,7 @@
     </dependencies>
 
     <build>
-        <finalName>sample-spring</finalName>
+        <finalName>netty-rpc-sample</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>

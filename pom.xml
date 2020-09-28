@@ -9,7 +9,7 @@
     <version>0.0.1</version>
     <modules>
         <module>netty-rpc-core</module>
-        <module>sample-spring</module>
+        <module>netty-rpc-sample</module>
     </modules>
 
     <dependencies>
