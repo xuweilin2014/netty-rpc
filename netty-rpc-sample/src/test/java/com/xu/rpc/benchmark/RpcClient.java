@@ -6,14 +6,10 @@ import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
-import com.xu.rpc.service.UserService;
 import com.xu.rpc.services.AddCalculate;
-import com.xu.rpc.services.PersonManage;
-import com.xu.rpc.services.pojo.Person;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import com.xu.rpc.service.*;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.BufferedWriter;
@@ -22,7 +18,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,7 +36,6 @@ public class RpcClient {
     private int requestsTotal;
     private int requestsPerThread = 1000;
     private ExecutorService executorService = Executors.newFixedThreadPool(threads);
-    private UserService userService;
     private int measurementIterations = 10;
     private int warmupIterations = 3;
 

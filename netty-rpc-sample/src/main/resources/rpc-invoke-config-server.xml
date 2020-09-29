@@ -12,8 +12,8 @@
     <nettyrpc:parameter key="heartbeat" value="60000"/>
     <nettyrpc:parameter key="heartbeatTimeout" value="180000"/>
 
-    <nettyrpc:protocol id="rpc1" name="rpc" port="10883" serialize="protostuff"/>
-    <nettyrpc:protocol id="rpc2" name="rpc" port="10881" serialize="protostuff"/>
+    <nettyrpc:protocol id="rpc1" name="rpc" port="10883" serialize="jdk"/>
+    <nettyrpc:protocol id="rpc2" name="rpc" port="10881" serialize="jdk"/>
 
     <nettyrpc:service id="demoAddService" interfaceName="com.xu.rpc.services.AddCalculate" ref="calcAddService"/>
     <nettyrpc:service id="demoMultiService" interfaceName="com.xu.rpc.services.MultiCalculate" ref="calcMultiService"/>

@@ -74,7 +74,7 @@ public class RpcParallelTest {
             addTask((AddCalculate) context.getBean("addCalc"), parallel);
             multiTask((MultiCalculate) context.getBean("multiCalc"), parallel);
             System.out.printf("netty-rpc server 消息协议序列化第[%d]轮并发验证结束!\n\n", i);
-            Thread.sleep(15000);
+            Thread.sleep(2000);
         }
 
         context.destroy();
