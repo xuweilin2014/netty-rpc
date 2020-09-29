@@ -112,7 +112,7 @@ public class ServiceConfig<T> extends AbstractConfig{
 
         // 获取协议所使用的序列化方式
         String serialize = protocol.getSerialize();
-        parameters.put(RpcConfig.SERIALIZE, serialize);
+        parameters.put(RpcConfig.SERIALIZE_KEY, serialize);
 
         if (!StringUtils.isEmpty(token) && !RpcConfig.FALSE.equals(token)) {
             // token 的值为 true 的话，使用随机 token 令牌，即使用 UUID 生成

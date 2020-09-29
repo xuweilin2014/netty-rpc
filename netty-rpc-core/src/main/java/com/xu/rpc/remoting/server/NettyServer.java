@@ -5,7 +5,7 @@ import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.ExchangeHandler;
-import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
+import com.xu.rpc.serialize.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.commons.parallel.NamedThreadFactory;
@@ -45,9 +45,6 @@ public class NettyServer implements Server{
     // Rpc服务器的端口号
     private Integer port;
 
-    //传输数据所使用的序列化协议
-    private Serialization serialization;
-
     //SYSTEM_PROPERTY_PARALLEL的值为处理器的数量
     private static final int PARALLEL = RpcConfig.SYSTEM_PROPERTY_PARALLEL * 2;
 
@@ -73,9 +70,6 @@ public class NettyServer implements Server{
         this.url = url;
         this.handler = ChannelHandlers.wrapHandler(handler);
 
-        String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE).toUpperCase();
-        this.serialization = Enum.valueOf(Serialization.class, serialize);
-
         this.host = url.getHost();
         if (host == null || host.length() == 0)
             throw new IllegalStateException("the netty server cannot open with host being empty.");
@@ -96,7 +90,7 @@ public class NettyServer implements Server{
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(boss, worker).channel(NioServerSocketChannel.class)
                     // 根据用户所选择的序列化协议不同，往NioSocketChannel对应的pipeline中添加不同的handler的类型也不同
-                    .childHandler(new RpcChannelInitializer(serialization, serverHandler))
+                    .childHandler(new RpcChannelInitializer(url, serverHandler))
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     // 服务器配置项：BACKLOG
@@ -104,11 +98,8 @@ public class NettyServer implements Server{
                     // 客户端接收到后再次发送ACK，服务器接收到后将客户端从A队列移至B队列，服务器的accept返回。A和B队列长度之和为backlog,
                     // 当A和B队列长度之和大于backlog时，新的连接会被TCP内核拒绝。注意：backlog对程序的连接数并无影响，影响的只是还没有被accept取出的连接数。
                     .option(ChannelOption.SO_BACKLOG, 128)
-                    //指定发送缓冲区大小
-                    .option(ChannelOption.SO_SNDBUF, 32 * 1024)
                     //指定接收缓冲区大小
-                    .option(ChannelOption.SO_RCVBUF, 32 * 1024)
-                    .option(ChannelOption.TCP_NODELAY, true);
+                    .option(ChannelOption.SO_RCVBUF, 32 * 1024);
 
             ChannelFuture future;
 

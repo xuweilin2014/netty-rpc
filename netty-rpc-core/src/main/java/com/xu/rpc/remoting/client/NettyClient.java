@@ -6,7 +6,7 @@ import com.xu.rpc.remoting.exchanger.RpcChannel;
 import com.xu.rpc.remoting.handler.ChannelHandler;
 import com.xu.rpc.remoting.handler.ChannelHandlers;
 import com.xu.rpc.remoting.handler.NettyClientHandler;
-import com.xu.rpc.remoting.initializer.RpcChannelInitializer;
+import com.xu.rpc.serialize.RpcChannelInitializer;
 import com.xu.rpc.serialize.Serialization;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcConfig;
@@ -73,7 +73,7 @@ public class NettyClient implements Client {
         this.handler = ChannelHandlers.wrapHandler(handler);
 
         // 客户端发送数据的序列化协议，默认为JDK自带的序列化方法
-        String serialize = url.getParameter(RpcConfig.SERIALIZE, RpcConfig.JDK_SERIALIZE).toUpperCase();
+        String serialize = url.getParameter(RpcConfig.SERIALIZE_KEY, RpcConfig.JDK_SERIALIZE).toUpperCase();
         this.serialization = Enum.valueOf(Serialization.class, serialize);
 
         this.host = url.getHost();
@@ -106,7 +106,7 @@ public class NettyClient implements Client {
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
-                .handler(new RpcChannelInitializer(serialization, clientHandler));
+                .handler(new RpcChannelInitializer(url, clientHandler));
     }
 
     private void connect() throws RemotingException {

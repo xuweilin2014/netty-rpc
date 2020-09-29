@@ -1,9 +1,8 @@
 package com.xu.rpc.registry;
 
-import com.xu.rpc.core.RpcConfig;
-import com.xu.rpc.commons.parallel.NamedThreadFactory;
 import com.xu.rpc.commons.URL;
-import io.netty.util.internal.ConcurrentSet;
+import com.xu.rpc.commons.parallel.NamedThreadFactory;
+import com.xu.rpc.core.RpcConfig;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -104,7 +103,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
     private void addFailedSubscribed(URL url, NotifyListener listener){
         Set<NotifyListener> listeners = failedSubscribedListeners.get(url);
         if (listeners == null){
-            failedSubscribedListeners.put(url, new ConcurrentSet<>());
+            failedSubscribedListeners.put(url, new CopyOnWriteArraySet<>());
             listeners = failedSubscribedListeners.get(url);
         }
         listeners.add(listener);
@@ -140,7 +139,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
             logger.error("failed to unsubscribe url " + url + " waiting for retry later, caused by " + e.getMessage());
             Set<NotifyListener> listeners = failedUnsubscribedListeners.get(url);
             if (listeners == null){
-                failedUnsubscribedListeners.put(url, new ConcurrentSet<>());
+                failedUnsubscribedListeners.put(url, new CopyOnWriteArraySet<>());
                 listeners = failedUnsubscribedListeners.get(url);
             }
             listeners.add(listener);

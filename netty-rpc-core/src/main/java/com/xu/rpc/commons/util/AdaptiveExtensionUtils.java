@@ -9,6 +9,8 @@ import com.xu.rpc.cluster.LoadBalancer;
 import com.xu.rpc.commons.URL;
 import com.xu.rpc.core.RpcConfig;
 import com.xu.rpc.core.extension.ExtensionLoader;
+import com.xu.rpc.serialize.SerializeFactory;
+import org.apache.commons.lang3.StringUtils;
 
 public class AdaptiveExtensionUtils {
 
@@ -68,7 +70,7 @@ public class AdaptiveExtensionUtils {
 
         String cache = url.getParameter(RpcConfig.CACHE_KEY);
         ExtensionLoader<CacheFactory> loader = ExtensionLoader.getExtensionLoader(CacheFactory.class);
-        if (cache == null || cache.length() == 0)
+        if (StringUtils.isEmpty(cache))
             return loader.getDefaultExtension();
         else
             return loader.getExtension(cache);
@@ -80,9 +82,21 @@ public class AdaptiveExtensionUtils {
 
         String limiter = url.getParameter(RpcConfig.LIMITER_KEY);
         ExtensionLoader<RateLimiterFactory> loader = ExtensionLoader.getExtensionLoader(RateLimiterFactory.class);
-        if (limiter == null || limiter.length() == 0)
-            return loader.getExtension(limiter);
-        else
+        if (StringUtils.isEmpty(limiter))
             return loader.getDefaultExtension();
+        else
+            return loader.getExtension(limiter);
+    }
+
+    public static SerializeFactory getSerializeFactory(URL url){
+        if (url == null)
+            throw new IllegalArgumentException("url cannot be null.");
+
+        String serialize = url.getParameter(RpcConfig.SERIALIZER_FACTORY);
+        ExtensionLoader<SerializeFactory> loader = ExtensionLoader.getExtensionLoader(SerializeFactory.class);
+        if (StringUtils.isEmpty(serialize))
+            return loader.getDefaultExtension();
+        else
+            return loader.getExtension(serialize);
     }
 }

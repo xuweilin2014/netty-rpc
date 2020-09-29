@@ -147,9 +147,6 @@ public abstract class AbstractConfig implements InitializingBean {
         if (metricsPort.equals(port)
                 || echoPort.equals(port))
             throw new IllegalStateException("in tag <nettyrpc:protocol/>, port cannot be the same as echo port or jmx port");
-
-        if (StringUtils.isEmpty(protocol.getSerialize()))
-            throw new IllegalStateException("in tag <nettyrpc:protocol/>, serialize attribute cannot be empty.");
     }
 
     // 将对象 object 及其父类中，所有被 @Attribute 标注的不为空的属性保存到 parameters 中

@@ -36,7 +36,7 @@ public class RpcProtocol extends AbstractProtocol {
     // ip:port -> server
     private final Map<String, HeaderExchangeServer> servers = new ConcurrentHashMap<>();
 
-    public static final String NAME = "com/xu/rpc";
+    public static final String NAME = "rpc";
 
     private static final Logger logger = Logger.getLogger(RpcProtocol.class);
 

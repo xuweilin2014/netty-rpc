@@ -39,7 +39,7 @@ public class RpcConfig {
 
     public static final int RETRY_PERIOD = 5000;
 
-    public static final String SERIALIZE = "serialize";
+    public static final String SERIALIZE_KEY = "serialize";
 
     public static final String JDK_SERIALIZE = "jdk";
 
@@ -190,5 +190,23 @@ public class RpcConfig {
     public static final String SEGMENTS_KEY = "segments";
 
     public static final String ECHO_PORT_KEY = "echoPort";
+
+    public static final int LENGTH_FIELD_LENGTH = 4;
+
+    public static final int LENGTH_ADJUSTMENT = 0;
+
+    public static final int MAX_FRAME_LENGTH = 1024 * 1024;
+
+    public static final int LENGTH_FIELD_OFFSET = 0;
+
+    public static final int INITIAL_BYTES_TO_STRIP = 4;
+
+    public static final String PROTOSTUFF_SERIALIZE = "protostuff";
+
+    public static final String SERIALIZER_FACTORY = "serialize";
+
+    public static final byte REQUEST = 1;
+
+    public static final byte RESPONSE = 1 << 1;
 }
 

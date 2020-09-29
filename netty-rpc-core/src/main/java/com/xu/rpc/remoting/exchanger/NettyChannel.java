@@ -51,7 +51,7 @@ public class NettyChannel implements RpcChannel {
 
     @Override
     public boolean isConnected() {
-        if (channel != null && channel.isActive())
+        if (!closed.get() && channel.isActive())
             return true;
         return false;
     }
