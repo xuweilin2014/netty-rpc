@@ -256,7 +256,7 @@ public class NettyClient implements Client {
             if (channel != null) {
                 // 阻塞直到 channel 关闭完成，否则可能会调用后面的 connect 方法时，channel 还没有关闭
                 channel.close();
-                logger.info("netty client is closed, close channel " + channel);
+                logger.info("begin to disconnect, close channel " + channel);
             }
             closeReconnectThread();
         }catch (Throwable t){

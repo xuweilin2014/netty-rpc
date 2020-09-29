@@ -177,6 +177,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
                 try{
                     doRegister(url);
                     failedRegistered.remove(url);
+                    logger.info("re-register url: " + url);
                 }catch (Throwable t){
                     logger.error("failed to register " + url.toFullString() + " again, waiting for another retry.");
                 }
@@ -190,6 +191,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
                 try{
                     doUnregister(url);
                     failedRegistered.remove(url);
+                    logger.info("re-unregister: " + url);
                 }catch (Throwable t){
                     logger.error("failed to unregister " + url.toFullString() + " again, waiting for another retry.");
                 }
@@ -205,6 +207,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
                     try {
                         doSubscribe(url, listener);
                         listeners.remove(listener);
+                        logger.info("re-subscribe: " + url);
                     } catch (Throwable t) {
                         logger.error("failed to subscribe " + url + " again, waiting for another retry.");
                     }
@@ -221,6 +224,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
                     try{
                         doUnsubscribe(url, listener);
                         listeners.remove(listener);
+                        logger.info("re-unsubscribe url: " + url);
                     }catch (Throwable t){
                         logger.error("failed to unsubscribe " + url + " again, waiting for another retry.");
                     }
@@ -238,6 +242,7 @@ public abstract class FailbackRegistry extends AbstractRegistry{
                         try{
                             listener.notify(urls);
                             listenerUrlMap.remove(listener);
+                            logger.info("re-notify url: " + urls);
                         }catch (Throwable t){
                             logger.error("failed to notify " + urls + " again, waiting for another retry.");
                         }

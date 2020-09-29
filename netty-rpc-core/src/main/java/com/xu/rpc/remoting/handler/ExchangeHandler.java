@@ -23,8 +23,7 @@ public class ExchangeHandler extends AbstractHandlerDelegate {
     }
 
     /**
-     * 此方法接收客户端发过来的Rpc调用请求，并且将方法的实际调用包装成一个Task，然后放到线程池中去执行。不会阻塞Netty的worker线程。
-     * 根据是否开启JMX监控，返回的Task不同。
+     * 此方法接收客户端发过来的Rpc调用请求，并且将方法的实际调用包装成一个Task，然后放到线程池中去执行。不会阻塞Netty的worker线程
      */
     @Override
     public void received(RpcChannel channel, Object message){
