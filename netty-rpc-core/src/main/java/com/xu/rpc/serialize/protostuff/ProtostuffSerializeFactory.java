@@ -1,22 +1,16 @@
 package com.xu.rpc.serialize.protostuff;
 
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
+import com.xu.rpc.commons.URL;
+import com.xu.rpc.serialize.AbstractSerializeFactory;
+import com.xu.rpc.serialize.Serialize;
+import com.xu.rpc.serialize.SerializeFactory;
 
-public class ProtostuffSerializeFactory extends BasePooledObjectFactory<ProtostuffSerialize> {
+public class ProtostuffSerializeFactory extends AbstractSerializeFactory {
 
-    @Override
-    public ProtostuffSerialize create() throws Exception {
-        return createProtostuff();
-    }
+    public static final String NAME = "protostuff";
 
     @Override
-    public PooledObject<ProtostuffSerialize> wrap(ProtostuffSerialize protostuff) {
-        return new DefaultPooledObject<ProtostuffSerialize>(protostuff);
-    }
-
-    private ProtostuffSerialize createProtostuff() {
+    protected Serialize createSerialize() {
         return new ProtostuffSerialize();
     }
 }

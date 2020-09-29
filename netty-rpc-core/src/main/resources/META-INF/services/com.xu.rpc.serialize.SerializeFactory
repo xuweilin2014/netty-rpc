@@ -1,0 +1,2 @@
+protostuff=com.xu.rpc.serialize.protostuff.ProtostuffSerializeFactory
+jdk=com.xu.rpc.serialize.jdk.JdkSerializeFactory
