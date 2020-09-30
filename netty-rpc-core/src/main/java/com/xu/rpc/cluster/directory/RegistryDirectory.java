@@ -48,6 +48,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
             return new ArrayList<>(0);
         }
 
+        // 获取到方法的签名
         String methodName = new ReflectionUtils().getMethodSignature(invocation.getMethod());
         if (methodName == null || methodName.length() == 0)
             throw new IllegalStateException("method name must be configured.");
@@ -155,6 +156,7 @@ public class RegistryDirectory extends AbstractDirectory implements NotifyListen
         this.methodToInvokers = newMethodToInvokers;
 
         try{
+            // 关闭掉已经下线的 invoker
             destroyInvokers(newUrltoInvokers, oldUrlToInvokers);
         }catch (Throwable t){
             logger.error("destroy unused invokers' error.");

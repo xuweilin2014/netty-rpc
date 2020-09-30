@@ -23,13 +23,14 @@ public class MonitorChainFilter implements ChainFilter {
     private static final Map<String, Map<String, MetricsVisitor>> cachedVisitors = new ConcurrentHashMap<>();
 
     /**
-     * 每一个客户端发起的一次Rpc请求，都会在服务器端将其包装成一个Task，然后放到线程池中去执行。这些Task的类型是MessageRecvInitializeTask
-     * （开启了JMX监控）或者MessageRecvInitializeTaskAdapter（没有开启JMX）这两类，他们都实现了Callable接口。每个Task任务的执行流程如下：
-     * 1.调用injectInvoke方法，增加方法的调用次数，不过如果没有开启JMX，也就是task是MessageRecvInitializeTaskAdapter的话，这个方法是个空方法，
-     * 2.调用reflect来执行客户端要调用的方法，并且获取到执行的结果。
-     * 3.如果调用成功的话，就会修改方法调用成功的次数、累积耗时、最大耗时、最小耗时
-     * 4.如果方法调用被拦截，就会修改方法被拦截的次数
-     * 5.如果方法调用时抛出异常，就会修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
+     * 每一个客户端发起的一次 rpc 请求，都会在服务器端将其包装成一个 task，然后放到线程池中去执行。这些 task 的类型是 RecvExecutionTask。
+     * 每个Task任务的执行流程如下：
+     *
+     * 1.调用 injectInvoke 方法，增加方法的调用次数
+     * 2.调用执行客户端要调用的方法，并且获取到执行的结果。
+     * 3.如果调用成功的话，就会修改方法调用成功的次数、平均耗时、最大耗时、最小耗时
+     * 4.如果方法调用时抛出异常，就会修改方法调用的失败次数、方法调用失败的时间以及失败的堆栈明细
+     *
      */
     @Override
     public RpcResult intercept(Invoker invoker, RpcInvocation invocation) {

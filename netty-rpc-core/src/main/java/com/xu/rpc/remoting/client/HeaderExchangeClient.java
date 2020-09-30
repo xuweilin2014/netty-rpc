@@ -22,6 +22,7 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
     public HeaderExchangeClient(Client client) {
         super(client);
         this.client = client;
+        // 开启心跳任务
         startHeartbeat(client);
     }
 
@@ -76,6 +77,7 @@ public class HeaderExchangeClient extends HeartbeatExchangeEndpoint implements E
         req.setMethodName(inv.getMethodName());
         req.setParametersVal(inv.getParameters());
         req.setTypeParameters(inv.getParameterTypes());
+        // 往 request 中添加 token 令牌信息
         req.setToken(inv.getAttachments().get(RpcConfig.TOKEN_KEY));
 
         RpcFuture future = new DefaultRpcFuture(timeout, req, client.getUrl());

@@ -24,7 +24,7 @@ public class NettyChannel implements RpcChannel {
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    private static final int SYNC_TIMEOUT = 1500;
+    private static final int SYNC_TIMEOUT = 3000;
 
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 

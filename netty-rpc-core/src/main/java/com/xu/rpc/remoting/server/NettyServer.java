@@ -107,14 +107,6 @@ public class NettyServer implements Server{
             future = bootstrap.bind(host, port).sync();
             this.channel = NettyChannel.getChannel(future.channel(), url);
             future.addListener(new ChannelFutureListener() {
-                /*
-                 * 在RPC服务器启动时，指定其监听一个ip地址127.0.0.1:18887，客户端发送调用请求到这个客户端。
-                 * 不过当指定RPC服务器监听上面这个ip地址之后，还必须让RPC服务器监听另外一个ip地址127.0.0.1:18886。
-                 * 这个端口是用来监听浏览器发送过来的http请求，然后把Rpc服务器可以提供的服务（也就是各个接口中的方法签名）
-                 * 展示在网页中，让用户可以直接知道.
-                 *
-                 * 在NettyRpcRegistry和NettyRpcReference中分别启动服务器监听和客户端，都是非阻塞进行的
-                 */
                 @Override
                 public void operationComplete(final ChannelFuture channelFuture) throws Exception {
                     if (channelFuture.isSuccess()) {

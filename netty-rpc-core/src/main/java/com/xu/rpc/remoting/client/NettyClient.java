@@ -33,8 +33,6 @@ public class NettyClient implements Client {
 
     public static final Logger logger = Logger.getLogger(NettyClient.class);
 
-    private Serialization serialization;
-
     private String host;
 
     private int port;
@@ -72,10 +70,6 @@ public class NettyClient implements Client {
         this.url = url;
         this.handler = ChannelHandlers.wrapHandler(handler);
 
-        // 客户端发送数据的序列化协议，默认为JDK自带的序列化方法
-        String serialize = url.getParameter(RpcConfig.SERIALIZE_KEY, RpcConfig.JDK_SERIALIZE).toUpperCase();
-        this.serialization = Enum.valueOf(Serialization.class, serialize);
-
         this.host = url.getHost();
         if (host == null || host.length() == 0)
             throw new IllegalStateException("consumer cannot connect to provider with host being empty. " +
@@ -106,6 +100,7 @@ public class NettyClient implements Client {
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
+                // 初始化 NioSocketChannel 的 pipeline，主要是要获取到对应的序列化方式
                 .handler(new RpcChannelInitializer(url, clientHandler));
     }
 
@@ -137,7 +132,8 @@ public class NettyClient implements Client {
         ChannelFuture channelFuture = bootstrap.connect(new InetSocketAddress(host, port));
         boolean res = channelFuture.awaitUninterruptibly(3000, TimeUnit.MILLISECONDS);
 
-        // 连接到服务器成功的话，如果存在旧的连接，必须先把旧的连接关闭掉
+        // 连接到服务器成功的话，如果存在旧的连接，必须先把旧的连接关闭掉，
+        // 再将 this.channel 替换为新的 连接 channel
         if (res && channelFuture.isSuccess()){
             RpcChannel newChannel = NettyChannel.getChannel(channelFuture.channel(), getUrl());
 

@@ -6,6 +6,11 @@ import com.xu.rpc.commons.URL;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 含有 HeaderExchangeClient 对象，并且在其基础上增加了一个引用计数的功能。这是因为客户端采用共享连接的模式，
+ * 对于同一个服务端地址，使用同一个连接，这也就意味着多个客户端会使用同一个连接，因此当一个客户端关闭连接时，
+ * 如果还有其它客户端来使用，不能真的将其关闭，只能计数器减一
+ */
 public class ReferenceCountClient implements ExchangeClient{
 
     private URL url;

@@ -17,6 +17,7 @@ public class HeartbeatHandler extends AbstractHandlerDelegate {
     @Override
     public void received(RpcChannel channel, Object message) throws RemotingException {
         setReadTimestamp(channel);
+        // 如果是心跳请求的话，返回一个心跳响应
         if (message instanceof MessageRequest && ((MessageRequest) message).isHeartbeat()){
             MessageResponse response = new MessageResponse();
             response.setHeartbeat(true);
@@ -29,7 +30,7 @@ public class HeartbeatHandler extends AbstractHandlerDelegate {
 
             return;
         }
-
+        // 如果是心跳响应的话，则只打印一条日志，然后返回
         if (message instanceof MessageResponse && ((MessageResponse) message).isHeartbeat()){
             logger.debug("heartbeat response packet is received from " + channel.getRemoteAddress());
             return;

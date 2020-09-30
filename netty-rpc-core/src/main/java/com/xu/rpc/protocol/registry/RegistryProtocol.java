@@ -28,14 +28,14 @@ public class RegistryProtocol extends AbstractProtocol {
         if (invoker.getUrl() == null)
             throw new IllegalArgumentException("url in invoker cannot be null.");
 
-        // 1.获取 providerURL
+        // 1.获取 providerUrl
         URL providerUrl =  getProviderUrl(invoker);
-        // 2.使用 providerURL 进行真正的导出
+        // 2.使用 providerUrl 进行真正的导出
         Protocol protocol = AdaptiveExtensionUtils.getProtocol(providerUrl);
         Exporter<T> exporter = protocol.export(new InvokerWrapper<>(invoker, providerUrl));
         // 3.获取 registry 对象的类型
         Registry registry = getRegistry(invoker);
-        // 4.将 providerURL 注册到 registryURL 上
+        // 4.将 providerUrl 注册到 registryUrl 上
         registry.register(providerUrl);
         return exporter;
     }
@@ -65,9 +65,10 @@ public class RegistryProtocol extends AbstractProtocol {
 
         // RegistryDirectory 本身既可以看成是 invoker 的集合，同时也可以看成是一个监听器，用于从注册中心获取信息
         RegistryDirectory directory = new RegistryDirectory(type, url, registry);
-
+        // 向注册中心进行订阅，其实就是在对应的目录上注册了一个监听器
         directory.subscribe(consumerUrl);
 
+        // 使用 Cluster 进行聚合操作，提供了集群逻辑，比如负载均衡以及容错
         Cluster cluster = AdaptiveExtensionUtils.getCluster(directory.getUrl());
         return cluster.join(directory);
     }

@@ -41,11 +41,13 @@ public class CacheChainFilter implements ChainFilter {
 
                 String cacheKey = genCacheKey(invocation);
                 Object value = segmentCache.get(cacheKey);
+                // 如果 rpc 调用有缓存的话，就将其直接返回
                 if (value != null){
                     return new RpcResult(value);
                 }
 
                 RpcResult result = invoker.invoke(invocation);
+                // 调用没有发生异常的话，就保存到缓存中
                 if (result.getException() == null){
                     segmentCache.put(cacheKey, result.getResult());
                 }

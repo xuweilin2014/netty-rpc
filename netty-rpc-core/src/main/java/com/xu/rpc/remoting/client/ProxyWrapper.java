@@ -45,6 +45,7 @@ public class ProxyWrapper implements InvocationHandler {
         RpcResult result = invoker.invoke(invocation);
         if (result == null)
             throw new RpcException("failed o invoke the method " + methodName);
+        // 如果 result 中的 RpcException 属性不为 null，表明调用发生了异常，抛出异常
         if (result.getException() != null)
             throw result.getException();
 

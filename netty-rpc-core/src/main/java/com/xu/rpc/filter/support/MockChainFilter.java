@@ -17,10 +17,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-
+// 拦截被屏蔽的服务，直接返回一个空结果
 @Activate(group = RpcConfig.PROVIDER, order = -1)
 public class MockChainFilter implements ChainFilter {
 
+    // 保存了被屏蔽的服务 URL
     @SuppressWarnings("unchecked")
     private static Set<String> blacklist = (Set<String>) DateStore.get(RpcConfig.MOCK_SET_KEY);
 

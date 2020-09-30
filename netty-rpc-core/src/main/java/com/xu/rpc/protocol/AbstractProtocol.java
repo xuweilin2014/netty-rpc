@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public abstract class AbstractProtocol implements Protocol {
 
@@ -14,7 +15,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     protected final Map<String, Exporter<?>> exporters = new ConcurrentHashMap<>();
 
-    protected final Set<Invoker> invokers = new ConcurrentSet<>();
+    protected final Set<Invoker> invokers = new CopyOnWriteArraySet<>();
 
     public String getServiceKey(String serviceName, int port){
         return serviceName + ":" + port;

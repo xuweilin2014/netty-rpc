@@ -146,15 +146,16 @@ public class AbilityDetailProvider implements AbilityDetail {
 
                                 StringBuilder recoverButton = new StringBuilder();
                                 StringBuilder forbidButton = new StringBuilder();
+
                                 // 生成两个按钮，屏蔽按钮和恢复按钮
                                 if (!RpcConfig.INJVM_PROTOCOL.equalsIgnoreCase(protocol.getName())){
                                     String duplicateU = "http://" + host + RpcConfig.ADDRESS_DELIMITER + port + "/" + RpcConfig.OVERRIDE_KEY + "?" + RpcConfig.INTERFACE_KEY + "=" +
                                             interfaceName + "&" + RpcConfig.METHOD_KEY + "=" + methodName + "&" + RpcConfig.PROTOCOL_KEY + "=" + url.getProtocol() + "&"
                                             + RpcConfig.IP_ADDRESS + "=" + url.getHost() + "&" + RpcConfig.PORT + "=" + url.getPort();
-
+                                    // 点击屏蔽按钮，将会发送屏蔽服务的请求给 EchoServer，具体就是将服务加入到 MockChainFilter 的黑名单中，进行拦截
                                     String u = duplicateU + "&" + RpcConfig.MOCK_KEY + "=" + RpcConfig.TRUE;
                                     forbidButton.append(String.format(FORBID_BUTTON, counter, interfaceName, methodName, u));
-
+                                    // 点击恢复按钮，将会发送恢复服务的请求给 EchoServer，将服务从 MockChainFilter 的黑名单中移除
                                     u = duplicateU + "&" + RpcConfig.MOCK_KEY + "=" + RpcConfig.FALSE;
                                     recoverButton.append(String.format(RECOVER_BUTTON, counter++, interfaceName, methodName, u));
                                 }
