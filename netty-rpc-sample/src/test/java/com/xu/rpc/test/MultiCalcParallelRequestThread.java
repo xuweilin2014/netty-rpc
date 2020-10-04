@@ -28,7 +28,7 @@ public class MultiCalcParallelRequestThread implements Runnable {
         try {
             signal.await();
             int multi = calc.multi(taskNumber, taskNumber);
-            System.out.println("calc multi result:[" + multi + "]");
+            // System.out.println("calc multi result:[" + multi + "]");
         } catch (InterruptedException ex) {
             Logger.getLogger(MultiCalcParallelRequestThread.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InvokeTimeoutException ex) {
